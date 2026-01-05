@@ -444,7 +444,7 @@ def ensure_dashboard_group(client: LMClient, group_path: str) -> Optional[int]:
 
     Args:
         client: LMClient instance
-        group_path: Full path like "DFW DEMO/Customer Dashboards"
+        group_path: Full path like "Operations/Customer Dashboards"
 
     Returns:
         Dashboard group ID if successful, None otherwise

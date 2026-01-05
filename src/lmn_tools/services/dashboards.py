@@ -48,7 +48,7 @@ class DashboardService(BaseService):
 
     def search(self, query: str, max_items: int = 50) -> list[dict[str, Any]]:
         """Search dashboards by name."""
-        return self.list(filter=f"name~*{query}*", max_items=max_items)
+        return self.list(filter=f'name~"{query}"', max_items=max_items)
 
     def clone(
         self,

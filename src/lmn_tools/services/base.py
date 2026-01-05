@@ -145,7 +145,7 @@ class BaseService(ABC):
         if exact:
             filter_str = f'{name_field}:"{name}"'
         else:
-            filter_str = f"{name_field}~*{name}*"
+            filter_str = f'{name_field}~"{name}"'
 
         results = self.list(filter=filter_str, max_items=1)
         return results[0] if results else None

@@ -63,11 +63,15 @@ def list_chains(
         table.add_column("In Alerting")
 
         for c in chains:
-            # Count destinations across all stages
-            destinations = 0
-            for dest_list in c.get("destinations", {}).values():
-                if isinstance(dest_list, list):
-                    destinations += len(dest_list)
+            # Count destinations - API returns list of destination objects
+            dest_data = c.get("destinations", [])
+            if isinstance(dest_data, list):
+                destinations = len(dest_data)
+            elif isinstance(dest_data, dict):
+                # Handle legacy dict format if still used
+                destinations = sum(len(v) for v in dest_data.values() if isinstance(v, list))
+            else:
+                destinations = 0
 
             in_alerting = "[green]Yes[/green]" if c.get("inAlerting", False) else "[dim]No[/dim]"
 
@@ -120,18 +124,29 @@ def get_chain(
 
     console.print(detail_table)
 
-    # Show destinations by stage
-    destinations = chain.get("destinations", {})
+    # Show destinations
+    destinations = chain.get("destinations", [])
     if destinations:
-        console.print("\n[bold]Destinations by Stage:[/bold]")
-        for stage, dests in sorted(destinations.items(), key=lambda x: int(x[0]) if x[0].isdigit() else 0):
-            if isinstance(dests, list) and dests:
-                console.print(f"\n  [cyan]Stage {stage}:[/cyan]")
-                for dest in dests:
-                    dest_type = dest.get("type", "unknown")
-                    method = dest.get("method", "")
-                    addr = dest.get("addr", dest.get("contact", ""))
-                    console.print(f"    • {dest_type}: {method} → {addr}")
+        console.print("\n[bold]Destinations:[/bold]")
+        if isinstance(destinations, list):
+            # API returns list of destination objects
+            for dest in destinations:
+                dest_type = dest.get("type", "unknown")
+                method = dest.get("method", "")
+                addr = dest.get("addr", dest.get("contact", ""))
+                period = dest.get("period", 0)
+                stage_info = f" (stage {dest.get('stages', 'N/A')}, period {period}min)" if period else ""
+                console.print(f"  • {dest_type}: {method} → {addr}{stage_info}")
+        elif isinstance(destinations, dict):
+            # Handle legacy dict format keyed by stage
+            for stage, dests in sorted(destinations.items(), key=lambda x: int(x[0]) if x[0].isdigit() else 0):
+                if isinstance(dests, list) and dests:
+                    console.print(f"\n  [cyan]Stage {stage}:[/cyan]")
+                    for dest in dests:
+                        dest_type = dest.get("type", "unknown")
+                        method = dest.get("method", "")
+                        addr = dest.get("addr", dest.get("contact", ""))
+                        console.print(f"    • {dest_type}: {method} → {addr}")
 
 
 @app.command("search")
@@ -142,7 +157,7 @@ def search_chains(
 ) -> None:
     """Search escalation chains by name."""
     svc = _get_service()
-    chains = svc.list(filter=f"name~*{query}*", max_items=limit)
+    chains = svc.list(filter=f'name~"{query}"', max_items=limit)
 
     if format == "json":
         console.print_json(data=chains)

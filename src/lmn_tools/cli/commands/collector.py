@@ -42,6 +42,21 @@ def _get_service() -> CollectorService:
     return CollectorService(_get_client())
 
 
+# Map integer status codes to labels (LM API returns integers)
+COLLECTOR_STATUS_MAP = {
+    0: "down",
+    1: "ok",
+    2: "warning",
+}
+
+
+def _status_name(status: str | int) -> str:
+    """Convert collector status to display name."""
+    if isinstance(status, int):
+        return COLLECTOR_STATUS_MAP.get(status, str(status))
+    return str(status) if status else "unknown"
+
+
 @app.command("list")
 def list_collectors(
     filter: Annotated[Optional[str], typer.Option("--filter", "-f", help="LM filter string")] = None,
@@ -75,7 +90,7 @@ def list_collectors(
         table.add_column("Platform")
 
         for c in collectors:
-            status = c.get("status", "")
+            status = _status_name(c.get("status", ""))
             status_style = "green" if status == "ok" else "red"
             table.add_row(
                 str(c["id"]),
@@ -105,7 +120,7 @@ def get_collector(
     console.print(f"\n[bold cyan]{collector.get('hostname', 'N/A')}[/bold cyan] (ID: {collector_id})")
     console.print()
 
-    status = collector.get("status", "")
+    status = _status_name(collector.get("status", ""))
     status_style = "green" if status == "ok" else "red"
 
     detail_table = Table(show_header=False, box=None)
@@ -116,9 +131,9 @@ def get_collector(
     detail_table.add_row("Status", f"[{status_style}]{status}[/{status_style}]")
     detail_table.add_row("Build", collector.get("build", "N/A"))
     detail_table.add_row("Platform", collector.get("platform", "N/A"))
-    detail_table.add_row("Up Time", collector.get("upTime", "N/A"))
+    detail_table.add_row("Up Time", str(collector.get("upTime", "N/A")))
     detail_table.add_row("Number of Hosts", str(collector.get("numberOfHosts", 0)))
-    detail_table.add_row("Automatic Upgrade", str(collector.get("automaticUpgradeInfo", {}).get("enabled", False)))
+    detail_table.add_row("Automatic Upgrade", str((collector.get("automaticUpgradeInfo") or {}).get("enabled", False)))
 
     console.print(detail_table)
 
@@ -136,7 +151,7 @@ def collector_status(
     down_collectors: list[dict] = []
 
     for c in collectors:
-        status = c.get("status", "unknown")
+        status = _status_name(c.get("status", "unknown"))
         status_counts[status] = status_counts.get(status, 0) + 1
         if status != "ok":
             down_collectors.append(c)
@@ -155,7 +170,7 @@ def collector_status(
             table.add_row(
                 str(c["id"]),
                 c.get("hostname", ""),
-                c.get("status", ""),
+                _status_name(c.get("status", "")),
             )
         console.print(table)
     else:

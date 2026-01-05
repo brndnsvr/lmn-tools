@@ -182,7 +182,7 @@ def search_websites(
 ) -> None:
     """Search website monitors by name."""
     svc = _get_service()
-    websites = svc.list(filter=f"name~*{query}*", max_items=limit)
+    websites = svc.list(filter=f'name~"{query}"', max_items=limit)
 
     if format == "json":
         console.print_json(data=websites)

@@ -208,8 +208,8 @@ def search_datasources(
 ) -> None:
     """Search DataSources by name or display name."""
     svc = _get_service()
-    results = svc.list(filter=f"name~*{query}*", max_items=limit)
-    display_results = svc.list(filter=f"displayName~*{query}*", max_items=limit)
+    results = svc.list(filter=f'name~"{query}"', max_items=limit)
+    display_results = svc.list(filter=f'displayName~"{query}"', max_items=limit)
     seen_ids = {r["id"] for r in results}
     results.extend(r for r in display_results if r["id"] not in seen_ids)
 

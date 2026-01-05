@@ -36,20 +36,26 @@ def _get_service() -> SDTService:
 
 
 def _format_timestamp(ts: int | None) -> str:
-    """Format millisecond timestamp."""
+    """Format epoch timestamp to readable string (handles both seconds and milliseconds)."""
     if not ts:
         return "N/A"
     try:
-        return datetime.fromtimestamp(ts / 1000).strftime("%Y-%m-%d %H:%M")
+        # Timestamps >= 10^12 are in milliseconds, < 10^12 are in seconds
+        if ts >= 1e12:
+            ts = ts / 1000
+        return datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M")
     except Exception:
         return str(ts)
 
 
 def _format_duration(start: int, end: int) -> str:
-    """Format duration between timestamps."""
+    """Format duration between timestamps (handles both seconds and milliseconds)."""
     if not start or not end:
         return "N/A"
-    duration_mins = (end - start) // 60000
+    # Convert to seconds if in milliseconds
+    start_secs = start / 1000 if start >= 1e12 else start
+    end_secs = end / 1000 if end >= 1e12 else end
+    duration_mins = int((end_secs - start_secs) / 60)
     if duration_mins < 60:
         return f"{duration_mins}m"
     elif duration_mins < 1440:

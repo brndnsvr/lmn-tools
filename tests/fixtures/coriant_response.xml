@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <data xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
   <ne xmlns="http://coriant.com/yang/os/ne">
-    <ne-id>NE-DFW-001</ne-id>
-    <ne-name>coriant-dfw-optical-01</ne-name>
+    <ne-id>NE-LAB-001</ne-id>
+    <ne-name>coriant-lab-optical-01</ne-name>
     <ne-type>Optical Transport</ne-type>
-    <ne-location>Dallas Fort Worth</ne-location>
-    <ne-site>DFW-DC1</ne-site>
+    <ne-location>Lab Environment</ne-location>
+    <ne-site>LAB-DC1</ne-site>
     <ne-altitude>152</ne-altitude>
     <ne-vendor>Coriant</ne-vendor>
     <ne-temperature>28.5</ne-temperature>

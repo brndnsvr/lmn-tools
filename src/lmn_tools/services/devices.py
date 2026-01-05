@@ -157,7 +157,7 @@ class DeviceService(BaseService):
         Returns:
             List of dead devices
         """
-        return self.list(filter="hostStatus:dead")
+        return self.list(filter='hostStatus:"dead"')
 
     def list_alive(self) -> list[dict[str, Any]]:
         """
@@ -166,7 +166,7 @@ class DeviceService(BaseService):
         Returns:
             List of alive devices
         """
-        return self.list(filter="hostStatus:normal")
+        return self.list(filter='hostStatus:"normal"')
 
 
 class DeviceGroupService(BaseService):

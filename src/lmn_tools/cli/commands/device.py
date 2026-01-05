@@ -149,7 +149,7 @@ def search_devices(
 ) -> None:
     """Search devices by hostname or display name."""
     svc = _get_service()
-    results = svc.list(filter=f"displayName~*{query}*", max_items=limit)
+    results = svc.list(filter=f'displayName~"{query}"', max_items=limit)
 
     if format == "json":
         console.print_json(data=results)

@@ -15,7 +15,7 @@ from rich.table import Table
 
 from lmn_tools.api.client import LMClient
 from lmn_tools.core.config import get_settings
-from lmn_tools.services.alerts import AlertService
+from lmn_tools.services.alerts import AlertService, AlertSeverity
 
 app = typer.Typer(help="Manage alerts")
 console = Console()
@@ -36,11 +36,14 @@ def _get_service() -> AlertService:
 
 
 def _format_timestamp(ts: int | None) -> str:
-    """Format millisecond timestamp to readable string."""
+    """Format epoch timestamp to readable string (handles both seconds and milliseconds)."""
     if not ts:
         return "N/A"
     try:
-        return datetime.fromtimestamp(ts / 1000).strftime("%Y-%m-%d %H:%M")
+        # Timestamps >= 10^12 are in milliseconds, < 10^12 are in seconds
+        if ts >= 1e12:
+            ts = ts / 1000
+        return datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M")
     except Exception:
         return str(ts)
 
@@ -172,7 +175,9 @@ def list_active_alerts(
         # Calculate duration
         start = a.get("startEpoch", 0)
         if start:
-            duration_mins = int((datetime.now().timestamp() * 1000 - start) / 60000)
+            # Convert to seconds if in milliseconds
+            start_secs = start / 1000 if start >= 1e12 else start
+            duration_mins = int((datetime.now().timestamp() - start_secs) / 60)
             if duration_mins < 60:
                 duration = f"{duration_mins}m"
             elif duration_mins < 1440:
@@ -291,8 +296,8 @@ def alert_summary() -> None:
 
     # Count by severity
     critical = len(svc.list_critical())
-    errors = len(svc.list_active(severity="error"))
-    warnings = len(svc.list_active(severity="warning"))
+    errors = len(svc.list_active(severity=AlertSeverity.ERROR))
+    warnings = len(svc.list_active(severity=AlertSeverity.WARNING))
     acked = len(svc.list_acknowledged())
 
     table = Table(show_header=False, box=None)

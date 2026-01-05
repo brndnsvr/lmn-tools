@@ -127,7 +127,7 @@ def search_configsources(
 ) -> None:
     """Search ConfigSources by name."""
     svc = _get_service()
-    results = svc.list(filter=f"name~*{query}*", max_items=limit)
+    results = svc.list(filter=f'name~"{query}"', max_items=limit)
 
     if format == "json":
         console.print_json(data=results)

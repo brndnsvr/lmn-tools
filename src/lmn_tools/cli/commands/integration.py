@@ -117,7 +117,13 @@ def get_integration(
 
     # Type-specific fields
     extra_info = integration.get("extra", {}) or {}
-    if extra_info:
+    # Parse JSON string if needed
+    if isinstance(extra_info, str):
+        try:
+            extra_info = json.loads(extra_info)
+        except json.JSONDecodeError:
+            extra_info = {}
+    if extra_info and isinstance(extra_info, dict):
         detail_table.add_row("", "")  # Separator
         detail_table.add_row("[bold]Configuration:[/bold]", "")
         for key, value in extra_info.items():
@@ -137,7 +143,7 @@ def search_integrations(
 ) -> None:
     """Search integrations by name."""
     svc = _get_service()
-    integrations = svc.list(filter=f"name~*{query}*", max_items=limit)
+    integrations = svc.list(filter=f'name~"{query}"', max_items=limit)
 
     if format == "json":
         console.print_json(data=integrations)

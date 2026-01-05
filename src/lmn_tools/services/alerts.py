@@ -63,9 +63,9 @@ class AlertService(BaseService):
         Returns:
             List of active alerts
         """
-        filters = ["cleared:false"]
+        filters = ['cleared:"false"']
         if severity:
-            filters.append(f"severity:{severity}")
+            filters.append(f'severity:"{severity.value}"')
         if device_id:
             filters.append(f"monitorObjectId:{device_id}")
 
@@ -73,7 +73,7 @@ class AlertService(BaseService):
 
     def list_acknowledged(self, max_items: int | None = None) -> list[dict[str, Any]]:
         """List acknowledged alerts."""
-        return self.list(filter="acked:true,cleared:false", max_items=max_items)
+        return self.list(filter='acked:"true",cleared:"false"', max_items=max_items)
 
     def list_critical(self, max_items: int | None = None) -> list[dict[str, Any]]:
         """List critical severity alerts."""

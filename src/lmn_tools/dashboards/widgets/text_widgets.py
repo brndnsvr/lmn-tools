@@ -91,10 +91,10 @@ def create_header_widget(
 <p><strong>BAN:</strong> ##BAN##</p>
 <p style="margin-top: 15px; color: #666;">
 This dashboard shows throughput, interface statistics, BGP (if applicable),
-and optical health for the customer's services across the DFW fabric.
+and optical health for the customer's services across the network fabric.
 </p>
 <p style="margin-top: 10px; font-size: 0.9em; color: #888;">
-For assistance, contact: <a href="mailto:noc@csquare.com">noc@csquare.com</a>
+For assistance, contact: <a href="mailto:noc@example.com">noc@example.com</a>
 </p>
 </div>"""
 

@@ -76,7 +76,7 @@ class BaseService(ABC):
             return self.client.get_all(self.base_path, params, max_items=max_items)
         return self.client.get_all(self.base_path, params)
 
-    def get(self, id: int) -> dict[str, Any]:
+    def get(self, id: str | int) -> dict[str, Any]:
         """
         Get a single resource by ID.
 

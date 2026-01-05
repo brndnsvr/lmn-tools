@@ -234,7 +234,7 @@ def get_alert(
 ) -> None:
     """Get alert details."""
     svc = _get_service()
-    response = svc.get(int(alert_id))
+    response = svc.get(alert_id)
     alert = response.get("data", response) if "data" in response else response
 
     if format == "json":

@@ -1,0 +1,136 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lmn-tools"
+version = "0.1.0"
+description = "Unified CLI tools for LogicMonitor operations"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Phoenix Infrastructure"}
+]
+keywords = [
+    "logicmonitor",
+    "monitoring",
+    "netconf",
+    "snmp",
+    "network",
+    "automation",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: System :: Monitoring",
+    "Topic :: System :: Networking :: Monitoring",
+    "Typing :: Typed",
+]
+
+dependencies = [
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "requests>=2.28.0",
+    "typer[all]>=0.9.0",
+    "rich>=13.0.0",
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+netconf = [
+    "ncclient>=0.6.13",
+    "lxml>=4.9.0",
+    "python-dateutil>=2.8.0",
+]
+snmp = [
+    "pysnmp>=4.4.12",
+]
+all = [
+    "lmn-tools[netconf,snmp]",
+]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-asyncio>=0.21.0",
+    "mypy>=1.5.0",
+    "ruff>=0.1.0",
+    "types-requests>=2.28.0",
+    "types-PyYAML>=6.0.0",
+]
+
+[project.scripts]
+lmn = "lmn_tools.cli.main:cli"
+
+[project.urls]
+Homepage = "https://github.com/phoenix-infra/lm-tools"
+Documentation = "https://github.com/phoenix-infra/lm-tools#readme"
+Repository = "https://github.com/phoenix-infra/lm-tools"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+lmn_tools = ["py.typed", "configs/*.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short --strict-markers"
+markers = [
+    "integration: marks tests as integration tests",
+    "slow: marks tests as slow",
+]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+plugins = ["pydantic.mypy"]
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+select = [
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "F",     # Pyflakes
+    "I",     # isort
+    "C4",    # flake8-comprehensions
+    "B",     # flake8-bugbear
+    "UP",    # pyupgrade
+    "RUF",   # Ruff-specific
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+]
+
+[tool.ruff.isort]
+known-first-party = ["lmn_tools"]
+
+[tool.coverage.run]
+source = ["src/lmn_tools"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+]

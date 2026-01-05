@@ -1,0 +1,80 @@
+# Customer Dashboard Configuration
+# BAN: 723389
+# Customer: Circle K Stores, Inc.
+#
+# This YAML file defines the devices, interfaces, and (optionally) BGP peers
+# that make up this customer's service across the DFW fabric.
+
+customer:
+  ban: 723389
+  name: "Circle K Stores, Inc."
+  metros:
+    - DFW
+
+logicmonitor:
+  # Dashboard will be created in this folder (created if it doesn't exist)
+  dashboard_group: "DFW DEMO/Customer Dashboards"
+
+  # Datasource names - these should match your LM datasource names
+  # The tool will search by displayName or internal name
+  interface_datasource: "SNMP_Network_Interfaces"
+  dom_datasource: "Juniper DOM-"
+  bgp_datasource: "BGP-"
+
+# Devices participating in this customer's service
+# hostname must match LM's system.displayname or system.sysname
+devices:
+  # ISP Router 1
+  - hostname: "DL2632678ISP001"
+    role: "router"
+    metro: "DFW"
+    interfaces:
+      - name: "irb.2033"
+        alias: "VLAN_723389_100"
+        role: "Customer-IRB"
+        include_in_traffic_graphs: true
+        include_in_table: true
+
+  # ISP Router 2
+  - hostname: "DL2632678ISP002"
+    role: "router"
+    metro: "DFW"
+    interfaces:
+      - name: "irb.2033"
+        alias: "VLAN_723389_100"
+        role: "Customer-IRB"
+        include_in_traffic_graphs: true
+        include_in_table: true
+
+  # Leaf Switch 1
+  - hostname: "DL2632678LEF001"
+    role: "leaf"
+    metro: "DFW"
+    interfaces:
+      - name: "ge-0/0/1.100"
+        alias: "VLAN_723389_100"
+        role: "Access-LEF001"
+        include_in_traffic_graphs: true
+        include_in_table: true
+
+  # Leaf Switch 2
+  - hostname: "DL2632678LEF002"
+    role: "leaf"
+    metro: "DFW"
+    interfaces:
+      - name: "ge-0/0/1.100"
+        alias: "VLAN_723389_100"
+        role: "Access-LEF002"
+        include_in_traffic_graphs: true
+        include_in_table: true
+
+# BGP Peers - Optional section
+# Only include if customer has BGP peering
+# bgp_peers:
+#   - device: "DL2632678ISP001"
+#     neighbor_ip: "<peer-ip-here>"
+#     description: "Circle K – ISP1"
+#
+#   - device: "DL2632678ISP002"
+#     neighbor_ip: "<peer-ip-here>"
+#     description: "Circle K – ISP2"

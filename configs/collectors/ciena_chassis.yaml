@@ -1,0 +1,71 @@
+# Ciena WaveServer Chassis/System Configuration
+# Defines single-instance metrics for Ciena WaveServer devices via NETCONF
+#
+# This configuration is used by:
+#   - ciena_chassis_collect.py (Single-instance collection - no discovery needed)
+#
+# DataSource: Ciena_WaveServer_Chassis (Single-instance)
+# Collection Method: SCRIPT (not BATCHSCRIPT)
+# No Active Discovery needed - single instance per device
+
+# Device identification
+device_type: ciena
+vendor: Ciena
+
+# Namespace definitions for XPath queries
+namespaces:
+  nc: "urn:ietf:params:xml:ns:netconf:base:1.0"
+  ws-chassis: "urn:ciena:params:xml:ns:yang:ciena-ws:ciena-waveserver-chassis"
+  ws-software: "urn:ciena:params:xml:ns:yang:ciena-ws:ciena-waveserver-software"
+
+# NETCONF filter to send to device
+# Request chassis identification and software status
+netconf_filter: |
+  <waveserver-chassis xmlns="urn:ciena:params:xml:ns:yang:ciena-ws:ciena-waveserver-chassis">
+    <identification>
+      <type/>
+      <model/>
+      <description/>
+      <serial-number/>
+      <part-number/>
+      <revision/>
+      <manufacture-date/>
+    </identification>
+  </waveserver-chassis>
+  <waveserver-software xmlns="urn:ciena:params:xml:ns:yang:ciena-ws:ciena-waveserver-software">
+    <status>
+      <software-operational-state/>
+      <active-version/>
+    </status>
+  </waveserver-software>
+
+# Chassis-level metrics (single-instance, no instance prefix needed)
+metrics:
+  # Software operational state - critical health indicator
+  - name: software_oper_state
+    xpath: ".//software-operational-state"
+    help: "Software operational state (1=normal, 0=other)"
+    string_map:
+      normal: 1
+
+# Labels/properties to include in output (for device info, not alerting)
+labels:
+  # Chassis identification
+  - name: chassis_type
+    xpath: ".//identification/type"
+  - name: chassis_model
+    xpath: ".//identification/model"
+  - name: chassis_description
+    xpath: ".//identification/description"
+  - name: chassis_serial
+    xpath: ".//identification/serial-number"
+  - name: chassis_part_number
+    xpath: ".//identification/part-number"
+  - name: chassis_revision
+    xpath: ".//identification/revision"
+  - name: chassis_manufacture_date
+    xpath: ".//identification/manufacture-date"
+
+  # Software information
+  - name: active_version
+    xpath: ".//active-version"

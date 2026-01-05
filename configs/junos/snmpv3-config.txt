@@ -1,0 +1,94 @@
+# =============================================================================
+# Junos SNMPv3 Configuration for LogicMonitor
+# =============================================================================
+#
+# This configuration enables SNMPv3 monitoring with SHA authentication
+# and AES128 privacy encryption.
+#
+# Variables to replace:
+#   <AUTH-PASSWORD>   - SNMPv3 authentication password (min 8 chars)
+#   <PRIV-PASSWORD>   - SNMPv3 privacy password (min 8 chars)
+#   <COLLECTOR-IP>    - LogicMonitor collector IP address
+#
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# SNMPv3 User Configuration
+# -----------------------------------------------------------------------------
+# Create the SNMPv3 user with SHA authentication and AES128 privacy
+set snmp v3 usm local-engine user lm-monitor authentication-sha authentication-password "<AUTH-PASSWORD>"
+set snmp v3 usm local-engine user lm-monitor privacy-aes128 privacy-password "<PRIV-PASSWORD>"
+
+# -----------------------------------------------------------------------------
+# VACM (View-based Access Control Model) Configuration
+# -----------------------------------------------------------------------------
+# Map the user to a security group
+set snmp v3 vacm security-to-group security-model usm security-name lm-monitor group lm-readonly-group
+
+# Define access permissions for the group
+set snmp v3 vacm access group lm-readonly-group default-context-prefix security-model usm security-level privacy read-view all-mibs
+set snmp v3 vacm access group lm-readonly-group default-context-prefix security-model usm security-level privacy write-view none
+set snmp v3 vacm access group lm-readonly-group default-context-prefix security-model usm security-level privacy notify-view all-mibs
+
+# -----------------------------------------------------------------------------
+# View Configuration
+# -----------------------------------------------------------------------------
+# Create a view that includes all MIBs (read-only access)
+set snmp view all-mibs oid .1 include
+set snmp view none oid .1 exclude
+
+# -----------------------------------------------------------------------------
+# Target Configuration (for SNMP polling)
+# -----------------------------------------------------------------------------
+# Configure the LogicMonitor collector as an SNMP target
+set snmp v3 target-address lm-collector address <COLLECTOR-IP>
+set snmp v3 target-address lm-collector port 162
+set snmp v3 target-address lm-collector tag-list lm-tag
+set snmp v3 target-address lm-collector target-parameters lm-params
+
+# Configure target parameters
+set snmp v3 target-parameters lm-params parameters message-processing-model v3
+set snmp v3 target-parameters lm-params parameters security-model usm
+set snmp v3 target-parameters lm-params parameters security-level privacy
+set snmp v3 target-parameters lm-params parameters security-name lm-monitor
+set snmp v3 target-parameters lm-params notify-filter lm-filter
+
+# -----------------------------------------------------------------------------
+# Notification Filter (for traps)
+# -----------------------------------------------------------------------------
+set snmp v3 notify lm-notify type trap
+set snmp v3 notify lm-notify tag lm-tag
+set snmp v3 notify-filter lm-filter oid .1 include
+
+# -----------------------------------------------------------------------------
+# General SNMP Settings
+# -----------------------------------------------------------------------------
+# Set SNMP contact and location (customize as needed)
+set snmp contact "Network Operations <noc@company.com>"
+set snmp location "<DATACENTER-NAME>"
+
+# Enable required MIB modules for Juniper monitoring
+set snmp traceoptions flag all
+
+# Restrict SNMP access to collector IP only (security best practice)
+set snmp client-list lm-collectors <COLLECTOR-IP>/32
+
+# =============================================================================
+# Verification Commands (run after commit)
+# =============================================================================
+# show snmp v3
+# show snmp v3 user
+# show snmp v3 vacm
+# show snmp statistics
+#
+# Test from collector:
+# snmpwalk -v3 -l authPriv -u lm-monitor -a SHA -A <AUTH-PASSWORD> -x AES -X <PRIV-PASSWORD> <DEVICE-IP> system
+# =============================================================================
+
+# =============================================================================
+# Example with Actual Values (DO NOT USE IN PRODUCTION)
+# =============================================================================
+# set snmp v3 usm local-engine user lm-monitor authentication-sha authentication-password "LogicMon!Auth2024"
+# set snmp v3 usm local-engine user lm-monitor privacy-aes128 privacy-password "LogicMon!Priv2024"
+# set snmp v3 target-address lm-collector address 10.1.1.50
+# =============================================================================

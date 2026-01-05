@@ -1,0 +1,325 @@
+# Coriant Optical Device Configuration
+# Defines metrics and instance discovery for Coriant NE devices via NETCONF
+#
+# This configuration is used by:
+#   - coriant_discover.py (Active Discovery)
+#   - coriant_collect.py (BATCHSCRIPT collection)
+
+# Device identification
+device_type: coriant
+vendor: Coriant
+
+# Namespace definitions for XPath queries
+namespaces:
+  ne: "http://coriant.com/yang/os/ne"
+  nc: "urn:ietf:params:xml:ns:netconf:base:1.0"
+
+# NETCONF filter to send to device
+# This defines what data to request from the device
+netconf_filter: |
+  <ne xmlns="http://coriant.com/yang/os/ne">
+    <ne-id/>
+    <ne-name/>
+    <ne-type/>
+    <ne-location/>
+    <ne-site/>
+    <ne-altitude/>
+    <ne-vendor/>
+    <ne-temperature/>
+    <system>
+      <sw-management>
+        <softwareload>
+          <swload-id/>
+          <swload-state/>
+          <swload-version/>
+          <swload-vendor/>
+          <swload-product/>
+          <swload-label/>
+        </softwareload>
+      </sw-management>
+    </system>
+    <services>
+      <optical-interfaces>
+        <ots>
+          <ots-name/>
+          <admin-status/>
+          <oper-status/>
+          <avail-status/>
+          <alias-name/>
+          <measured-span-loss/>
+          <fiber-spectral-attenuation-tilt/>
+          <raman-tilt-coefficient/>
+          <fiber-type/>
+          <external-tx-attenuation/>
+          <fiber-length-tx-derived/>
+          <span-degrade-enable/>
+          <span-degrade-loss/>
+          <span-degrade-hysteresis/>
+        </ots>
+        <oms>
+          <oms-name/>
+          <admin-status/>
+          <oper-status/>
+          <avail-status/>
+          <alias-name/>
+          <rx-optical-power/>
+          <tx-optical-power/>
+          <grid-mode/>
+          <statistics>
+            <last-clear/>
+            <in-optical-power>
+              <instant/>
+            </in-optical-power>
+            <out-optical-power>
+              <instant/>
+            </out-optical-power>
+          </statistics>
+        </oms>
+        <osc>
+          <osc-name/>
+          <admin-status/>
+          <oper-status/>
+          <avail-status/>
+          <alias-name/>
+          <osc-mode/>
+          <osc-wavelength/>
+          <osc-data-communication/>
+          <rx-optical-power/>
+          <tx-optical-power/>
+          <statistics>
+            <last-clear/>
+            <in-optical-power>
+              <instant/>
+            </in-optical-power>
+            <out-optical-power>
+              <instant/>
+            </out-optical-power>
+          </statistics>
+        </osc>
+        <gopt>
+          <gopt-name/>
+          <admin-status/>
+          <oper-status/>
+          <avail-status/>
+          <alias-name/>
+          <rx-optical-power/>
+          <tx-optical-power/>
+          <statistics>
+            <in-optical-power>
+              <instant/>
+            </in-optical-power>
+            <out-optical-power>
+              <instant/>
+            </out-optical-power>
+            <last-clear/>
+            <loss-tx/>
+            <loss-rx/>
+            <protection-switch-duration/>
+            <protection-switch-count/>
+          </statistics>
+        </gopt>
+      </optical-interfaces>
+    </services>
+  </ne>
+
+# NOTE: Chassis-level metrics are in a separate DataSource (coriant_chassis.yaml)
+# This config is for multi-instance optical interface metrics only
+
+# Interface types to discover and collect
+interfaces:
+  # OTS - Optical Transport Section (line-side fiber interface)
+  ots:
+    xpath: ".//ots"
+    instance_key: "alias-name"
+    fallback_id_key: "ots-name"  # Fallback if alias-name is empty
+    instance_name_key: "alias-name"
+    description_key: "ots-name"
+    properties:
+      - fiber-type
+      - fiber-spectral-attenuation-tilt
+    metrics:
+      - name: admin_status
+        xpath: "admin-status"
+        help: "Administrative status (0=down, 1=up)"
+        string_map:
+          down: 0
+          up: 1
+      - name: oper_status
+        xpath: "oper-status"
+        help: "Operational status (0=down, 1=up)"
+        string_map:
+          down: 0
+          up: 1
+      - name: measured_span_loss
+        xpath: "measured-span-loss"
+        help: "Measured fiber span loss in dB"
+      - name: external_tx_attenuation
+        xpath: "external-tx-attenuation"
+        help: "External TX attenuation in dB"
+      - name: fiber_length_tx_derived
+        xpath: "fiber-length-tx-derived"
+        help: "Derived fiber length from TX side in km"
+      - name: span_degrade_enable
+        xpath: "span-degrade-enable"
+        help: "Span degradation monitoring enabled (0=disabled, 1=enabled)"
+        string_map:
+          disabled: 0
+          enabled: 1
+      - name: span_degrade_loss
+        xpath: "span-degrade-loss"
+        help: "Span degradation loss threshold in dB"
+      - name: span_degrade_hysteresis
+        xpath: "span-degrade-hysteresis"
+        help: "Span degradation hysteresis in dB"
+
+  # OMS - Optical Multiplex Section (wavelength multiplexed section)
+  oms:
+    xpath: ".//oms"
+    instance_key: "alias-name"
+    fallback_id_key: "oms-name"  # Fallback if alias-name is empty
+    instance_name_key: "alias-name"
+    description_key: "oms-name"
+    properties:
+      - grid-mode
+    metrics:
+      - name: admin_status
+        xpath: "admin-status"
+        help: "Administrative status (0=down, 1=up)"
+        string_map:
+          down: 0
+          up: 1
+      - name: oper_status
+        xpath: "oper-status"
+        help: "Operational status (0=down, 1=up)"
+        string_map:
+          down: 0
+          up: 1
+      - name: rx_optical_power
+        xpath: "rx-optical-power"
+        help: "Received optical power in dBm"
+      - name: tx_optical_power
+        xpath: "tx-optical-power"
+        help: "Transmitted optical power in dBm"
+      - name: in_optical_power_instant
+        xpath: "statistics/in-optical-power/instant"
+        help: "Instantaneous input optical power in dBm"
+      - name: out_optical_power_instant
+        xpath: "statistics/out-optical-power/instant"
+        help: "Instantaneous output optical power in dBm"
+      - name: statistics_last_clear
+        xpath: "statistics/last-clear"
+        help: "Unix timestamp when statistics were last cleared"
+        parse_timestamp: true
+
+  # OSC - Optical Supervisory Channel
+  osc:
+    xpath: ".//osc"
+    instance_key: "alias-name"
+    fallback_id_key: "osc-name"  # Fallback if alias-name is empty
+    instance_name_key: "alias-name"
+    description_key: "osc-name"
+    properties:
+      - osc-mode
+    metrics:
+      - name: admin_status
+        xpath: "admin-status"
+        help: "Administrative status (0=down, 1=up)"
+        string_map:
+          down: 0
+          up: 1
+      - name: oper_status
+        xpath: "oper-status"
+        help: "Operational status (0=down, 1=up)"
+        string_map:
+          down: 0
+          up: 1
+      - name: osc_wavelength
+        xpath: "osc-wavelength"
+        help: "OSC wavelength in nm"
+      - name: osc_data_communication
+        xpath: "osc-data-communication"
+        help: "OSC data communication enabled (0=disabled, 1=enabled)"
+        string_map:
+          disabled: 0
+          enabled: 1
+      - name: rx_optical_power
+        xpath: "rx-optical-power"
+        help: "Received optical power in dBm"
+      - name: tx_optical_power
+        xpath: "tx-optical-power"
+        help: "Transmitted optical power in dBm"
+      - name: in_optical_power_instant
+        xpath: "statistics/in-optical-power/instant"
+        help: "Instantaneous input optical power in dBm"
+      - name: out_optical_power_instant
+        xpath: "statistics/out-optical-power/instant"
+        help: "Instantaneous output optical power in dBm"
+      - name: statistics_last_clear
+        xpath: "statistics/last-clear"
+        help: "Unix timestamp when statistics were last cleared"
+        parse_timestamp: true
+
+  # GOPT - Generic Optical Protection Transport
+  gopt:
+    xpath: ".//gopt"
+    instance_key: "alias-name"
+    fallback_id_key: "gopt-name"  # Fallback if alias-name is empty
+    instance_name_key: "alias-name"
+    description_key: "gopt-name"
+    properties: []
+    metrics:
+      - name: admin_status
+        xpath: "admin-status"
+        help: "Administrative status (0=down, 1=up)"
+        string_map:
+          down: 0
+          up: 1
+      - name: oper_status
+        xpath: "oper-status"
+        help: "Operational status (0=down, 1=up)"
+        string_map:
+          down: 0
+          up: 1
+      - name: rx_optical_power
+        xpath: "rx-optical-power"
+        help: "Received optical power in dBm"
+      - name: tx_optical_power
+        xpath: "tx-optical-power"
+        help: "Transmitted optical power in dBm"
+      - name: in_optical_power_instant
+        xpath: "statistics/in-optical-power/instant"
+        help: "Instantaneous input optical power in dBm"
+      - name: out_optical_power_instant
+        xpath: "statistics/out-optical-power/instant"
+        help: "Instantaneous output optical power in dBm"
+      - name: loss_tx
+        xpath: "statistics/loss-tx"
+        help: "TX loss count"
+      - name: loss_rx
+        xpath: "statistics/loss-rx"
+        help: "RX loss count"
+      - name: protection_switch_duration
+        xpath: "statistics/protection-switch-duration"
+        help: "Total protection switch duration"
+      - name: protection_switch_count
+        xpath: "statistics/protection-switch-count"
+        help: "Protection switch count"
+      - name: statistics_last_clear
+        xpath: "statistics/last-clear"
+        help: "Unix timestamp when statistics were last cleared"
+        parse_timestamp: true
+
+# Common string maps referenced by metrics
+string_maps:
+  status:
+    down: 0
+    up: 1
+  enabled:
+    disabled: 0
+    enabled: 1
+  active:
+    Inactive: 0
+    Active: 1
+  swload_state:
+    Inactive: 0
+    Active: 1

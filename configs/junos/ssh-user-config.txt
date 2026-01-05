@@ -1,0 +1,136 @@
+# =============================================================================
+# Junos SSH Read-Only User Configuration for LogicMonitor
+# =============================================================================
+#
+# This configuration creates a read-only SSH user for LogicMonitor's
+# ConfigSource to backup device configurations.
+#
+# Variables to replace:
+#   <SSH-PASSWORD>    - Password for the SSH user
+#   <SSH-PUBLIC-KEY>  - (Optional) SSH public key for key-based auth
+#   <COLLECTOR-IP>    - LogicMonitor collector IP address (for access restriction)
+#
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Custom Login Class (Read-Only with Config View)
+# -----------------------------------------------------------------------------
+# Create a custom class with permissions needed for config backup
+set system login class lm-config-reader permissions view
+set system login class lm-config-reader permissions view-configuration
+set system login class lm-config-reader permissions network
+set system login class lm-config-reader permissions trace
+set system login class lm-config-reader permissions access
+set system login class lm-config-reader idle-timeout 5
+
+# Deny all operational commands except specific read-only ones
+set system login class lm-config-reader allow-commands "(show|ping|traceroute)"
+set system login class lm-config-reader deny-commands ".*"
+set system login class lm-config-reader deny-configuration ".*"
+
+# -----------------------------------------------------------------------------
+# Alternative: Use Built-in Read-Only Class
+# -----------------------------------------------------------------------------
+# If you prefer the built-in class (less restrictive):
+# set system login user lm-config class read-only
+
+# -----------------------------------------------------------------------------
+# User Account Configuration
+# -----------------------------------------------------------------------------
+# Create the LogicMonitor config backup user
+set system login user lm-config full-name "LogicMonitor Config Backup"
+set system login user lm-config uid 2001
+set system login user lm-config class lm-config-reader
+
+# Option 1: Password authentication
+set system login user lm-config authentication plain-text-password
+# (You will be prompted to enter the password interactively)
+
+# Option 2: Encrypted password (generate with: openssl passwd -6 'password')
+# set system login user lm-config authentication encrypted-password "<ENCRYPTED-PASSWORD-HASH>"
+
+# Option 3: SSH key authentication (recommended for security)
+# set system login user lm-config authentication ssh-rsa "<SSH-PUBLIC-KEY>"
+
+# -----------------------------------------------------------------------------
+# SSH Service Configuration
+# -----------------------------------------------------------------------------
+# Ensure SSH is enabled
+set system services ssh protocol-version v2
+set system services ssh max-sessions-per-connection 5
+set system services ssh connection-limit 10
+set system services ssh rate-limit 5
+
+# Restrict SSH access to specific source IPs (security best practice)
+set system services ssh root-login deny
+
+# -----------------------------------------------------------------------------
+# Firewall Filter for SSH Access Control (Optional but Recommended)
+# -----------------------------------------------------------------------------
+# Create a firewall filter to restrict SSH access
+set firewall family inet filter PROTECT-RE term ALLOW-LM-SSH from source-address <COLLECTOR-IP>/32
+set firewall family inet filter PROTECT-RE term ALLOW-LM-SSH from protocol tcp
+set firewall family inet filter PROTECT-RE term ALLOW-LM-SSH from destination-port ssh
+set firewall family inet filter PROTECT-RE term ALLOW-LM-SSH then accept
+
+# Apply to loopback interface (protects routing engine)
+# set interfaces lo0 unit 0 family inet filter input PROTECT-RE
+
+# -----------------------------------------------------------------------------
+# Session Timeout and Security Settings
+# -----------------------------------------------------------------------------
+set system login retry-options tries-before-disconnect 3
+set system login retry-options backoff-threshold 1
+set system login retry-options backoff-factor 5
+set system login retry-options minimum-time 30
+
+# =============================================================================
+# LogicMonitor Device Properties
+# =============================================================================
+# Set these properties on the device in LogicMonitor:
+#
+#   ssh.user = lm-config
+#   ssh.pass = <SSH-PASSWORD>
+#   ssh.port = 22 (default)
+#
+# OR for ConfigSource specifically:
+#   config.user = lm-config
+#   config.pass = <SSH-PASSWORD>
+#
+# =============================================================================
+
+# =============================================================================
+# Verification Commands (run after commit)
+# =============================================================================
+# show system login user lm-config
+# show system login class lm-config-reader
+# show system services ssh
+#
+# Test from collector:
+# ssh lm-config@<DEVICE-IP> "show version"
+# ssh lm-config@<DEVICE-IP> "show configuration"
+# =============================================================================
+
+# =============================================================================
+# ConfigSource Commands (what LogicMonitor runs)
+# =============================================================================
+# The Juniper_JUNOS ConfigSource typically runs:
+#   show configuration | display set
+#   show configuration | display xml
+#   show version
+#   show chassis hardware
+#
+# Ensure the lm-config user has permissions for these commands.
+# =============================================================================
+
+# =============================================================================
+# Rollback Commands (if issues occur)
+# =============================================================================
+# To remove the user:
+#   delete system login user lm-config
+#   delete system login class lm-config-reader
+#
+# To revert to previous configuration:
+#   rollback 1
+#   commit
+# =============================================================================

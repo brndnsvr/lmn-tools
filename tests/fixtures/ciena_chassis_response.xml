@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Ciena WaveServer Chassis NETCONF Response Fixture -->
+<data xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <waveserver-chassis xmlns="urn:ciena:params:xml:ns:yang:ciena-ws:ciena-waveserver-chassis">
+    <identification>
+      <type>Waveserver Ai</type>
+      <model>WS-AI-2</model>
+      <description>Ciena WaveServer Ai Platform</description>
+      <serial-number>CIENA12345678</serial-number>
+      <part-number>170-0001-900</part-number>
+      <revision>A</revision>
+      <manufacture-date>2023-06-15</manufacture-date>
+    </identification>
+  </waveserver-chassis>
+  <waveserver-software xmlns="urn:ciena:params:xml:ns:yang:ciena-ws:ciena-waveserver-software">
+    <status>
+      <software-operational-state>normal</software-operational-state>
+      <active-version>waveserver-1.9.0</active-version>
+    </status>
+  </waveserver-software>
+</data>

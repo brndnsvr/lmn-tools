@@ -1,0 +1,152 @@
+{
+  "_version": "2.24.0",
+  "_changelog": "v2.24.0: Include customer ID in wildValue and displayName for dashboard filtering",
+  "name": "Juniper_EVPN_VXLAN",
+  "displayName": "EVPN VXLAN",
+  "description": "Monitors EVPN-VXLAN fabric health on Juniper QFX switches including VNI status, MAC tables, and customer mapping.",
+  "appliesTo": "hasCategory(\"Juniper\") && system.sysinfo =~ \"QFX\"",
+  "technology": "Requires SSH access. Discovers VNIs from configuration and monitors per-VLAN MAC counts.",
+  "tags": "juniper,evpn,vxlan,qfx,fabric,data-center",
+  "group": "",
+  "hasMultiInstances": true,
+  "useWildValueAsUUID": false,
+  "collectInterval": 300,
+  "collectMethod": "script",
+  "collectorAttribute": {
+    "name": "script",
+    "groovyScript": "// EVPN-VXLAN Collection Script\n// v2.22.0: Use direct show commands (no cli wrapper)\nimport com.jcraft.jsch.JSch\nimport com.santaba.agent.util.Settings\n\ndef host = hostProps.get('system.hostname')\ndef user = hostProps.get('ssh.user')\ndef pass = hostProps.get('ssh.pass')\ndef port = hostProps.get('ssh.port')?.toInteger() ?: 22\ndef timeout = 30000\n\ndef vni = instanceProps.get('wildvalue')\ndef vlanName = instanceProps.get('auto.vlan.name')\n\nif (!user) { println 'Error: ssh.user not set'; return 1 }\nif (!host) { println 'Error: system.hostname not set'; return 1 }\nif (!vlanName) { println 'Error: auto.vlan.name not set'; return 1 }\n\ndef macCount = 0\ndef status = 1\n\ndef runCommand(session, cmd) {\n    def channel = session.openChannel('exec')\n    channel.setCommand(cmd)\n    def output = channel.getInputStream()\n    channel.connect()\n    def result = output.text\n    channel.disconnect()\n    return result\n}\n\ntry {\n    def jsch = new JSch()\n    def session = jsch.getSession(user, host, port)\n    session.setConfig('StrictHostKeyChecking', 'no')\n    def authMethod = Settings.getSetting(Settings.SSH_PREFEREDAUTHENTICATION, Settings.DEFAULT_SSH_PREFEREDAUTHENTICATION)\n    session.setConfig('PreferredAuthentications', authMethod)\n    session.setTimeout(timeout)\n    if (pass) { session.setPassword(pass) }\n    session.connect()\n    \n    // Get MAC count for this VLAN - direct command (no cli wrapper)\n    def output = runCommand(session, \"show ethernet-switching table count vlan ${vlanName} | no-more\")\n    \n    session.disconnect()\n    \n    // Parse MAC count\n    def countMatch = output =~ /MAC address count.*?:\\s*(\\d+)/\n    if (countMatch.find()) {\n        macCount = countMatch.group(1).toInteger()\n    }\n    \n} catch (Exception e) {\n    println 'Error: ' + e.message\n    status = 0\n}\n\ndef macLimit = hostProps.get('evpn.mac.limit')?.toInteger() ?: 512000\ndef macUtil = macLimit > 0 ? ((macCount / macLimit) * 100).round(2) : 0\n\nprintln \"Status=${status}\"\nprintln \"MACCount=${macCount}\"\nprintln \"MACUtilization=${macUtil}\"\n\nreturn 0",
+    "scriptType": "embed",
+    "linuxCmdline": "",
+    "linuxScript": "",
+    "windowsCmdline": "",
+    "windowsScript": ""
+  },
+  "enableAutoDiscovery": true,
+  "autoDiscoveryConfig": {
+    "persistentInstance": true,
+    "disableInstance": false,
+    "deleteInactiveInstance": true,
+    "showDeletedInstanceDays": 0,
+    "instanceAutoGroupMethod": "none",
+    "instanceAutoGroupMethodParams": "",
+    "scheduleInterval": 60,
+    "method": {
+      "name": "ad_script",
+      "type": "embeded",
+      "groovyScript": "// EVPN-VXLAN Discovery Script\n// v2.22.0: Use direct show commands (user shell is CLI)\nimport com.jcraft.jsch.JSch\nimport com.santaba.agent.util.Settings\n\ndef host = hostProps.get('system.hostname')\ndef user = hostProps.get('ssh.user')\ndef pass = hostProps.get('ssh.pass')\ndef port = hostProps.get('ssh.port')?.toInteger() ?: 22\ndef timeout = 30000\n\nif (!user) { println 'Error: ssh.user not set'; return 1 }\nif (!host) { println 'Error: system.hostname not set'; return 1 }\n\ndef runCommand(session, cmd) {\n    def channel = session.openChannel('exec')\n    channel.setCommand(cmd)\n    def output = channel.getInputStream()\n    channel.connect()\n    def result = output.text\n    channel.disconnect()\n    return result\n}\n\ntry {\n    def jsch = new JSch()\n    def session = jsch.getSession(user, host, port)\n    session.setConfig('StrictHostKeyChecking', 'no')\n    def authMethod = Settings.getSetting(Settings.SSH_PREFEREDAUTHENTICATION, Settings.DEFAULT_SSH_PREFEREDAUTHENTICATION)\n    session.setConfig('PreferredAuthentications', authMethod)\n    session.setTimeout(timeout)\n    if (pass) { session.setPassword(pass) }\n    session.connect()\n    \n    // Get VLAN VXLAN config - direct show command (no cli wrapper)\n    def output = runCommand(session, 'show configuration vlans | display set | match vxlan | no-more')\n    \n    session.disconnect()\n    \n    // Parse VNI configuration\n    def foundCount = 0\n    output.eachLine { line ->\n        def match = line =~ /set vlans (\\S+) vxlan vni (\\d+)/\n        if (match.find()) {\n            def vlanName = match.group(1)\n            def vni = match.group(2)\n            def customerMatch = vlanName =~ /VLAN_(\\d+)_(\\d+)/\n            def customerId = customerMatch.find() ? customerMatch.group(1) : 'unknown'\n            def vlanId = customerMatch ? customerMatch.group(2) : vni\n            println \"${customerId}-${vni}##${customerId}-VNI-${vni}##${vlanName} (Customer: ${customerId})####auto.vni.id=${vni}&auto.customer.id=${customerId}&auto.vlan.name=${vlanName}&auto.vlan.id=${vlanId}\"\n            foundCount++\n        }\n    }\n    \n    if (foundCount == 0) {\n        def clean = output.replaceAll('[\\n\\r]+', ' | ').take(150)\n        println \"DEBUG##No-VNIs-Found##${clean}####auto.raw.len=${output.length()}\"\n    }\n    \n} catch (Exception e) {\n    println \"Error: ${e.class.simpleName} - ${e.message}\"\n    return 1\n}\n\nreturn 0",
+      "linuxCmdline": "",
+      "linuxScript": "",
+      "windowsCmdline": "",
+      "windowsScript": ""
+    },
+    "filters": []
+  },
+  "dataPoints": [
+    {
+      "name": "Status",
+      "description": "VNI operational status (1=up, 0=down)",
+      "alertTransitionInterval": 0,
+      "alertClearTransitionInterval": 0,
+      "type": 2,
+      "dataType": 7,
+      "maxDigits": 4,
+      "postProcessorMethod": "namevalue",
+      "postProcessorParam": "Status",
+      "rawDataFieldName": "output",
+      "maxValue": "",
+      "minValue": "",
+      "userParam1": "",
+      "userParam2": "",
+      "userParam3": "",
+      "alertForNoData": 1,
+      "alertExpr": "!= 1",
+      "alertExprNote": "VNI is down",
+      "alertSubject": "",
+      "alertBody": ""
+    },
+    {
+      "name": "MACCount",
+      "description": "Number of MAC addresses learned for this VNI/VLAN",
+      "alertTransitionInterval": 0,
+      "alertClearTransitionInterval": 0,
+      "type": 2,
+      "dataType": 7,
+      "maxDigits": 4,
+      "postProcessorMethod": "namevalue",
+      "postProcessorParam": "MACCount",
+      "rawDataFieldName": "output",
+      "maxValue": "",
+      "minValue": "",
+      "userParam1": "",
+      "userParam2": "",
+      "userParam3": "",
+      "alertForNoData": 1,
+      "alertExpr": "",
+      "alertExprNote": "",
+      "alertSubject": "",
+      "alertBody": ""
+    },
+    {
+      "name": "MACUtilization",
+      "description": "MAC table utilization percentage",
+      "alertTransitionInterval": 0,
+      "alertClearTransitionInterval": 0,
+      "type": 2,
+      "dataType": 7,
+      "maxDigits": 4,
+      "postProcessorMethod": "namevalue",
+      "postProcessorParam": "MACUtilization",
+      "rawDataFieldName": "output",
+      "maxValue": "100",
+      "minValue": "0",
+      "userParam1": "",
+      "userParam2": "",
+      "userParam3": "",
+      "alertForNoData": 1,
+      "alertExpr": "> 80 90",
+      "alertExprNote": "MAC table utilization high",
+      "alertSubject": "",
+      "alertBody": ""
+    }
+  ],
+  "graphs": [
+    {
+      "name": "MAC Table",
+      "title": "MAC Table",
+      "verticalLabel": "Count",
+      "rigid": false,
+      "maxValue": "NaN",
+      "minValue": "0",
+      "displayPrio": 1,
+      "timescale": "1day",
+      "base1024": false,
+      "dataPoints": [
+        {
+          "name": "MACCount",
+          "consolidateFunc": 1,
+          "aggregateMethod": "sum",
+          "aggregateFunc": "sum"
+        }
+      ]
+    },
+    {
+      "name": "MAC Utilization",
+      "title": "MAC Utilization",
+      "verticalLabel": "%",
+      "rigid": false,
+      "maxValue": "100",
+      "minValue": "0",
+      "displayPrio": 2,
+      "timescale": "1day",
+      "base1024": false,
+      "dataPoints": [
+        {
+          "name": "MACUtilization",
+          "consolidateFunc": 1,
+          "aggregateMethod": "max",
+          "aggregateFunc": "max"
+        }
+      ]
+    }
+  ]
+}

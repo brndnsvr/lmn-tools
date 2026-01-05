@@ -1,0 +1,196 @@
+# Ciena WaveServer Optical Device Configuration
+# Defines metrics and instance discovery for Ciena WaveServer devices via NETCONF
+#
+# This configuration is used by:
+#   - ciena_discover.py (Active Discovery)
+#   - ciena_collect.py (BATCHSCRIPT collection)
+#
+# DataSource: Ciena_WaveServer_Interfaces (Multi-instance)
+# Contains PTPs (Physical Termination Points) and Ports
+
+# Device identification
+device_type: ciena
+vendor: Ciena
+
+# Namespace definitions for XPath queries
+namespaces:
+  nc: "urn:ietf:params:xml:ns:netconf:base:1.0"
+  ws-ptp: "urn:ciena:params:xml:ns:yang:ciena-ws:ciena-waveserver-ptp"
+  ws-ptp-modem: "urn:ciena:params:xml:ns:yang:ciena-ws:ciena-waveserver-ptp-modem"
+  ws-port: "urn:ciena:params:xml:ns:yang:ciena-ws:ciena-waveserver-port"
+
+# NETCONF filter to send to device
+# Request PTP and Port data for interface monitoring
+netconf_filter: |
+  <waveserver-ptps xmlns="urn:ciena:params:xml:ns:yang:ciena-ws:ciena-waveserver-ptp">
+    <ptps>
+      <ptp-id/>
+      <id>
+        <name/>
+      </id>
+      <state>
+        <admin-state/>
+        <operational-state/>
+      </state>
+      <properties>
+        <xcvr-type/>
+        <type/>
+        <forward-error-correction/>
+        <transmitter>
+          <state/>
+          <actual-state/>
+          <wavelength>
+            <actual/>
+          </wavelength>
+          <frequency xmlns="urn:ciena:params:xml:ns:yang:ciena-ws:ciena-waveserver-ptp-modem">
+            <actual/>
+          </frequency>
+          <power xmlns="urn:ciena:params:xml:ns:yang:ciena-ws:ciena-waveserver-ptp-modem">
+            <actual/>
+          </power>
+        </transmitter>
+        <span xmlns="urn:ciena:params:xml:ns:yang:ciena-ws:ciena-waveserver-ptp-cmd">
+          <tx-span-loss/>
+          <rx-span-loss/>
+          <optical-return-loss/>
+        </span>
+        <modem xmlns="urn:ciena:params:xml:ns:yang:ciena-ws:ciena-waveserver-ptp-modem">
+          <baud-rate/>
+          <actual-reach/>
+          <estimated-fiber-length/>
+        </modem>
+      </properties>
+    </ptps>
+  </waveserver-ptps>
+  <waveserver-ports xmlns="urn:ciena:params:xml:ns:yang:ciena-ws:ciena-waveserver-port">
+    <ports>
+      <port-id/>
+      <id>
+        <name/>
+        <label/>
+        <type/>
+        <rate/>
+        <speed/>
+        <interface-type/>
+      </id>
+      <state>
+        <admin-state/>
+        <operational-state/>
+        <operational-state-duration/>
+      </state>
+    </ports>
+  </waveserver-ports>
+
+# Interface types to discover and collect
+interfaces:
+  # PTP - Physical Termination Points (line-side optical interfaces)
+  ptp:
+    xpath: ".//ptps"
+    instance_key: "ptp-id"
+    instance_name_key: "ptp-id"
+    fallback_id_key: "id/name"
+    description_key: "id/name"
+    properties:
+      - xcvr-type
+      - type
+      - forward-error-correction
+    metrics:
+      # Tier 1 - Critical operational metrics
+      - name: admin_status
+        xpath: "state/admin-state"
+        help: "Administrative status (0=disabled, 1=enabled)"
+        string_map:
+          disabled: 0
+          enabled: 1
+      - name: oper_status
+        xpath: "state/operational-state"
+        help: "Operational status (0=down, 1=up)"
+        string_map:
+          down: 0
+          up: 1
+      - name: transmitter_power
+        xpath: "properties/transmitter/power/actual"
+        help: "Transmitter output power in dBm"
+
+      # Tier 2 - Important operational metrics
+      - name: transmitter_state
+        xpath: "properties/transmitter/state"
+        help: "Transmitter state (0=disabled, 1=enabled)"
+        string_map:
+          disabled: 0
+          enabled: 1
+      - name: transmitter_actual_state
+        xpath: "properties/transmitter/actual-state"
+        help: "Transmitter actual state (0=disabled, 1=enabled)"
+        string_map:
+          disabled: 0
+          enabled: 1
+      - name: transmitter_wavelength
+        xpath: "properties/transmitter/wavelength/actual"
+        help: "Transmitter wavelength in nm"
+      - name: transmitter_frequency
+        xpath: "properties/transmitter/frequency/actual"
+        help: "Transmitter frequency in THz"
+      - name: baud_rate
+        xpath: "properties/modem/baud-rate"
+        help: "Modem baud rate"
+      - name: actual_reach
+        xpath: "properties/modem/actual-reach"
+        help: "Modem actual reach"
+      - name: estimated_fiber_length
+        xpath: "properties/modem/estimated-fiber-length"
+        help: "Estimated fiber length in km"
+
+      # Span metrics
+      - name: tx_span_loss
+        xpath: "properties/span/tx-span-loss"
+        help: "TX span loss in dB"
+      - name: rx_span_loss
+        xpath: "properties/span/rx-span-loss"
+        help: "RX span loss in dB"
+      - name: optical_return_loss
+        xpath: "properties/span/optical-return-loss"
+        help: "Optical return loss in dB"
+
+  # Port - Client-side ports
+  port:
+    xpath: ".//ports"
+    instance_key: "port-id"
+    instance_name_key: "id/label"
+    fallback_id_key: "id/name"
+    description_key: "id/name"
+    properties:
+      - id/type
+      - id/rate
+      - id/interface-type
+    metrics:
+      # Tier 1 - Critical operational metrics
+      - name: admin_status
+        xpath: "state/admin-state"
+        help: "Administrative status (0=disabled, 1=enabled)"
+        string_map:
+          disabled: 0
+          enabled: 1
+      - name: oper_status
+        xpath: "state/operational-state"
+        help: "Operational status (0=down, 1=up)"
+        string_map:
+          down: 0
+          up: 1
+
+      # Tier 2 - Important operational metrics
+      - name: speed
+        xpath: "id/speed"
+        help: "Port speed"
+      - name: oper_state_duration
+        xpath: "state/operational-state-duration"
+        help: "Duration in current operational state in seconds"
+
+# Common string maps referenced by metrics
+string_maps:
+  status:
+    disabled: 0
+    enabled: 1
+  oper_state:
+    down: 0
+    up: 1

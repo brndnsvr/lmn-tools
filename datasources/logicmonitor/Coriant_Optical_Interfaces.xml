@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Coriant Optical Interfaces DataSource for LogicMonitor
+Multi-instance DataSource using BATCHSCRIPT collection
+
+Monitors OTS, OMS, OSC, and GOPT optical interfaces on Coriant devices.
+
+Required Device Properties:
+  - netconf.user: NETCONF username
+  - netconf.pass: NETCONF password
+  - netconf.port: NETCONF port (default: 830)
+-->
+<DataSource>
+  <name>Coriant_Optical_Interfaces</name>
+  <displayName>Coriant Optical Interfaces</displayName>
+  <description>Monitors optical interfaces (OTS, OMS, OSC, GOPT) on Coriant optical transport devices via NETCONF</description>
+  <group>Optical Transport</group>
+  <hasMultiInstances>true</hasMultiInstances>
+  <useWildValueAsUniqueIdentifier>true</useWildValueAsUniqueIdentifier>
+
+  <appliesTo>hasCategory("CoriantOptical") || system.sysoid == "REPLACE_WITH_OID"</appliesTo>
+
+  <!-- Active Discovery Configuration -->
+  <activeDiscovery>
+    <disableInstance>false</disableInstance>
+    <method>script</method>
+    <schedule>
+      <type>interval</type>
+      <interval>1440</interval>
+    </schedule>
+    <filters/>
+    <params>
+      <param>
+        <name>scripttype</name>
+        <value>embed</value>
+      </param>
+      <param>
+        <name>scriptgroovy</name>
+        <value><![CDATA[
+// Coriant Active Discovery Script
+// Calls the Python discovery script and outputs instances
+
+import com.santaba.agent.groovyapi.expect.Expect
+import com.santaba.agent.groovyapi.snmp.Snmp
+import com.santaba.agent.groovyapi.file.File
+
+def hostname = hostProps.get("system.hostname")
+def username = hostProps.get("netconf.user") ?: "admin"
+def password = hostProps.get("netconf.pass") ?: ""
+def port = hostProps.get("netconf.port") ?: "830"
+
+// Path to Python script - adjust based on your collector installation
+def scriptPath = "/usr/local/logicmonitor/lm-netconf-optical/scripts/coriant_discover.py"
+
+def cmd = ["python3", scriptPath, hostname, username, password, "--port", port]
+
+try {
+    def process = cmd.execute()
+    def stdout = new StringBuilder()
+    def stderr = new StringBuilder()
+    process.consumeProcessOutput(stdout, stderr)
+    process.waitForOrKill(120000)  // 2 minute timeout
+
+    if (process.exitValue() == 0) {
+        // Output discovery results (already in LM format)
+        println stdout.toString()
+    } else {
+        println "Discovery failed: ${stderr.toString()}"
+    }
+} catch (Exception e) {
+    println "Error: ${e.message}"
+}
+
+return 0
+]]></value>
+      </param>
+    </params>
+  </activeDiscovery>
+
+  <!-- Collection Configuration -->
+  <dataPoints>
+    <!-- OTS Metrics -->
+    <dataPoint>
+      <name>admin_status</name>
+      <description>Administrative status (0=down, 1=up)</description>
+      <dataType>7</dataType>
+      <type>2</type>
+      <alertExpr></alertExpr>
+      <alertTransitionInterval>0</alertTransitionInterval>
+      <maxDigits>4</maxDigits>
+    </dataPoint>
+    <dataPoint>
+      <name>oper_status</name>
+      <description>Operational status (0=down, 1=up)</description>
+      <dataType>7</dataType>
+      <type>2</type>
+      <alertExpr>= 0 0 0</alertExpr>
+      <alertExprNote>Alert when interface is down</alertExprNote>
+      <alertTransitionInterval>3</alertTransitionInterval>
+      <maxDigits>4</maxDigits>
+    </dataPoint>
+    <dataPoint>
+      <name>rx_optical_power</name>
+      <description>Received optical power in dBm</description>
+      <dataType>7</dataType>
+      <type>2</type>
+      <alertExpr></alertExpr>
+      <maxDigits>4</maxDigits>
+    </dataPoint>
+    <dataPoint>
+      <name>tx_optical_power</name>
+      <description>Transmitted optical power in dBm</description>
+      <dataType>7</dataType>
+      <type>2</type>
+      <alertExpr></alertExpr>
+      <maxDigits>4</maxDigits>
+    </dataPoint>
+    <dataPoint>
+      <name>measured_span_loss</name>
+      <description>Measured fiber span loss in dB</description>
+      <dataType>7</dataType>
+      <type>2</type>
+      <alertExpr></alertExpr>
+      <maxDigits>4</maxDigits>
+    </dataPoint>
+    <dataPoint>
+      <name>in_optical_power_instant</name>
+      <description>Instantaneous input optical power in dBm</description>
+      <dataType>7</dataType>
+      <type>2</type>
+      <alertExpr></alertExpr>
+      <maxDigits>4</maxDigits>
+    </dataPoint>
+    <dataPoint>
+      <name>out_optical_power_instant</name>
+      <description>Instantaneous output optical power in dBm</description>
+      <dataType>7</dataType>
+      <type>2</type>
+      <alertExpr></alertExpr>
+      <maxDigits>4</maxDigits>
+    </dataPoint>
+  </dataPoints>
+
+  <collectMethod>batchscript</collectMethod>
+  <collectInterval>300</collectInterval>
+
+  <collectScript><![CDATA[
+// Coriant BATCHSCRIPT Collection Script
+// Calls the Python collection script and outputs metrics
+
+import com.santaba.agent.groovyapi.expect.Expect
+import com.santaba.agent.groovyapi.snmp.Snmp
+import com.santaba.agent.groovyapi.file.File
+
+def hostname = hostProps.get("system.hostname")
+def username = hostProps.get("netconf.user") ?: "admin"
+def password = hostProps.get("netconf.pass") ?: ""
+def port = hostProps.get("netconf.port") ?: "830"
+
+// Path to Python script - adjust based on your collector installation
+def scriptPath = "/usr/local/logicmonitor/lm-netconf-optical/scripts/coriant_collect.py"
+
+def cmd = ["python3", scriptPath, hostname, username, password, "--port", port]
+
+try {
+    def process = cmd.execute()
+    def stdout = new StringBuilder()
+    def stderr = new StringBuilder()
+    process.consumeProcessOutput(stdout, stderr)
+    process.waitForOrKill(120000)  // 2 minute timeout
+
+    if (process.exitValue() == 0) {
+        // Output collection results (already in BATCHSCRIPT format)
+        println stdout.toString()
+    } else {
+        println "Collection failed: ${stderr.toString()}"
+        return 1
+    }
+} catch (Exception e) {
+    println "Error: ${e.message}"
+    return 1
+}
+
+return 0
+]]></collectScript>
+
+  <!-- Graphs -->
+  <graphs>
+    <graph>
+      <name>Optical Power</name>
+      <title>Optical Power (dBm)</title>
+      <verticalLabel>dBm</verticalLabel>
+      <lines>
+        <line>
+          <type>2</type>
+          <legend>RX Power</legend>
+          <dataPointName>rx_optical_power</dataPointName>
+          <color>blue</color>
+        </line>
+        <line>
+          <type>2</type>
+          <legend>TX Power</legend>
+          <dataPointName>tx_optical_power</dataPointName>
+          <color>green</color>
+        </line>
+      </lines>
+    </graph>
+    <graph>
+      <name>Interface Status</name>
+      <title>Interface Status</title>
+      <verticalLabel>Status</verticalLabel>
+      <rigid>true</rigid>
+      <maxValue>1</maxValue>
+      <minValue>0</minValue>
+      <lines>
+        <line>
+          <type>2</type>
+          <legend>Admin Status</legend>
+          <dataPointName>admin_status</dataPointName>
+          <color>blue</color>
+        </line>
+        <line>
+          <type>2</type>
+          <legend>Oper Status</legend>
+          <dataPointName>oper_status</dataPointName>
+          <color>green</color>
+        </line>
+      </lines>
+    </graph>
+  </graphs>
+</DataSource>

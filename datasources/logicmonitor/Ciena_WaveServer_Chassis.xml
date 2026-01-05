@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Ciena WaveServer Chassis DataSource for LogicMonitor
+Single-instance DataSource using SCRIPT collection
+
+Monitors chassis-level metrics (software state) on Ciena WaveServer devices.
+
+Required Device Properties:
+  - netconf.user: NETCONF username
+  - netconf.pass: NETCONF password
+  - netconf.port: NETCONF port (default: 830)
+-->
+<DataSource>
+  <name>Ciena_WaveServer_Chassis</name>
+  <displayName>Ciena WaveServer Chassis</displayName>
+  <description>Monitors chassis-level metrics (software state) on Ciena WaveServer optical transport devices via NETCONF</description>
+  <group>Optical Transport</group>
+  <hasMultiInstances>false</hasMultiInstances>
+
+  <appliesTo>hasCategory("CienaWaveServer") || system.sysoid == "REPLACE_WITH_OID"</appliesTo>
+
+  <!-- Collection Configuration -->
+  <dataPoints>
+    <dataPoint>
+      <name>software_oper_state</name>
+      <description>Software operational state (1=normal, 0=other)</description>
+      <dataType>7</dataType>
+      <type>2</type>
+      <alertExpr>= 0 0 0</alertExpr>
+      <alertExprNote>Alert if software state is not normal</alertExprNote>
+      <alertTransitionInterval>3</alertTransitionInterval>
+      <maxDigits>4</maxDigits>
+    </dataPoint>
+  </dataPoints>
+
+  <collectMethod>script</collectMethod>
+  <collectInterval>300</collectInterval>
+
+  <collectScript><![CDATA[
+// Ciena WaveServer Chassis SCRIPT Collection
+// Calls the Python collection script and outputs metrics
+
+import com.santaba.agent.groovyapi.expect.Expect
+import com.santaba.agent.groovyapi.snmp.Snmp
+import com.santaba.agent.groovyapi.file.File
+
+def hostname = hostProps.get("system.hostname")
+def username = hostProps.get("netconf.user") ?: "admin"
+def password = hostProps.get("netconf.pass") ?: ""
+def port = hostProps.get("netconf.port") ?: "830"
+
+// Path to Python script - adjust based on your collector installation
+def scriptPath = "/usr/local/logicmonitor/lm-netconf-optical/scripts/ciena_chassis_collect.py"
+
+def cmd = ["python3", scriptPath, hostname, username, password, "--port", port]
+
+try {
+    def process = cmd.execute()
+    def stdout = new StringBuilder()
+    def stderr = new StringBuilder()
+    process.consumeProcessOutput(stdout, stderr)
+    process.waitForOrKill(120000)  // 2 minute timeout
+
+    if (process.exitValue() == 0) {
+        // Output collection results (single-instance format: datapoint=value)
+        println stdout.toString()
+    } else {
+        println "Collection failed: ${stderr.toString()}"
+        return 1
+    }
+} catch (Exception e) {
+    println "Error: ${e.message}"
+    return 1
+}
+
+return 0
+]]></collectScript>
+
+  <!-- Graphs -->
+  <graphs>
+    <graph>
+      <name>Software State</name>
+      <title>Software Operational State</title>
+      <verticalLabel>State</verticalLabel>
+      <rigid>true</rigid>
+      <maxValue>1</maxValue>
+      <minValue>0</minValue>
+      <lines>
+        <line>
+          <type>2</type>
+          <legend>Software State</legend>
+          <dataPointName>software_oper_state</dataPointName>
+          <color>green</color>
+        </line>
+      </lines>
+    </graph>
+  </graphs>
+</DataSource>

@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Ciena WaveServer Interfaces DataSource for LogicMonitor
+Multi-instance DataSource using BATCHSCRIPT collection
+
+Monitors PTPs (Physical Termination Points) and Ports on Ciena WaveServer devices.
+
+Required Device Properties:
+  - netconf.user: NETCONF username
+  - netconf.pass: NETCONF password
+  - netconf.port: NETCONF port (default: 830)
+-->
+<DataSource>
+  <name>Ciena_WaveServer_Interfaces</name>
+  <displayName>Ciena WaveServer Interfaces</displayName>
+  <description>Monitors optical interfaces (PTPs and Ports) on Ciena WaveServer optical transport devices via NETCONF</description>
+  <group>Optical Transport</group>
+  <hasMultiInstances>true</hasMultiInstances>
+  <useWildValueAsUniqueIdentifier>true</useWildValueAsUniqueIdentifier>
+
+  <appliesTo>hasCategory("CienaWaveServer") || system.sysoid == "REPLACE_WITH_OID"</appliesTo>
+
+  <!-- Active Discovery Configuration -->
+  <activeDiscovery>
+    <disableInstance>false</disableInstance>
+    <method>script</method>
+    <schedule>
+      <type>interval</type>
+      <interval>1440</interval>
+    </schedule>
+    <filters/>
+    <params>
+      <param>
+        <name>scripttype</name>
+        <value>embed</value>
+      </param>
+      <param>
+        <name>scriptgroovy</name>
+        <value><![CDATA[
+// Ciena WaveServer Active Discovery Script
+// Calls the Python discovery script and outputs instances
+
+import com.santaba.agent.groovyapi.expect.Expect
+import com.santaba.agent.groovyapi.snmp.Snmp
+import com.santaba.agent.groovyapi.file.File
+
+def hostname = hostProps.get("system.hostname")
+def username = hostProps.get("netconf.user") ?: "admin"
+def password = hostProps.get("netconf.pass") ?: ""
+def port = hostProps.get("netconf.port") ?: "830"
+
+// Path to Python script - adjust based on your collector installation
+def scriptPath = "/usr/local/logicmonitor/lm-netconf-optical/scripts/ciena_discover.py"
+
+def cmd = ["python3", scriptPath, hostname, username, password, "--port", port]
+
+try {
+    def process = cmd.execute()
+    def stdout = new StringBuilder()
+    def stderr = new StringBuilder()
+    process.consumeProcessOutput(stdout, stderr)
+    process.waitForOrKill(120000)  // 2 minute timeout
+
+    if (process.exitValue() == 0) {
+        // Output discovery results (already in LM format)
+        println stdout.toString()
+    } else {
+        println "Discovery failed: ${stderr.toString()}"
+    }
+} catch (Exception e) {
+    println "Error: ${e.message}"
+}
+
+return 0
+]]></value>
+      </param>
+    </params>
+  </activeDiscovery>
+
+  <!-- Collection Configuration -->
+  <dataPoints>
+    <!-- PTP Metrics -->
+    <dataPoint>
+      <name>admin_status</name>
+      <description>Administrative status (0=disabled, 1=enabled)</description>
+      <dataType>7</dataType>
+      <type>2</type>
+      <alertExpr></alertExpr>
+      <alertTransitionInterval>0</alertTransitionInterval>
+      <maxDigits>4</maxDigits>
+    </dataPoint>
+    <dataPoint>
+      <name>oper_status</name>
+      <description>Operational status (0=down, 1=up)</description>
+      <dataType>7</dataType>
+      <type>2</type>
+      <alertExpr>= 0 0 0</alertExpr>
+      <alertExprNote>Alert when interface is down</alertExprNote>
+      <alertTransitionInterval>3</alertTransitionInterval>
+      <maxDigits>4</maxDigits>
+    </dataPoint>
+    <dataPoint>
+      <name>transmitter_power</name>
+      <description>Transmitter output power in dBm</description>
+      <dataType>7</dataType>
+      <type>2</type>
+      <alertExpr></alertExpr>
+      <maxDigits>4</maxDigits>
+    </dataPoint>
+    <dataPoint>
+      <name>transmitter_state</name>
+      <description>Transmitter state (0=disabled, 1=enabled)</description>
+      <dataType>7</dataType>
+      <type>2</type>
+      <alertExpr></alertExpr>
+      <maxDigits>4</maxDigits>
+    </dataPoint>
+    <dataPoint>
+      <name>transmitter_wavelength</name>
+      <description>Transmitter wavelength in nm</description>
+      <dataType>7</dataType>
+      <type>2</type>
+      <alertExpr></alertExpr>
+      <maxDigits>4</maxDigits>
+    </dataPoint>
+    <dataPoint>
+      <name>transmitter_frequency</name>
+      <description>Transmitter frequency in THz</description>
+      <dataType>7</dataType>
+      <type>2</type>
+      <alertExpr></alertExpr>
+      <maxDigits>4</maxDigits>
+    </dataPoint>
+    <dataPoint>
+      <name>baud_rate</name>
+      <description>Modem baud rate</description>
+      <dataType>7</dataType>
+      <type>2</type>
+      <alertExpr></alertExpr>
+      <maxDigits>4</maxDigits>
+    </dataPoint>
+    <dataPoint>
+      <name>tx_span_loss</name>
+      <description>TX span loss in dB</description>
+      <dataType>7</dataType>
+      <type>2</type>
+      <alertExpr></alertExpr>
+      <maxDigits>4</maxDigits>
+    </dataPoint>
+    <dataPoint>
+      <name>rx_span_loss</name>
+      <description>RX span loss in dB</description>
+      <dataType>7</dataType>
+      <type>2</type>
+      <alertExpr></alertExpr>
+      <maxDigits>4</maxDigits>
+    </dataPoint>
+    <dataPoint>
+      <name>estimated_fiber_length</name>
+      <description>Estimated fiber length in km</description>
+      <dataType>7</dataType>
+      <type>2</type>
+      <alertExpr></alertExpr>
+      <maxDigits>4</maxDigits>
+    </dataPoint>
+    <!-- Port Metrics -->
+    <dataPoint>
+      <name>speed</name>
+      <description>Port speed</description>
+      <dataType>7</dataType>
+      <type>2</type>
+      <alertExpr></alertExpr>
+      <maxDigits>4</maxDigits>
+    </dataPoint>
+    <dataPoint>
+      <name>oper_state_duration</name>
+      <description>Duration in current operational state (seconds)</description>
+      <dataType>7</dataType>
+      <type>2</type>
+      <alertExpr></alertExpr>
+      <maxDigits>4</maxDigits>
+    </dataPoint>
+  </dataPoints>
+
+  <collectMethod>batchscript</collectMethod>
+  <collectInterval>300</collectInterval>
+
+  <collectScript><![CDATA[
+// Ciena WaveServer BATCHSCRIPT Collection Script
+// Calls the Python collection script and outputs metrics
+
+import com.santaba.agent.groovyapi.expect.Expect
+import com.santaba.agent.groovyapi.snmp.Snmp
+import com.santaba.agent.groovyapi.file.File
+
+def hostname = hostProps.get("system.hostname")
+def username = hostProps.get("netconf.user") ?: "admin"
+def password = hostProps.get("netconf.pass") ?: ""
+def port = hostProps.get("netconf.port") ?: "830"
+
+// Path to Python script - adjust based on your collector installation
+def scriptPath = "/usr/local/logicmonitor/lm-netconf-optical/scripts/ciena_collect.py"
+
+def cmd = ["python3", scriptPath, hostname, username, password, "--port", port]
+
+try {
+    def process = cmd.execute()
+    def stdout = new StringBuilder()
+    def stderr = new StringBuilder()
+    process.consumeProcessOutput(stdout, stderr)
+    process.waitForOrKill(120000)  // 2 minute timeout
+
+    if (process.exitValue() == 0) {
+        // Output collection results (already in BATCHSCRIPT format)
+        println stdout.toString()
+    } else {
+        println "Collection failed: ${stderr.toString()}"
+        return 1
+    }
+} catch (Exception e) {
+    println "Error: ${e.message}"
+    return 1
+}
+
+return 0
+]]></collectScript>
+
+  <!-- Graphs -->
+  <graphs>
+    <graph>
+      <name>Transmitter Power</name>
+      <title>Transmitter Power (dBm)</title>
+      <verticalLabel>dBm</verticalLabel>
+      <lines>
+        <line>
+          <type>2</type>
+          <legend>TX Power</legend>
+          <dataPointName>transmitter_power</dataPointName>
+          <color>green</color>
+        </line>
+      </lines>
+    </graph>
+    <graph>
+      <name>Span Loss</name>
+      <title>Span Loss (dB)</title>
+      <verticalLabel>dB</verticalLabel>
+      <lines>
+        <line>
+          <type>2</type>
+          <legend>TX Span Loss</legend>
+          <dataPointName>tx_span_loss</dataPointName>
+          <color>blue</color>
+        </line>
+        <line>
+          <type>2</type>
+          <legend>RX Span Loss</legend>
+          <dataPointName>rx_span_loss</dataPointName>
+          <color>red</color>
+        </line>
+      </lines>
+    </graph>
+    <graph>
+      <name>Interface Status</name>
+      <title>Interface Status</title>
+      <verticalLabel>Status</verticalLabel>
+      <rigid>true</rigid>
+      <maxValue>1</maxValue>
+      <minValue>0</minValue>
+      <lines>
+        <line>
+          <type>2</type>
+          <legend>Admin Status</legend>
+          <dataPointName>admin_status</dataPointName>
+          <color>blue</color>
+        </line>
+        <line>
+          <type>2</type>
+          <legend>Oper Status</legend>
+          <dataPointName>oper_status</dataPointName>
+          <color>green</color>
+        </line>
+      </lines>
+    </graph>
+  </graphs>
+</DataSource>

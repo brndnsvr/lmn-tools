@@ -1,0 +1,77 @@
+# Coriant Chassis/System Configuration
+# Defines single-instance metrics for Coriant NE devices via NETCONF
+#
+# This configuration is used by:
+#   - coriant_chassis_collect.py (Single-instance collection - no discovery needed)
+#
+# These metrics are collected at the chassis/system level and do not require
+# multi-instance discovery. Use a separate DataSource with:
+#   - Collection Method: SCRIPT (not BATCHSCRIPT)
+#   - No Active Discovery needed
+#   - Single instance per device
+
+# Device identification
+device_type: coriant
+vendor: Coriant
+
+# Namespace definitions for XPath queries
+namespaces:
+  ne: "http://coriant.com/yang/os/ne"
+  nc: "urn:ietf:params:xml:ns:netconf:base:1.0"
+
+# NETCONF filter to send to device
+# Only request chassis/system level data
+netconf_filter: |
+  <ne xmlns="http://coriant.com/yang/os/ne">
+    <ne-id/>
+    <ne-name/>
+    <ne-type/>
+    <ne-location/>
+    <ne-site/>
+    <ne-altitude/>
+    <ne-vendor/>
+    <ne-temperature/>
+    <system>
+      <sw-management>
+        <softwareload>
+          <swload-id/>
+          <swload-state/>
+          <swload-version/>
+          <swload-vendor/>
+          <swload-product/>
+          <swload-label/>
+        </softwareload>
+      </sw-management>
+    </system>
+  </ne>
+
+# Chassis-level metrics (no instance prefix needed for single-instance DataSource)
+metrics:
+  # Device environmental metrics
+  - name: ne_temperature
+    xpath: ".//ne-temperature"
+    help: "Network element temperature in degrees Celsius"
+
+  - name: ne_altitude
+    xpath: ".//ne-altitude"
+    help: "Network element altitude in meters"
+
+  # Note: swload_active is handled specially in the collection script
+  # (outputs 1 if Active software load exists, 0 otherwise)
+
+# Labels/properties to include in output (for device info, not alerting)
+labels:
+  - name: ne_id
+    xpath: ".//ne-id"
+  - name: ne_name
+    xpath: ".//ne-name"
+  - name: ne_type
+    xpath: ".//ne-type"
+  - name: ne_location
+    xpath: ".//ne-location"
+  - name: ne_site
+    xpath: ".//ne-site"
+  - name: ne_vendor
+    xpath: ".//ne-vendor"
+  - name: swload_version
+    xpath: ".//softwareload[swload-state='Active']/swload-version"

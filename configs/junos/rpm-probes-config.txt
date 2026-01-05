@@ -1,0 +1,185 @@
+# =============================================================================
+# Junos RPM (Real-time Performance Monitoring) Probe Configuration
+# =============================================================================
+#
+# This configuration enables RPM probes for SLA/latency monitoring.
+# LogicMonitor's Juniper_RPM_Tests datasource collects these metrics.
+#
+# Variables to replace:
+#   <TARGET-IP>       - IP address to probe
+#   <SOURCE-IP>       - Source IP for probes (usually loopback)
+#   <PROBE-NAME>      - Descriptive name for the probe owner
+#   <TEST-NAME>       - Descriptive name for the test
+#
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Basic ICMP Ping Probe (Internet Gateway)
+# -----------------------------------------------------------------------------
+set services rpm probe internet-gateway test icmp-to-gateway target address <GATEWAY-IP>
+set services rpm probe internet-gateway test icmp-to-gateway probe-type icmp-ping
+set services rpm probe internet-gateway test icmp-to-gateway probe-count 5
+set services rpm probe internet-gateway test icmp-to-gateway probe-interval 1
+set services rpm probe internet-gateway test icmp-to-gateway test-interval 60
+set services rpm probe internet-gateway test icmp-to-gateway thresholds successive-loss 3
+set services rpm probe internet-gateway test icmp-to-gateway thresholds total-loss 4
+set services rpm probe internet-gateway test icmp-to-gateway thresholds rtt-jitter 50000
+set services rpm probe internet-gateway test icmp-to-gateway thresholds rtt-stddev 100000
+
+# -----------------------------------------------------------------------------
+# ICMP Probe to Critical Server
+# -----------------------------------------------------------------------------
+set services rpm probe critical-servers test icmp-to-dns target address <DNS-SERVER-IP>
+set services rpm probe critical-servers test icmp-to-dns probe-type icmp-ping
+set services rpm probe critical-servers test icmp-to-dns probe-count 5
+set services rpm probe critical-servers test icmp-to-dns probe-interval 1
+set services rpm probe critical-servers test icmp-to-dns test-interval 60
+set services rpm probe critical-servers test icmp-to-dns source-address <SOURCE-IP>
+
+set services rpm probe critical-servers test icmp-to-ntp target address <NTP-SERVER-IP>
+set services rpm probe critical-servers test icmp-to-ntp probe-type icmp-ping
+set services rpm probe critical-servers test icmp-to-ntp probe-count 5
+set services rpm probe critical-servers test icmp-to-ntp probe-interval 1
+set services rpm probe critical-servers test icmp-to-ntp test-interval 60
+set services rpm probe critical-servers test icmp-to-ntp source-address <SOURCE-IP>
+
+# -----------------------------------------------------------------------------
+# ICMP Timestamp Probe (for clock offset detection)
+# -----------------------------------------------------------------------------
+set services rpm probe time-sync test timestamp-check target address <NTP-SERVER-IP>
+set services rpm probe time-sync test timestamp-check probe-type icmp-timestamp
+set services rpm probe time-sync test timestamp-check probe-count 3
+set services rpm probe time-sync test timestamp-check probe-interval 2
+set services rpm probe time-sync test timestamp-check test-interval 300
+set services rpm probe time-sync test timestamp-check source-address <SOURCE-IP>
+
+# -----------------------------------------------------------------------------
+# TCP Ping Probe (for service availability)
+# -----------------------------------------------------------------------------
+set services rpm probe services test tcp-to-web target address <WEB-SERVER-IP>
+set services rpm probe services test tcp-to-web probe-type tcp-ping
+set services rpm probe services test tcp-to-web destination-port 443
+set services rpm probe services test tcp-to-web probe-count 3
+set services rpm probe services test tcp-to-web probe-interval 2
+set services rpm probe services test tcp-to-web test-interval 60
+
+set services rpm probe services test tcp-to-api target address <API-SERVER-IP>
+set services rpm probe services test tcp-to-api probe-type tcp-ping
+set services rpm probe services test tcp-to-api destination-port 8443
+set services rpm probe services test tcp-to-api probe-count 3
+set services rpm probe services test tcp-to-api probe-interval 2
+set services rpm probe services test tcp-to-api test-interval 60
+
+# -----------------------------------------------------------------------------
+# UDP Probe (for DNS availability)
+# -----------------------------------------------------------------------------
+set services rpm probe dns-servers test udp-to-dns target address <DNS-SERVER-IP>
+set services rpm probe dns-servers test udp-to-dns probe-type udp-ping
+set services rpm probe dns-servers test udp-to-dns destination-port 53
+set services rpm probe dns-servers test udp-to-dns probe-count 5
+set services rpm probe dns-servers test udp-to-dns probe-interval 1
+set services rpm probe dns-servers test udp-to-dns test-interval 60
+
+# -----------------------------------------------------------------------------
+# HTTP GET Probe (for web service latency)
+# -----------------------------------------------------------------------------
+set services rpm probe web-services test http-to-portal target address <WEB-SERVER-IP>
+set services rpm probe web-services test http-to-portal probe-type http-get
+set services rpm probe web-services test http-to-portal destination-port 80
+set services rpm probe web-services test http-to-portal http-request /health
+set services rpm probe web-services test http-to-portal probe-count 3
+set services rpm probe web-services test http-to-portal probe-interval 5
+set services rpm probe web-services test http-to-portal test-interval 60
+
+# -----------------------------------------------------------------------------
+# WAN/MPLS SLA Probe (for provider SLA verification)
+# -----------------------------------------------------------------------------
+set services rpm probe wan-sla test mpls-pe1 target address <REMOTE-PE-LOOPBACK>
+set services rpm probe wan-sla test mpls-pe1 probe-type icmp-ping
+set services rpm probe wan-sla test mpls-pe1 probe-count 10
+set services rpm probe wan-sla test mpls-pe1 probe-interval 1
+set services rpm probe wan-sla test mpls-pe1 test-interval 60
+set services rpm probe wan-sla test mpls-pe1 source-address <LOCAL-LOOPBACK>
+set services rpm probe wan-sla test mpls-pe1 dscp-code-point ef
+set services rpm probe wan-sla test mpls-pe1 thresholds successive-loss 3
+set services rpm probe wan-sla test mpls-pe1 thresholds total-loss 5
+set services rpm probe wan-sla test mpls-pe1 thresholds rtt-jitter 10000
+set services rpm probe wan-sla test mpls-pe1 thresholds egress-time 25000
+set services rpm probe wan-sla test mpls-pe1 thresholds ingress-time 25000
+
+# -----------------------------------------------------------------------------
+# Data Plane Verification (through firewall)
+# -----------------------------------------------------------------------------
+# For SRX: Verify traffic path through the data plane
+set services rpm probe data-plane test through-firewall target address <FAR-SIDE-HOST>
+set services rpm probe data-plane test through-firewall probe-type icmp-ping
+set services rpm probe data-plane test through-firewall probe-count 5
+set services rpm probe data-plane test through-firewall probe-interval 1
+set services rpm probe data-plane test through-firewall test-interval 60
+set services rpm probe data-plane test through-firewall routing-instance <VR-NAME>
+
+# -----------------------------------------------------------------------------
+# Threshold Configuration (Global)
+# -----------------------------------------------------------------------------
+# These thresholds trigger SNMP traps when exceeded
+set services rpm probe-limit 100
+set services rpm history-size standard
+
+# =============================================================================
+# LogicMonitor Datasource: Juniper_RPM_Tests
+# =============================================================================
+# The Juniper_RPM_Tests datasource collects:
+#   - jnxRpmResSumSent: Probes sent
+#   - jnxRpmResSumReceived: Probes received
+#   - jnxRpmResSumPercentLost: Packet loss %
+#   - jnxRpmResultsAvgRtt: Average RTT
+#   - jnxRpmResultsMinRtt: Minimum RTT
+#   - jnxRpmResultsMaxRtt: Maximum RTT
+#   - jnxRpmResultsJitter: Jitter
+#
+# AppliesTo: system.categories =~ "Juniper" && rpm.enabled == "true"
+# =============================================================================
+
+# =============================================================================
+# Verification Commands
+# =============================================================================
+# show services rpm probe-results
+# show services rpm probe-results detail
+# show services rpm history-results
+# show services rpm active-servers
+# show services rpm statistics
+#
+# Per-probe results:
+# show services rpm probe-results owner internet-gateway test icmp-to-gateway
+# =============================================================================
+
+# =============================================================================
+# SNMP Traps for RPM
+# =============================================================================
+# Enable SNMP traps for RPM threshold violations
+set snmp trap-group lm-traps categories services
+# =============================================================================
+
+# =============================================================================
+# Example: Complete Site Configuration
+# =============================================================================
+# # Internet gateway (primary ISP)
+# set services rpm probe internet test isp1-gateway target address 203.0.113.1
+# set services rpm probe internet test isp1-gateway probe-type icmp-ping
+# set services rpm probe internet test isp1-gateway probe-count 5
+# set services rpm probe internet test isp1-gateway test-interval 60
+# set services rpm probe internet test isp1-gateway thresholds successive-loss 3
+#
+# # DNS servers
+# set services rpm probe dns test google-dns target address 8.8.8.8
+# set services rpm probe dns test google-dns probe-type icmp-ping
+# set services rpm probe dns test google-dns probe-count 5
+# set services rpm probe dns test google-dns test-interval 60
+#
+# # Internal application
+# set services rpm probe apps test erp-server target address 10.100.50.10
+# set services rpm probe apps test erp-server probe-type tcp-ping
+# set services rpm probe apps test erp-server destination-port 443
+# set services rpm probe apps test erp-server probe-count 3
+# set services rpm probe apps test erp-server test-interval 60
+# =============================================================================

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Ciena WaveServer PTP NETCONF Response Fixture -->
+<data xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+  <waveserver-ptps xmlns="urn:ciena:params:xml:ns:yang:ciena-ws:ciena-waveserver-ptp">
+    <ptps>
+      <ptp-id>1</ptp-id>
+      <id>
+        <name>1-1</name>
+      </id>
+      <state>
+        <admin-state>enabled</admin-state>
+        <operational-state>up</operational-state>
+      </state>
+      <properties>
+        <xcvr-type>WL3n</xcvr-type>
+        <type>line</type>
+        <forward-error-correction>sdfec-15</forward-error-correction>
+        <transmitter>
+          <state>enabled</state>
+          <actual-state>enabled</actual-state>
+          <wavelength>
+            <actual>1549.32</actual>
+          </wavelength>
+          <frequency xmlns="urn:ciena:params:xml:ns:yang:ciena-ws:ciena-waveserver-ptp-modem">
+            <actual>193.4</actual>
+          </frequency>
+          <power xmlns="urn:ciena:params:xml:ns:yang:ciena-ws:ciena-waveserver-ptp-modem">
+            <actual>1.5</actual>
+          </power>
+        </transmitter>
+        <span xmlns="urn:ciena:params:xml:ns:yang:ciena-ws:ciena-waveserver-ptp-cmd">
+          <tx-span-loss>12.5</tx-span-loss>
+          <rx-span-loss>13.2</rx-span-loss>
+          <optical-return-loss>45.0</optical-return-loss>
+        </span>
+        <modem xmlns="urn:ciena:params:xml:ns:yang:ciena-ws:ciena-waveserver-ptp-modem">
+          <baud-rate>69000000000</baud-rate>
+          <actual-reach>500</actual-reach>
+          <estimated-fiber-length>75.5</estimated-fiber-length>
+        </modem>
+      </properties>
+    </ptps>
+    <ptps>
+      <ptp-id>2</ptp-id>
+      <id>
+        <name>1-2</name>
+      </id>
+      <state>
+        <admin-state>disabled</admin-state>
+        <operational-state>down</operational-state>
+      </state>
+      <properties>
+        <xcvr-type>WL3n</xcvr-type>
+        <type>line</type>
+        <forward-error-correction>sdfec-15</forward-error-correction>
+        <transmitter>
+          <state>disabled</state>
+          <actual-state>disabled</actual-state>
+          <wavelength>
+            <actual>0</actual>
+          </wavelength>
+          <frequency xmlns="urn:ciena:params:xml:ns:yang:ciena-ws:ciena-waveserver-ptp-modem">
+            <actual>0</actual>
+          </frequency>
+          <power xmlns="urn:ciena:params:xml:ns:yang:ciena-ws:ciena-waveserver-ptp-modem">
+            <actual>0</actual>
+          </power>
+        </transmitter>
+        <span xmlns="urn:ciena:params:xml:ns:yang:ciena-ws:ciena-waveserver-ptp-cmd">
+          <tx-span-loss>0</tx-span-loss>
+          <rx-span-loss>0</rx-span-loss>
+          <optical-return-loss>0</optical-return-loss>
+        </span>
+        <modem xmlns="urn:ciena:params:xml:ns:yang:ciena-ws:ciena-waveserver-ptp-modem">
+          <baud-rate>0</baud-rate>
+          <actual-reach>0</actual-reach>
+          <estimated-fiber-length>0</estimated-fiber-length>
+        </modem>
+      </properties>
+    </ptps>
+  </waveserver-ptps>
+  <waveserver-ports xmlns="urn:ciena:params:xml:ns:yang:ciena-ws:ciena-waveserver-port">
+    <ports>
+      <port-id>1</port-id>
+      <id>
+        <name>1-1</name>
+        <label>Client Port 1</label>
+        <type>ethernet</type>
+        <rate>100GE</rate>
+        <speed>100000000000</speed>
+        <interface-type>client</interface-type>
+      </id>
+      <state>
+        <admin-state>enabled</admin-state>
+        <operational-state>up</operational-state>
+        <operational-state-duration>86400</operational-state-duration>
+      </state>
+    </ports>
+    <ports>
+      <port-id>2</port-id>
+      <id>
+        <name>1-2</name>
+        <label>Client Port 2</label>
+        <type>ethernet</type>
+        <rate>100GE</rate>
+        <speed>100000000000</speed>
+        <interface-type>client</interface-type>
+      </id>
+      <state>
+        <admin-state>enabled</admin-state>
+        <operational-state>down</operational-state>
+        <operational-state-duration>3600</operational-state-duration>
+      </state>
+    </ports>
+  </waveserver-ports>
+</data>

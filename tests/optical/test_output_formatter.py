@@ -6,12 +6,12 @@ import json
 import pytest
 from io import StringIO
 
-from src.output_formatter import (
+from lmn_tools.collectors.optical.formatter import (
     OutputFormatter,
     format_discovery_output,
     format_collection_output,
 )
-from src.xml_parser import DiscoveredInstance, MetricValue
+from lmn_tools.collectors.optical.parser import DiscoveredInstance, MetricValue
 
 
 class TestDiscoveryFormatting:

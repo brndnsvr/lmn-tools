@@ -6,11 +6,11 @@ import pytest
 from pathlib import Path
 from lxml import etree
 
-from src.xml_parser import XmlParser, DiscoveredInstance, MetricValue
+from lmn_tools.collectors.optical.parser import XmlParser, DiscoveredInstance, MetricValue
 
 
 # Path to test fixtures
-FIXTURES_DIR = Path(__file__).parent / "fixtures"
+FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
 
 
 @pytest.fixture

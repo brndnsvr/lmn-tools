@@ -3,7 +3,7 @@ Tests for utility functions.
 """
 
 import pytest
-from src.utils import (
+from lmn_tools.collectors.optical.utils import (
     sanitize_instance_id,
     sanitize_metric_name,
     apply_string_map,

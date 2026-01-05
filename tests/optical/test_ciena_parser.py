@@ -6,15 +6,12 @@ import pytest
 from pathlib import Path
 from lxml import etree
 
-import sys
-sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from src.xml_parser import XmlParser, DiscoveredInstance, MetricValue
+from lmn_tools.collectors.optical.parser import XmlParser, DiscoveredInstance, MetricValue
 import yaml
 
 
 # Load fixtures
-FIXTURES_DIR = Path(__file__).parent / "fixtures"
+FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
 
 
 @pytest.fixture
@@ -34,7 +31,7 @@ def ciena_chassis_response():
 @pytest.fixture
 def ciena_config():
     """Load Ciena configuration."""
-    config_path = Path(__file__).parent.parent / "configs" / "ciena.yaml"
+    config_path = Path(__file__).parent.parent.parent / "configs" / "collectors" / "ciena.yaml"
     with open(config_path, "r") as f:
         return yaml.safe_load(f)
 
@@ -42,7 +39,7 @@ def ciena_config():
 @pytest.fixture
 def ciena_chassis_config():
     """Load Ciena chassis configuration."""
-    config_path = Path(__file__).parent.parent / "configs" / "ciena_chassis.yaml"
+    config_path = Path(__file__).parent.parent.parent / "configs" / "collectors" / "ciena_chassis.yaml"
     with open(config_path, "r") as f:
         return yaml.safe_load(f)
 
@@ -169,7 +166,7 @@ class TestCienaChassis:
         """Test software operational state extraction."""
         # For chassis metrics, we need to test the xpath extraction directly
         # since the chassis config uses a different structure
-        from src.utils import get_local_name, extract_element_text
+        from lmn_tools.collectors.optical.utils import get_local_name, extract_element_text
 
         # Find software-operational-state
         for elem in ciena_chassis_response.iter():
@@ -184,7 +181,7 @@ class TestCienaChassis:
 
     def test_active_version_label(self, ciena_chassis_response, ciena_chassis_config):
         """Test active version label extraction."""
-        from src.utils import get_local_name, extract_element_text
+        from lmn_tools.collectors.optical.utils import get_local_name, extract_element_text
 
         # Find active-version
         for elem in ciena_chassis_response.iter():

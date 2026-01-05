@@ -8,7 +8,7 @@ import pytest
 from unittest.mock import Mock, patch, MagicMock
 from lxml import etree
 
-from src.netconf_client import (
+from lmn_tools.collectors.optical.client import (
     NetconfClient,
     NetconfClientError,
     NetconfConnectionError,
@@ -77,7 +77,7 @@ class TestNetconfClientInit:
 class TestNetconfClientConnection:
     """Tests for NETCONF connection handling."""
 
-    @patch('src.netconf_client.manager')
+    @patch('ncclient.manager')
     def test_connect_success(self, mock_manager_module):
         """Test successful connection."""
         mock_manager = Mock()
@@ -95,7 +95,7 @@ class TestNetconfClientConnection:
         assert len(client.capabilities) == 2
         mock_manager_module.connect.assert_called_once()
 
-    @patch('src.netconf_client.manager')
+    @patch('ncclient.manager')
     def test_connect_auth_failure(self, mock_manager_module):
         """Test connection with authentication failure."""
         from ncclient.transport.errors import AuthenticationError
@@ -113,7 +113,7 @@ class TestNetconfClientConnection:
 
         assert "Authentication failed" in str(excinfo.value)
 
-    @patch('src.netconf_client.manager')
+    @patch('ncclient.manager')
     def test_connect_ssh_failure(self, mock_manager_module):
         """Test connection with SSH failure."""
         from ncclient.transport.errors import SSHError
@@ -131,7 +131,7 @@ class TestNetconfClientConnection:
 
         assert "SSH connection failed" in str(excinfo.value)
 
-    @patch('src.netconf_client.manager')
+    @patch('ncclient.manager')
     def test_disconnect(self, mock_manager_module):
         """Test disconnect."""
         mock_manager = Mock()
@@ -153,7 +153,7 @@ class TestNetconfClientConnection:
 class TestNetconfClientContextManager:
     """Tests for context manager functionality."""
 
-    @patch('src.netconf_client.manager')
+    @patch('ncclient.manager')
     def test_context_manager(self, mock_manager_module):
         """Test using client as context manager."""
         mock_manager = Mock()
@@ -174,7 +174,7 @@ class TestNetconfClientContextManager:
 class TestNetconfClientRPC:
     """Tests for RPC operations."""
 
-    @patch('src.netconf_client.manager')
+    @patch('ncclient.manager')
     def test_get_operation(self, mock_manager_module):
         """Test get RPC operation."""
         # Setup mock response
@@ -256,7 +256,7 @@ class TestBuildFilter:
 class TestDetectDeviceType:
     """Tests for device type detection."""
 
-    @patch('src.netconf_client.manager')
+    @patch('ncclient.manager')
     def test_detect_coriant(self, mock_manager_module):
         """Test detecting Coriant device."""
         mock_manager = Mock()
@@ -276,7 +276,7 @@ class TestDetectDeviceType:
         device_type = client.detect_device_type()
         assert device_type == "coriant"
 
-    @patch('src.netconf_client.manager')
+    @patch('ncclient.manager')
     def test_detect_ciena(self, mock_manager_module):
         """Test detecting Ciena device."""
         mock_manager = Mock()
@@ -296,7 +296,7 @@ class TestDetectDeviceType:
         device_type = client.detect_device_type()
         assert device_type == "ciena"
 
-    @patch('src.netconf_client.manager')
+    @patch('ncclient.manager')
     def test_detect_unknown(self, mock_manager_module):
         """Test detecting unknown device type."""
         mock_manager = Mock()

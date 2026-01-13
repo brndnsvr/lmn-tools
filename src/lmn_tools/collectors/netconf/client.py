@@ -113,7 +113,7 @@ class NetconfCollector(BaseCollector[NetconfCredentials]):
                 self.hostname,
                 self.credentials.port,
                 f"ncclient not installed. Install with: pip install lmn-tools[netconf]. Error: {e}",
-            )
+            ) from e
 
         # Get device-specific connection parameters
         device_params = {"name": "default"}
@@ -143,23 +143,23 @@ class NetconfCollector(BaseCollector[NetconfCredentials]):
             self._debug_print(f"Capabilities: {len(self._capabilities)}")
 
         except AuthenticationError as e:
-            raise NetconfAuthenticationError(self.hostname, self.credentials.username)
+            raise NetconfAuthenticationError(self.hostname, self.credentials.username) from e
         except SSHError as e:
             raise NetconfConnectionError(
                 self.hostname, self.credentials.port, f"SSH error: {e}"
-            )
+            ) from e
         except socket.gaierror as e:
             raise NetconfConnectionError(
                 self.hostname, self.credentials.port, f"DNS resolution failed: {e}"
-            )
-        except socket.timeout:
+            ) from e
+        except TimeoutError as e:
             raise NetconfConnectionError(
                 self.hostname, self.credentials.port, "Connection timed out"
-            )
+            ) from e
         except Exception as e:
             raise NetconfConnectionError(
                 self.hostname, self.credentials.port, str(e)
-            )
+            ) from e
 
     def disconnect(self) -> None:
         """Close NETCONF session."""
@@ -198,8 +198,8 @@ class NetconfCollector(BaseCollector[NetconfCredentials]):
 
         try:
             from lxml import etree
-        except ImportError:
-            raise NetconfRPCError("get", "lxml not installed")
+        except ImportError as e:
+            raise NetconfRPCError("get", "lxml not installed") from e
 
         try:
             # Build filter specification
@@ -226,9 +226,9 @@ class NetconfCollector(BaseCollector[NetconfCredentials]):
                 return etree.fromstring(str(response).encode())
 
         except TimeoutError as e:
-            raise NetconfTimeoutError(f"get operation timed out: {e}")
+            raise NetconfTimeoutError(f"get operation timed out: {e}") from e
         except Exception as e:
-            raise NetconfRPCError("get", str(e))
+            raise NetconfRPCError("get", str(e)) from e
 
     def get_config(
         self,
@@ -253,8 +253,8 @@ class NetconfCollector(BaseCollector[NetconfCredentials]):
 
         try:
             from lxml import etree
-        except ImportError:
-            raise NetconfRPCError("get-config", "lxml not installed")
+        except ImportError as e:
+            raise NetconfRPCError("get-config", "lxml not installed") from e
 
         try:
             filter_spec = None
@@ -276,7 +276,7 @@ class NetconfCollector(BaseCollector[NetconfCredentials]):
             return etree.fromstring(str(response).encode())
 
         except Exception as e:
-            raise NetconfRPCError("get-config", str(e))
+            raise NetconfRPCError("get-config", str(e)) from e
 
     def detect_device_type(self) -> str | None:
         """
@@ -307,7 +307,8 @@ class NetconfCollector(BaseCollector[NetconfCredentials]):
             Dictionary mapping prefixes to namespace URIs
         """
         if self.device_type and self.device_type in DEVICE_CONFIGS:
-            return DEVICE_CONFIGS[self.device_type].get("namespaces", {}).copy()
+            ns: dict[str, str] = DEVICE_CONFIGS[self.device_type].get("namespaces", {}).copy()
+            return ns
         return {}
 
     def discover(self, config: dict[str, Any]) -> list[DiscoveredInstance]:

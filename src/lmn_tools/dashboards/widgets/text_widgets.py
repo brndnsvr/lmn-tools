@@ -8,13 +8,12 @@ This module provides functions to create text-based widgets:
 """
 
 import logging
-from typing import Optional
 
-from ..lm_client import LMClient, LMAPIError
+from ..lm_client import LMAPIError, LMClient
 from .common import (
-    WidgetPosition,
-    GRID_COLUMNS,
     DEFAULT_TEXT_HEIGHT,
+    GRID_COLUMNS,
+    WidgetPosition,
 )
 
 logger = logging.getLogger(__name__)
@@ -28,7 +27,7 @@ def create_text_widget(
     position: WidgetPosition,
     width: int = GRID_COLUMNS,
     height: int = DEFAULT_TEXT_HEIGHT
-) -> Optional[int]:
+) -> int | None:
     """
     Create a text/HTML widget on a dashboard.
 
@@ -57,7 +56,7 @@ def create_text_widget(
 
     try:
         response = client.post('/dashboard/widgets', json=widget_data)
-        widget_id = response.get('data', {}).get('id') or response.get('id')
+        widget_id: int | None = response.get('data', {}).get('id') or response.get('id')
         position.next_row(height)
         logger.info(f"Created text widget: {name} -> {widget_id}")
         return widget_id
@@ -72,7 +71,7 @@ def create_header_widget(
     customer_name: str,
     ban: str,
     position: WidgetPosition
-) -> Optional[int]:
+) -> int | None:
     """
     Create the header text widget for a customer dashboard.
 
@@ -100,7 +99,7 @@ For assistance, contact: <a href="mailto:noc@example.com">noc@example.com</a>
 
     return create_text_widget(
         client, dashboard_id,
-        name=f'Customer Overview - ##BAN##',
+        name='Customer Overview - ##BAN##',
         content=content,
         position=position,
         width=GRID_COLUMNS,
@@ -113,7 +112,7 @@ def create_section_header(
     dashboard_id: int,
     title: str,
     position: WidgetPosition
-) -> Optional[int]:
+) -> int | None:
     """
     Create a section header widget.
 
@@ -146,7 +145,7 @@ def create_noc_header_widget(
     customer_name: str,
     ban: str,
     position: WidgetPosition
-) -> Optional[int]:
+) -> int | None:
     """
     Create the header text widget for a NOC dashboard.
 
@@ -177,7 +176,7 @@ It shows alerts, errors, discards, and traffic metrics for customer circuits.
 
     return create_text_widget(
         client, dashboard_id,
-        name=f'NOC Overview - ##BAN##',
+        name='NOC Overview - ##BAN##',
         content=content,
         position=position,
         width=GRID_COLUMNS,

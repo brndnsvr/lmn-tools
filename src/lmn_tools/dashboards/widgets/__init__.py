@@ -12,45 +12,29 @@ This package contains modular widget builders organized by type:
 """
 
 # Common utilities and classes
+# Alert widgets
+from .alerts import (
+    create_discard_percentage_graph,
+    create_errors_discards_table,
+    create_interface_alerts_widget,
+    create_resource_alerts_widget,
+)
 from .common import (
-    WidgetPosition,
-    GRID_COLUMNS,
-    DEFAULT_WIDGET_WIDTH,
     DEFAULT_GRAPH_HEIGHT,
     DEFAULT_TABLE_HEIGHT,
     DEFAULT_TEXT_HEIGHT,
+    DEFAULT_WIDGET_WIDTH,
+    GRID_COLUMNS,
     INTERFACE_COLORS,
+    WidgetPosition,
     get_interface_type,
-)
-
-# Text widgets
-from .text_widgets import (
-    create_text_widget,
-    create_header_widget,
-    create_section_header,
-    create_noc_header_widget,
-)
-
-# NOC widgets
-from .noc_widgets import (
-    create_interface_table_widget,
-    create_bgp_table_widget,
-)
-
-# Traffic graphs
-from .traffic_graphs import (
-    create_traffic_graph_widget,
-    create_consolidated_traffic_graph,
-    create_consolidated_packet_graph,
-    build_traffic_graphs_by_type,
-    build_traffic_graphs_by_device,
 )
 
 # DOM graphs
 from .dom_graphs import (
+    build_dom_graphs,
     create_dom_graph_widget,
     create_dom_optical_power_graph,
-    build_dom_graphs,
 )
 
 # Dynamic tables
@@ -58,47 +42,62 @@ from .dynamic_tables import (
     create_bgp_statistics_widget,
 )
 
-# Alert widgets
-from .alerts import (
-    create_resource_alerts_widget,
-    create_interface_alerts_widget,
-    create_errors_discards_table,
-    create_discard_percentage_graph,
+# NOC widgets
+from .noc_widgets import (
+    create_bgp_table_widget,
+    create_interface_table_widget,
+)
+
+# Text widgets
+from .text_widgets import (
+    create_header_widget,
+    create_noc_header_widget,
+    create_section_header,
+    create_text_widget,
+)
+
+# Traffic graphs
+from .traffic_graphs import (
+    build_traffic_graphs_by_device,
+    build_traffic_graphs_by_type,
+    create_consolidated_packet_graph,
+    create_consolidated_traffic_graph,
+    create_traffic_graph_widget,
 )
 
 __all__ = [
-    # Common
-    'WidgetPosition',
-    'GRID_COLUMNS',
-    'DEFAULT_WIDGET_WIDTH',
     'DEFAULT_GRAPH_HEIGHT',
     'DEFAULT_TABLE_HEIGHT',
     'DEFAULT_TEXT_HEIGHT',
+    'DEFAULT_WIDGET_WIDTH',
+    'GRID_COLUMNS',
     'INTERFACE_COLORS',
-    'get_interface_type',
-    # Text widgets
-    'create_text_widget',
-    'create_header_widget',
-    'create_section_header',
-    'create_noc_header_widget',
-    # NOC widgets
-    'create_interface_table_widget',
-    'create_bgp_table_widget',
-    # Traffic graphs
-    'create_traffic_graph_widget',
-    'create_consolidated_traffic_graph',
-    'create_consolidated_packet_graph',
-    'build_traffic_graphs_by_type',
+    # Common
+    'WidgetPosition',
+    'build_dom_graphs',
     'build_traffic_graphs_by_device',
+    'build_traffic_graphs_by_type',
+    # Dynamic tables
+    'create_bgp_statistics_widget',
+    'create_bgp_table_widget',
+    'create_consolidated_packet_graph',
+    'create_consolidated_traffic_graph',
+    'create_discard_percentage_graph',
     # DOM graphs
     'create_dom_graph_widget',
     'create_dom_optical_power_graph',
-    'build_dom_graphs',
-    # Dynamic tables
-    'create_bgp_statistics_widget',
+    'create_errors_discards_table',
+    'create_header_widget',
+    'create_interface_alerts_widget',
+    # NOC widgets
+    'create_interface_table_widget',
+    'create_noc_header_widget',
     # Alert widgets
     'create_resource_alerts_widget',
-    'create_interface_alerts_widget',
-    'create_errors_discards_table',
-    'create_discard_percentage_graph',
+    'create_section_header',
+    # Text widgets
+    'create_text_widget',
+    # Traffic graphs
+    'create_traffic_graph_widget',
+    'get_interface_type',
 ]

@@ -13,7 +13,6 @@ from typing import Annotated
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 # =============================================================================
 # LogicMonitor API Credentials
 # =============================================================================

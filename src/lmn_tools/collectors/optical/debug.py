@@ -7,7 +7,8 @@ and metric collection.
 
 import logging
 import sys
-from typing import Optional, List, Dict, Any
+from typing import Any
+
 from lxml import etree
 
 logger = logging.getLogger(__name__)
@@ -27,7 +28,7 @@ class DebugHelper:
     - Metric extraction
     """
 
-    def __init__(self, enabled: bool = False, output=None):
+    def __init__(self, enabled: bool = False, output: Any = None) -> None:
         """
         Initialize debug helper.
 
@@ -39,20 +40,20 @@ class DebugHelper:
         self.output = output or sys.stderr
         self._indent = 0
 
-    def _print(self, message: str, indent: int = 0):
+    def _print(self, message: str, indent: int = 0) -> None:
         """Print message with indentation."""
         if not self.enabled:
             return
         prefix = "  " * (self._indent + indent)
         print(f"DEBUG: {prefix}{message}", file=self.output)
 
-    def _print_separator(self, char: str = "=", length: int = 60):
+    def _print_separator(self, char: str = "=", length: int = 60) -> None:
         """Print a separator line."""
         if not self.enabled:
             return
         print(f"DEBUG: {char * length}", file=self.output)
 
-    def section(self, title: str):
+    def section(self, title: str) -> None:
         """Print a section header."""
         if not self.enabled:
             return
@@ -65,9 +66,9 @@ class DebugHelper:
         hostname: str,
         port: int,
         username: str,
-        device_type: Optional[str] = None,
+        device_type: str | None = None,
         timeout: int = 60
-    ):
+    ) -> None:
         """Print connection details."""
         self.section("CONNECTION INFO")
         self._print(f"Host: {hostname}")
@@ -79,10 +80,10 @@ class DebugHelper:
 
     def session_info(
         self,
-        session_id: Optional[str] = None,
-        capabilities: Optional[List[str]] = None,
-        detected_type: Optional[str] = None
-    ):
+        session_id: str | None = None,
+        capabilities: list[str] | None = None,
+        detected_type: str | None = None
+    ) -> None:
         """Print NETCONF session information."""
         self.section("SESSION INFO")
         if session_id:
@@ -98,7 +99,7 @@ class DebugHelper:
                 self._print(f"  ... and {len(capabilities) - 5} more")
         self._print("")
 
-    def filter_xml(self, filter_elem: etree._Element):
+    def filter_xml(self, filter_elem: etree._Element) -> None:
         """Print the XML filter being sent."""
         self.section("NETCONF FILTER")
         try:
@@ -117,7 +118,7 @@ class DebugHelper:
             self._print(f"Error formatting filter: {e}")
         self._print("")
 
-    def response_xml(self, data: etree._Element, max_lines: int = 100):
+    def response_xml(self, data: etree._Element, max_lines: int = 100) -> None:
         """Print the raw XML response."""
         self.section("NETCONF RESPONSE")
         try:
@@ -137,7 +138,7 @@ class DebugHelper:
             self._print(f"Error formatting response: {e}")
         self._print("")
 
-    def parsing_start(self, config: Dict[str, Any]):
+    def parsing_start(self, config: dict[str, Any]) -> None:
         """Print parsing start info."""
         self.section("PARSING CONFIG")
         interfaces = config.get('interfaces', {})
@@ -155,7 +156,7 @@ class DebugHelper:
         iface_type: str,
         xpath: str,
         found_count: int
-    ):
+    ) -> None:
         """Print interface search results."""
         if not self.enabled:
             return
@@ -168,8 +169,8 @@ class DebugHelper:
         instance_id: str,
         instance_name: str,
         iface_type: str,
-        properties: Optional[Dict[str, str]] = None
-    ):
+        properties: dict[str, str] | None = None
+    ) -> None:
         """Print discovered instance details."""
         if not self.enabled:
             return
@@ -184,10 +185,10 @@ class DebugHelper:
     def metric_extracted(
         self,
         metric_name: str,
-        raw_value: Optional[str],
-        converted_value: Optional[float],
-        instance_id: Optional[str] = None
-    ):
+        raw_value: str | None,
+        converted_value: float | None,
+        instance_id: str | None = None
+    ) -> None:
         """Print metric extraction details."""
         if not self.enabled:
             return
@@ -200,9 +201,9 @@ class DebugHelper:
 
     def discovery_summary(
         self,
-        instances: List[Any],
-        by_type: Optional[Dict[str, int]] = None
-    ):
+        instances: list[Any],
+        by_type: dict[str, int] | None = None
+    ) -> None:
         """Print discovery summary."""
         self.section("DISCOVERY SUMMARY")
         self._print(f"Total instances discovered: {len(instances)}")
@@ -213,9 +214,9 @@ class DebugHelper:
 
     def collection_summary(
         self,
-        metrics: List[Any],
-        by_instance: Optional[Dict[str, int]] = None
-    ):
+        metrics: list[Any],
+        by_instance: dict[str, int] | None = None
+    ) -> None:
         """Print collection summary."""
         self.section("COLLECTION SUMMARY")
         self._print(f"Total metrics collected: {len(metrics)}")
@@ -227,7 +228,7 @@ class DebugHelper:
                 self._print(f"  ... and {len(by_instance) - 10} more instances")
         self._print("")
 
-    def error(self, message: str, exception: Optional[Exception] = None):
+    def error(self, message: str, exception: Exception | None = None) -> None:
         """Print error information."""
         self.section("ERROR")
         self._print(f"Message: {message}")
@@ -238,7 +239,7 @@ class DebugHelper:
 
 
 # Global debug helper instance
-_debug_helper: Optional[DebugHelper] = None
+_debug_helper: DebugHelper | None = None
 
 
 def get_debug_helper(enabled: bool = False) -> DebugHelper:

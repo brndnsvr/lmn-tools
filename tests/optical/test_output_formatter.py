@@ -3,13 +3,12 @@ Tests for output formatter module.
 """
 
 import json
-import pytest
 from io import StringIO
 
 from lmn_tools.collectors.optical.formatter import (
     OutputFormatter,
-    format_discovery_output,
     format_collection_output,
+    format_discovery_output,
 )
 from lmn_tools.collectors.optical.parser import DiscoveredInstance, MetricValue
 
@@ -145,7 +144,7 @@ class TestCollectionFormatting:
         formatter = OutputFormatter()
         output = formatter.format_collection(metrics)
 
-        lines = [l for l in output.split("\n") if l]
+        lines = [line for line in output.split("\n") if line]
         assert len(lines) == 1
         assert "rx_optical_power" in lines[0]
 

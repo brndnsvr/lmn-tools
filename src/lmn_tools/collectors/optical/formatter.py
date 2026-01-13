@@ -9,8 +9,7 @@ Handles formatting of:
 
 import json
 import sys
-from typing import Dict, List, Optional, Any, TextIO
-from dataclasses import dataclass
+from typing import TextIO
 
 from .parser import DiscoveredInstance, MetricValue
 
@@ -45,7 +44,7 @@ class OutputFormatter:
 
     def __init__(
         self,
-        output: TextIO = None,
+        output: TextIO | None = None,
         use_json: bool = False,
         debug: bool = False
     ):
@@ -67,7 +66,7 @@ class OutputFormatter:
 
     def format_discovery(
         self,
-        instances: List[DiscoveredInstance]
+        instances: list[DiscoveredInstance]
     ) -> str:
         """
         Format instances for LogicMonitor Active Discovery output.
@@ -115,7 +114,7 @@ class OutputFormatter:
 
         return "##".join(parts)
 
-    def write_discovery(self, instances: List[DiscoveredInstance]) -> None:
+    def write_discovery(self, instances: list[DiscoveredInstance]) -> None:
         """
         Write discovery output to the output stream.
 
@@ -153,7 +152,7 @@ class OutputFormatter:
         """
         return f"{instance_id}.{datapoint}={value}"
 
-    def format_collection(self, metrics: List[MetricValue]) -> str:
+    def format_collection(self, metrics: list[MetricValue]) -> str:
         """
         Format metrics for line-based BATCHSCRIPT collection output.
 
@@ -174,7 +173,7 @@ class OutputFormatter:
                 lines.append(line)
         return "\n".join(lines)
 
-    def write_collection(self, metrics: List[MetricValue]) -> None:
+    def write_collection(self, metrics: list[MetricValue]) -> None:
         """
         Write collection output to the output stream.
 
@@ -196,7 +195,7 @@ class OutputFormatter:
     # Collection Output (JSON)
     # =========================================================================
 
-    def format_collection_json(self, metrics: List[MetricValue]) -> str:
+    def format_collection_json(self, metrics: list[MetricValue]) -> str:
         """
         Format metrics for JSON BATCHSCRIPT collection output.
 
@@ -219,7 +218,7 @@ class OutputFormatter:
         Returns:
             JSON-formatted string
         """
-        data: Dict[str, Dict[str, Dict[str, float]]] = {}
+        data: dict[str, dict[str, dict[str, float]]] = {}
 
         for metric in metrics:
             if not metric.instance_id or not metric.name:
@@ -235,7 +234,7 @@ class OutputFormatter:
         output = {"data": data}
         return json.dumps(output, indent=2)
 
-    def write_collection_json(self, metrics: List[MetricValue]) -> None:
+    def write_collection_json(self, metrics: list[MetricValue]) -> None:
         """
         Write JSON collection output to the output stream.
 
@@ -253,7 +252,7 @@ class OutputFormatter:
 
     def format_collection_grouped(
         self,
-        metrics_by_instance: Dict[str, List[MetricValue]]
+        metrics_by_instance: dict[str, list[MetricValue]]
     ) -> str:
         """
         Format metrics grouped by instance.
@@ -302,7 +301,7 @@ class OutputFormatter:
         print(f"ERROR: {message}", file=sys.stderr)
 
 
-def format_discovery_output(instances: List[DiscoveredInstance]) -> str:
+def format_discovery_output(instances: list[DiscoveredInstance]) -> str:
     """
     Convenience function to format discovery output.
 
@@ -317,7 +316,7 @@ def format_discovery_output(instances: List[DiscoveredInstance]) -> str:
 
 
 def format_collection_output(
-    metrics: List[MetricValue],
+    metrics: list[MetricValue],
     use_json: bool = False
 ) -> str:
     """
@@ -336,7 +335,7 @@ def format_collection_output(
     return formatter.format_collection(metrics)
 
 
-def print_discovery(instances: List[DiscoveredInstance]) -> None:
+def print_discovery(instances: list[DiscoveredInstance]) -> None:
     """
     Convenience function to print discovery output to stdout.
 
@@ -348,7 +347,7 @@ def print_discovery(instances: List[DiscoveredInstance]) -> None:
 
 
 def print_collection(
-    metrics: List[MetricValue],
+    metrics: list[MetricValue],
     use_json: bool = False
 ) -> None:
     """

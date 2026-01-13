@@ -8,18 +8,17 @@ This module provides functions to create traffic-related cgraph widgets:
 - Traffic graphs split by interface type
 """
 
-import re
 import logging
-from typing import Optional
+import re
 
-from ..lm_client import LMClient, LMAPIError
+from ..lm_client import LMAPIError, LMClient
 from ..lm_helpers import ResolvedInterface
 from .common import (
-    WidgetPosition,
-    GRID_COLUMNS,
-    DEFAULT_WIDGET_WIDTH,
     DEFAULT_GRAPH_HEIGHT,
+    DEFAULT_WIDGET_WIDTH,
+    GRID_COLUMNS,
     INTERFACE_COLORS,
+    WidgetPosition,
     get_interface_type,
 )
 from .text_widgets import create_section_header
@@ -34,7 +33,7 @@ def create_traffic_graph_widget(
     position: WidgetPosition,
     width: int = DEFAULT_WIDGET_WIDTH,
     datasource_full_name: str = 'Interfaces- (snmpIf-)'
-) -> Optional[int]:
+) -> int | None:
     """
     Create a traffic throughput graph widget for an interface.
 
@@ -107,7 +106,7 @@ def create_traffic_graph_widget(
 
     try:
         response = client.post('/dashboard/widgets', json=widget_data)
-        widget_id = response.get('data', {}).get('id') or response.get('id')
+        widget_id: int | None = response.get('data', {}).get('id') or response.get('id')
         position.next_col(width)
         logger.debug(f"Created traffic graph widget: {title} -> {widget_id}")
         return widget_id
@@ -122,8 +121,8 @@ def create_consolidated_traffic_graph(
     interfaces: list[ResolvedInterface],
     position: WidgetPosition,
     title: str = 'Bandwidth Utilization - All Interfaces',
-    interface_type_filter: str = None
-) -> Optional[int]:
+    interface_type_filter: str | None = None
+) -> int | None:
     """
     Create a consolidated bandwidth utilization graph with filtered interfaces.
 
@@ -225,7 +224,7 @@ def create_consolidated_traffic_graph(
 
     try:
         response = client.post('/dashboard/widgets', json=widget_data)
-        widget_id = response.get('data', {}).get('id') or response.get('id')
+        widget_id: int | None = response.get('data', {}).get('id') or response.get('id')
         position.next_row(DEFAULT_GRAPH_HEIGHT + 2)
         logger.info(f"Created bandwidth graph '{title}' -> {widget_id}")
         return widget_id
@@ -240,8 +239,8 @@ def create_consolidated_packet_graph(
     interfaces: list[ResolvedInterface],
     position: WidgetPosition,
     title: str = 'Packet Transmission - All Interfaces',
-    interface_type_filter: str = None
-) -> Optional[int]:
+    interface_type_filter: str | None = None
+) -> int | None:
     """
     Create a consolidated packet transmission graph with filtered interfaces.
 
@@ -336,7 +335,7 @@ def create_consolidated_packet_graph(
 
     try:
         response = client.post('/dashboard/widgets', json=widget_data)
-        widget_id = response.get('data', {}).get('id') or response.get('id')
+        widget_id: int | None = response.get('data', {}).get('id') or response.get('id')
         position.next_row(DEFAULT_GRAPH_HEIGHT + 2)
         logger.info(f"Created packet graph '{title}' -> {widget_id}")
         return widget_id

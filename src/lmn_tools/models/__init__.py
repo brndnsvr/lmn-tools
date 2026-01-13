@@ -11,17 +11,17 @@ from __future__ import annotations
 
 from lmn_tools.models.discovery import (
     DiscoveredInstance,
+    ResolutionSummary,
     ResolvedBGPPeer,
     ResolvedInterface,
-    ResolutionSummary,
 )
 from lmn_tools.models.metrics import MetricCollection, MetricValue
 
 __all__ = [
     "DiscoveredInstance",
-    "ResolvedInterface",
-    "ResolvedBGPPeer",
-    "ResolutionSummary",
-    "MetricValue",
     "MetricCollection",
+    "MetricValue",
+    "ResolutionSummary",
+    "ResolvedBGPPeer",
+    "ResolvedInterface",
 ]

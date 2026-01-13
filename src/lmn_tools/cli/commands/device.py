@@ -7,7 +7,7 @@ Provides commands for listing, viewing, and managing LogicMonitor devices.
 from __future__ import annotations
 
 import json
-from typing import Annotated, Optional
+from typing import Annotated, Any
 
 import typer
 from rich.console import Console
@@ -27,10 +27,10 @@ def _get_service() -> DeviceService:
 
 @app.command("list")
 def list_devices(
-    filter: Annotated[Optional[str], typer.Option("--filter", "-f", help="LM filter string")] = None,
-    group: Annotated[Optional[int], typer.Option("--group", "-g", help="Filter by group ID")] = None,
-    collector: Annotated[Optional[int], typer.Option("--collector", "-c", help="Filter by collector ID")] = None,
-    status: Annotated[Optional[str], typer.Option("--status", "-s", help="Filter by status: alive, dead")] = None,
+    filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
+    group: Annotated[int | None, typer.Option("--group", "-g", help="Filter by group ID")] = None,
+    collector: Annotated[int | None, typer.Option("--collector", "-c", help="Filter by collector ID")] = None,
+    status: Annotated[str | None, typer.Option("--status", "-s", help="Filter by status: alive, dead")] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
 ) -> None:
@@ -84,12 +84,13 @@ def get_device(
 
     try:
         device_id = int(identifier)
-        device = unwrap_response(svc.get(device_id))
+        device: dict[str, Any] = unwrap_response(svc.get(device_id))
     except ValueError:
-        device = svc.find_by_hostname(identifier)
-        if not device:
+        found_device = svc.find_by_hostname(identifier)
+        if not found_device:
             console.print(f"[red]Device not found: {identifier}[/red]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
+        device = found_device
         device_id = device["id"]
 
     if format == "json":
@@ -182,7 +183,7 @@ def search_devices(
 @app.command("datasources")
 def list_device_datasources(
     device_id: Annotated[int, typer.Argument(help="Device ID")],
-    filter: Annotated[Optional[str], typer.Option("--filter", "-f", help="Filter by datasource name")] = None,
+    filter: Annotated[str | None, typer.Option("--filter", "-f", help="Filter by datasource name")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """List DataSources applied to a device."""
@@ -216,7 +217,7 @@ def list_device_datasources(
 @app.command("properties")
 def list_device_properties(
     device_id: Annotated[int, typer.Argument(help="Device ID")],
-    type: Annotated[Optional[str], typer.Option("--type", "-t", help="Property type: custom, system, auto")] = None,
+    type: Annotated[str | None, typer.Option("--type", "-t", help="Property type: custom, system, auto")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """List device properties."""
@@ -291,16 +292,16 @@ def create_device(
     name: Annotated[str, typer.Argument(help="Device IP or hostname")],
     display_name: Annotated[str, typer.Option("--display-name", "-d", help="Display name")],
     group: Annotated[int, typer.Option("--group", "-g", help="Host group ID")] = 1,
-    collector: Annotated[Optional[int], typer.Option("--collector", "-c", help="Preferred collector ID")] = None,
-    description: Annotated[Optional[str], typer.Option("--description", help="Device description")] = None,
-    properties: Annotated[Optional[str], typer.Option("--properties", "-p", help="Custom properties as JSON")] = None,
+    collector: Annotated[int | None, typer.Option("--collector", "-c", help="Preferred collector ID")] = None,
+    description: Annotated[str | None, typer.Option("--description", help="Device description")] = None,
+    properties: Annotated[str | None, typer.Option("--properties", "-p", help="Custom properties as JSON")] = None,
     disable_alerting: Annotated[bool, typer.Option("--disable-alerting", help="Disable alerting on creation")] = False,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Create a new device."""
     svc = _get_service()
 
-    device_data: dict = {
+    device_data: dict[str, Any] = {
         "name": name,
         "displayName": display_name,
         "hostGroupIds": str(group),
@@ -318,7 +319,7 @@ def create_device(
             device_data["customProperties"] = [{"name": k, "value": v} for k, v in props.items()]
         except json.JSONDecodeError as e:
             console.print(f"[red]Invalid JSON for properties: {e}[/red]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
     try:
         result = unwrap_response(svc.create(device_data))
@@ -330,23 +331,23 @@ def create_device(
             console.print(f"[green]Created device '{display_name}' with ID: {device_id}[/green]")
     except Exception as e:
         console.print(f"[red]Failed to create device: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("update")
 def update_device(
     device_id: Annotated[int, typer.Argument(help="Device ID")],
-    display_name: Annotated[Optional[str], typer.Option("--display-name", "-d", help="New display name")] = None,
-    description: Annotated[Optional[str], typer.Option("--description", help="New description")] = None,
-    group: Annotated[Optional[int], typer.Option("--group", "-g", help="New host group ID")] = None,
-    collector: Annotated[Optional[int], typer.Option("--collector", "-c", help="New preferred collector ID")] = None,
-    disable_alerting: Annotated[Optional[bool], typer.Option("--disable-alerting/--enable-alerting", help="Toggle alerting")] = None,
+    display_name: Annotated[str | None, typer.Option("--display-name", "-d", help="New display name")] = None,
+    description: Annotated[str | None, typer.Option("--description", help="New description")] = None,
+    group: Annotated[int | None, typer.Option("--group", "-g", help="New host group ID")] = None,
+    collector: Annotated[int | None, typer.Option("--collector", "-c", help="New preferred collector ID")] = None,
+    disable_alerting: Annotated[bool | None, typer.Option("--disable-alerting/--enable-alerting", help="Toggle alerting")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Update a device's properties."""
     svc = _get_service()
 
-    update_data: dict = {}
+    update_data: dict[str, Any] = {}
     if display_name:
         update_data["displayName"] = display_name
     if description is not None:
@@ -360,7 +361,7 @@ def update_device(
 
     if not update_data:
         console.print("[yellow]No updates specified[/yellow]")
-        raise typer.Exit(0)
+        raise typer.Exit(0) from None
 
     try:
         result = unwrap_response(svc.update(device_id, update_data))
@@ -370,7 +371,7 @@ def update_device(
             console.print(f"[green]Updated device {device_id}[/green]")
     except Exception as e:
         console.print(f"[red]Failed to update device: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("delete")
@@ -393,7 +394,7 @@ def delete_device(
         confirm = typer.confirm(f"{delete_type} device '{display_name}'?")
         if not confirm:
             console.print("[dim]Cancelled[/dim]")
-            raise typer.Exit(0)
+            raise typer.Exit(0) from None
 
     try:
         if delete_hard:
@@ -403,7 +404,7 @@ def delete_device(
         console.print(f"[green]Deleted device '{display_name}'[/green]")
     except Exception as e:
         console.print(f"[red]Failed to delete device: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("set-property")
@@ -420,7 +421,7 @@ def set_device_property(
         console.print(f"[green]Set property '{name}' = '{value}' on device {device_id}[/green]")
     except Exception as e:
         console.print(f"[red]Failed to set property: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("delete-property")
@@ -436,11 +437,11 @@ def delete_device_property(
         confirm = typer.confirm(f"Delete property '{name}' from device {device_id}?")
         if not confirm:
             console.print("[dim]Cancelled[/dim]")
-            raise typer.Exit(0)
+            raise typer.Exit(0) from None
 
     try:
         svc.client.delete(f"{svc.base_path}/{device_id}/properties/{name}")
         console.print(f"[green]Deleted property '{name}' from device {device_id}[/green]")
     except Exception as e:
         console.print(f"[red]Failed to delete property: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None

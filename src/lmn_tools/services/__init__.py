@@ -24,10 +24,10 @@ __all__ = [
     # LogicModules
     "LogicModuleService",
     "ModuleType",
+    "configsource_service",
     # Factory functions
     "datasource_service",
-    "propertysource_service",
     "eventsource_service",
-    "configsource_service",
+    "propertysource_service",
     "topologysource_service",
 ]

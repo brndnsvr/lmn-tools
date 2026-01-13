@@ -6,21 +6,22 @@ to extract metrics and labels according to defined rules.
 """
 
 import logging
-from typing import Dict, List, Optional, Any, Tuple, Generator
+from collections.abc import Generator
 from dataclasses import dataclass, field
+from typing import Any
+
 from lxml import etree
 
+from .debug import get_debug_helper
 from .utils import (
-    sanitize_instance_id,
-    sanitize_metric_name,
-    apply_string_map,
+    extract_element_text,
+    get_local_name,
     parse_string_map_definition,
     parse_timestamp,
     safe_float,
-    get_local_name,
-    extract_element_text,
+    sanitize_instance_id,
+    sanitize_metric_name,
 )
-from .debug import get_debug_helper
 
 logger = logging.getLogger(__name__)
 
@@ -30,10 +31,10 @@ class MetricValue:
     """Represents a single metric value extracted from XML."""
     name: str                           # Metric name (e.g., "rx_optical_power")
     value: float                        # Numeric value
-    labels: Dict[str, str] = field(default_factory=dict)  # Associated labels
-    instance_id: Optional[str] = None   # LogicMonitor instance ID
-    instance_name: Optional[str] = None # Human-readable instance name
-    help_text: Optional[str] = None     # Metric description
+    labels: dict[str, str] = field(default_factory=dict)  # Associated labels
+    instance_id: str | None = None   # LogicMonitor instance ID
+    instance_name: str | None = None # Human-readable instance name
+    help_text: str | None = None     # Metric description
 
 
 @dataclass
@@ -42,7 +43,7 @@ class DiscoveredInstance:
     instance_id: str                    # Unique ID (sanitized)
     instance_name: str                  # Display name
     description: str = ""               # Optional description
-    properties: Dict[str, str] = field(default_factory=dict)  # auto.* properties
+    properties: dict[str, str] = field(default_factory=dict)  # auto.* properties
 
 
 @dataclass
@@ -52,7 +53,7 @@ class MetricConfig:
     xpath: str
     metric_type: str = "gauge"
     help_text: str = ""
-    string_map: Optional[Dict[str, int]] = None
+    string_map: dict[str, int] | None = None
     parse_timestamp: bool = False
 
 
@@ -62,10 +63,10 @@ class InterfaceConfig:
     name: str                           # Interface type name
     xpath: str                          # XPath to interface list
     instance_key: str                   # Element that identifies each instance
-    instance_name_key: Optional[str] = None  # Element for display name
-    description_key: Optional[str] = None    # Element for description
-    metrics: List[MetricConfig] = field(default_factory=list)
-    properties: List[str] = field(default_factory=list)  # Additional properties
+    instance_name_key: str | None = None  # Element for display name
+    description_key: str | None = None    # Element for description
+    metrics: list[MetricConfig] = field(default_factory=list)
+    properties: list[str] = field(default_factory=list)  # Additional properties
 
 
 class XmlParser:
@@ -82,7 +83,7 @@ class XmlParser:
 
     def __init__(
         self,
-        namespaces: Optional[Dict[str, str]] = None,
+        namespaces: dict[str, str] | None = None,
         debug: bool = False
     ):
         """
@@ -105,8 +106,8 @@ class XmlParser:
     def parse_response(
         self,
         data: etree._Element,
-        config: Dict[str, Any]
-    ) -> Tuple[List[DiscoveredInstance], List[MetricValue]]:
+        config: dict[str, Any]
+    ) -> tuple[list[DiscoveredInstance], list[MetricValue]]:
         """
         Parse a NETCONF response and extract instances and metrics.
 
@@ -129,7 +130,7 @@ class XmlParser:
         ns.update(self.namespaces)
 
         # Track instances by type for summary
-        instances_by_type: Dict[str, int] = {}
+        instances_by_type: dict[str, int] = {}
 
         # Process each interface type defined in config
         for iface_type, iface_config in config.get("interfaces", {}).items():
@@ -158,9 +159,9 @@ class XmlParser:
         self,
         data: etree._Element,
         iface_type: str,
-        iface_config: Dict[str, Any],
-        namespaces: Dict[str, str]
-    ) -> Tuple[List[DiscoveredInstance], List[MetricValue]]:
+        iface_config: dict[str, Any],
+        namespaces: dict[str, str]
+    ) -> tuple[list[DiscoveredInstance], list[MetricValue]]:
         """
         Process a single interface type (OTS, OSC, OMS, etc.).
 
@@ -277,9 +278,9 @@ class XmlParser:
     def _process_chassis_metrics(
         self,
         data: etree._Element,
-        chassis_config: Dict[str, Any],
-        namespaces: Dict[str, str]
-    ) -> List[MetricValue]:
+        chassis_config: dict[str, Any],
+        namespaces: dict[str, str]
+    ) -> list[MetricValue]:
         """
         Process chassis-level (global) metrics.
 
@@ -291,7 +292,7 @@ class XmlParser:
         Returns:
             List of chassis metric values
         """
-        metrics = []
+        metrics: list[MetricValue] = []
 
         xpath = chassis_config.get("xpath", "")
         metric_configs = chassis_config.get("metrics", [])
@@ -321,10 +322,10 @@ class XmlParser:
     def _extract_metric(
         self,
         element: etree._Element,
-        metric_config: Dict[str, Any],
+        metric_config: dict[str, Any],
         instance_id: str,
-        namespaces: Dict[str, str]
-    ) -> Optional[MetricValue]:
+        namespaces: dict[str, str]
+    ) -> MetricValue | None:
         """
         Extract a single metric value from an element.
 
@@ -386,9 +387,9 @@ class XmlParser:
     def _transform_value(
         self,
         raw_value: str,
-        string_map: Optional[Dict[str, int]] = None,
+        string_map: dict[str, int] | None = None,
         do_parse_timestamp: bool = False
-    ) -> Optional[float]:
+    ) -> float | None:
         """
         Transform a raw string value to numeric.
 
@@ -434,8 +435,8 @@ class XmlParser:
         self,
         root: etree._Element,
         xpath: str,
-        namespaces: Dict[str, str]
-    ) -> List[etree._Element]:
+        namespaces: dict[str, str]
+    ) -> list[etree._Element]:
         """
         Find elements matching an XPath expression.
 
@@ -456,7 +457,8 @@ class XmlParser:
             # Try with namespaces first
             elements = root.xpath(xpath, namespaces=namespaces)
             if elements:
-                return elements
+                result: list[etree._Element] = elements
+                return result
         except Exception as e:
             logger.debug(f"XPath with namespaces failed: {e}")
 
@@ -466,7 +468,8 @@ class XmlParser:
             local_xpath = self._convert_to_local_xpath(xpath)
             elements = root.xpath(local_xpath)
             if elements:
-                return elements
+                result2: list[etree._Element] = elements
+                return result2
         except Exception as e:
             logger.debug(f"Local XPath failed: {e}")
 
@@ -526,13 +529,13 @@ class XmlParser:
         self,
         root: etree._Element,
         path: str
-    ) -> List[etree._Element]:
+    ) -> list[etree._Element]:
         """
         Find elements by walking path segments using local names.
 
         This is a fallback when XPath doesn't work due to namespace issues.
         """
-        parts = [p for p in path.split('/') if p and ':' not in p or True]
+        parts = [p for p in path.split('/') if (p and ':' not in p) or True]
         # Strip namespace prefixes
         parts = [p.split(':')[-1] if ':' in p else p for p in parts]
 
@@ -560,8 +563,8 @@ class XmlParser:
         self,
         element: etree._Element,
         path: str,
-        namespaces: Dict[str, str]
-    ) -> Optional[str]:
+        namespaces: dict[str, str]
+    ) -> str | None:
         """
         Get text content of a child element.
 
@@ -595,8 +598,8 @@ class XmlParser:
     def discover_instances(
         self,
         data: etree._Element,
-        config: Dict[str, Any]
-    ) -> List[DiscoveredInstance]:
+        config: dict[str, Any]
+    ) -> list[DiscoveredInstance]:
         """
         Discover instances from NETCONF data for Active Discovery.
 
@@ -610,7 +613,7 @@ class XmlParser:
         instances, _ = self.parse_response(data, config)
 
         # Output discovery summary in debug mode
-        by_type: Dict[str, int] = {}
+        by_type: dict[str, int] = {}
         for instance in instances:
             iface_type = instance.properties.get("interface_type", "unknown")
             by_type[iface_type] = by_type.get(iface_type, 0) + 1
@@ -621,8 +624,8 @@ class XmlParser:
     def collect_metrics(
         self,
         data: etree._Element,
-        config: Dict[str, Any]
-    ) -> List[MetricValue]:
+        config: dict[str, Any]
+    ) -> list[MetricValue]:
         """
         Collect metrics from NETCONF data for BATCHSCRIPT collection.
 
@@ -636,7 +639,7 @@ class XmlParser:
         _, metrics = self.parse_response(data, config)
 
         # Output collection summary in debug mode
-        by_instance: Dict[str, int] = {}
+        by_instance: dict[str, int] = {}
         for metric in metrics:
             if metric.instance_id:
                 by_instance[metric.instance_id] = by_instance.get(metric.instance_id, 0) + 1
@@ -647,8 +650,8 @@ class XmlParser:
     def iter_instances(
         self,
         data: etree._Element,
-        config: Dict[str, Any]
-    ) -> Generator[Tuple[DiscoveredInstance, List[MetricValue]], None, None]:
+        config: dict[str, Any]
+    ) -> Generator[tuple[DiscoveredInstance, list[MetricValue]], None, None]:
         """
         Iterate over instances with their associated metrics.
 
@@ -664,7 +667,7 @@ class XmlParser:
         instances, all_metrics = self.parse_response(data, config)
 
         # Group metrics by instance
-        metrics_by_instance: Dict[str, List[MetricValue]] = {}
+        metrics_by_instance: dict[str, list[MetricValue]] = {}
         for metric in all_metrics:
             if metric.instance_id:
                 if metric.instance_id not in metrics_by_instance:

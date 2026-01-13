@@ -87,7 +87,8 @@ class LogicModuleService(BaseService):
             List of datapoint dictionaries
         """
         response = self.client.get(f"{self.base_path}/{module_id}/datapoints")
-        return response.get("items", response.get("data", {}).get("items", []))
+        items: list[dict[str, Any]] = response.get("items", response.get("data", {}).get("items", []))
+        return items
 
     def get_graphs(self, module_id: int) -> list[dict[str, Any]]:
         """
@@ -100,7 +101,8 @@ class LogicModuleService(BaseService):
             List of graph dictionaries
         """
         response = self.client.get(f"{self.base_path}/{module_id}/graphs")
-        return response.get("items", response.get("data", {}).get("items", []))
+        items: list[dict[str, Any]] = response.get("items", response.get("data", {}).get("items", []))
+        return items
 
     def get_overview_graphs(self, module_id: int) -> list[dict[str, Any]]:
         """
@@ -113,7 +115,8 @@ class LogicModuleService(BaseService):
             List of overview graph dictionaries
         """
         response = self.client.get(f"{self.base_path}/{module_id}/ographs")
-        return response.get("items", response.get("data", {}).get("items", []))
+        items: list[dict[str, Any]] = response.get("items", response.get("data", {}).get("items", []))
+        return items
 
     def get_audit_log(self, module_id: int) -> list[dict[str, Any]]:
         """
@@ -126,7 +129,8 @@ class LogicModuleService(BaseService):
             List of audit log entries
         """
         response = self.client.get(f"{self.base_path}/{module_id}/audit")
-        return response.get("items", response.get("data", {}).get("items", []))
+        items: list[dict[str, Any]] = response.get("items", response.get("data", {}).get("items", []))
+        return items
 
     # =========================================================================
     # Export/Import operations

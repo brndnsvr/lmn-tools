@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated, Any
 
 import typer
 from rich.console import Console
@@ -37,13 +37,13 @@ def _get_service() -> LogicModuleService:
     return LogicModuleService(get_client(console), ModuleType.DATASOURCE)
 
 
-def _get_script_from_ds(ds: dict, discovery: bool, script_type: str) -> str:
+def _get_script_from_ds(ds: dict[str, Any], discovery: bool, script_type: str) -> str:
     """Extract script from DataSource data."""
     config = ds.get("autoDiscoveryConfig") or {} if discovery else ds.get("collectorAttribute") or {}
-    return config.get(f"{script_type}Script", "")
+    return str(config.get(f"{script_type}Script", ""))
 
 
-def _set_script_in_ds(ds: dict, discovery: bool, script_type: str, script: str) -> None:
+def _set_script_in_ds(ds: dict[str, Any], discovery: bool, script_type: str, script: str) -> None:
     """Set script in DataSource data (mutates ds)."""
     key = "autoDiscoveryConfig" if discovery else "collectorAttribute"
     if not ds.get(key):
@@ -58,9 +58,9 @@ def _set_script_in_ds(ds: dict, discovery: bool, script_type: str, script: str) 
 
 @app.command("list")
 def list_datasources(
-    filter: Annotated[Optional[str], typer.Option("--filter", "-f", help="LM filter string")] = None,
-    group: Annotated[Optional[str], typer.Option("--group", "-g", help="Filter by group name")] = None,
-    method: Annotated[Optional[str], typer.Option("--method", "-m", help="Filter by collect method")] = None,
+    filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
+    group: Annotated[str | None, typer.Option("--group", "-g", help="Filter by group name")] = None,
+    method: Annotated[str | None, typer.Option("--method", "-m", help="Filter by collect method")] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
 ) -> None:
@@ -102,7 +102,7 @@ def get_datasource(
         results = svc.list(filter=f'name:"{identifier}"', max_items=1)
         if not results:
             console.print(f"[red]DataSource not found: {identifier}[/red]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
         ds, ds_id = results[0], results[0]["id"]
 
     if format == "json":
@@ -234,7 +234,7 @@ def search_datasources(
 @app.command("export")
 def export_datasource(
     ds_id: Annotated[int, typer.Argument(help="DataSource ID to export")],
-    output: Annotated[Optional[str], typer.Option("--output", "-o", help="Output file path")] = None,
+    output: Annotated[str | None, typer.Option("--output", "-o", help="Output file path")] = None,
 ) -> None:
     """Export a DataSource as JSON."""
     ds = unwrap_response(_get_service().export_json(ds_id))
@@ -292,7 +292,7 @@ def import_datasource(
         if existing:
             console.print(f"[yellow]DataSource '{ds_name}' already exists (ID: {existing[0]['id']})[/yellow]")
             console.print("Use --force to overwrite")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
     for key in ["id", "checksum", "registeredOn", "modifiedOn", "version"]:
         ds_data.pop(key, None)
@@ -305,21 +305,21 @@ def import_datasource(
             console.print(f"[green]Imported DataSource '{ds_name}' (ID: {result.get('id')})[/green]")
     except Exception as e:
         console.print(f"[red]Failed to import: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("update")
 def update_datasource(
     ds_id: Annotated[int, typer.Argument(help="DataSource ID")],
-    group: Annotated[Optional[str], typer.Option("--group", "-g", help="New group name")] = None,
-    display_name: Annotated[Optional[str], typer.Option("--display-name", "-d", help="New display name")] = None,
-    description: Annotated[Optional[str], typer.Option("--description", help="New description")] = None,
-    applies_to: Annotated[Optional[str], typer.Option("--applies-to", "-a", help="New AppliesTo expression")] = None,
-    collect_interval: Annotated[Optional[int], typer.Option("--interval", help="Collection interval in seconds")] = None,
+    group: Annotated[str | None, typer.Option("--group", "-g", help="New group name")] = None,
+    display_name: Annotated[str | None, typer.Option("--display-name", "-d", help="New display name")] = None,
+    description: Annotated[str | None, typer.Option("--description", help="New description")] = None,
+    applies_to: Annotated[str | None, typer.Option("--applies-to", "-a", help="New AppliesTo expression")] = None,
+    collect_interval: Annotated[int | None, typer.Option("--interval", help="Collection interval in seconds")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Update a DataSource."""
-    update_data: dict = {}
+    update_data: dict[str, Any] = {}
     if group is not None:
         update_data["group"] = group
     if display_name:
@@ -333,7 +333,7 @@ def update_datasource(
 
     if not update_data:
         console.print("[yellow]No updates specified[/yellow]")
-        raise typer.Exit(0)
+        raise typer.Exit(0) from None
 
     try:
         result = unwrap_response(_get_service().update(ds_id, update_data))
@@ -343,7 +343,7 @@ def update_datasource(
             console.print(f"[green]Updated DataSource {ds_id}[/green]")
     except Exception as e:
         console.print(f"[red]Failed to update DataSource: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("delete")
@@ -360,21 +360,21 @@ def delete_datasource(
 
     if not force and not typer.confirm(f"Delete DataSource '{ds_name}'?"):
         console.print("[dim]Cancelled[/dim]")
-        raise typer.Exit(0)
+        raise typer.Exit(0) from None
 
     try:
         svc.delete(ds_id)
         console.print(f"[green]Deleted DataSource '{ds_name}'[/green]")
     except Exception as e:
         console.print(f"[red]Failed to delete DataSource: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("clone")
 def clone_datasource(
     ds_id: Annotated[int, typer.Argument(help="DataSource ID to clone")],
     name: Annotated[str, typer.Option("--name", "-n", help="New DataSource name")],
-    display_name: Annotated[Optional[str], typer.Option("--display-name", "-d", help="New display name")] = None,
+    display_name: Annotated[str | None, typer.Option("--display-name", "-d", help="New display name")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Clone a DataSource with a new name."""
@@ -386,7 +386,7 @@ def clone_datasource(
             console.print(f"[green]Cloned DataSource {ds_id} → '{name}' (ID: {result.get('id')})[/green]")
     except Exception as e:
         console.print(f"[red]Failed to clone DataSource: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("test")
@@ -414,7 +414,7 @@ def test_datasource(
         except Exception as e:
             console.print(f"[red]Failed to test DataSource: {e}[/red]")
             console.print("[dim]Note: Test requires appropriate permissions and collector access[/dim]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
 
 # ============================================================================
@@ -427,7 +427,7 @@ def datasource_script(
     ds_id: Annotated[int, typer.Argument(help="DataSource ID")],
     discovery: Annotated[bool, typer.Option("--discovery", "-d", help="Show/set Active Discovery script")] = False,
     script_type: Annotated[str, typer.Option("--type", "-t", help="Script type: groovy, linux, windows")] = "groovy",
-    set_file: Annotated[Optional[str], typer.Option("--set", "-s", help="File path to read new script from")] = None,
+    set_file: Annotated[str | None, typer.Option("--set", "-s", help="File path to read new script from")] = None,
     no_highlight: Annotated[bool, typer.Option("--no-highlight", help="Output raw script without syntax highlighting")] = False,
 ) -> None:
     """View or update DataSource scripts."""
@@ -436,14 +436,15 @@ def datasource_script(
         ds = unwrap_response(svc.export_json(ds_id))
     except Exception as e:
         console.print(f"[red]Failed to get DataSource: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     script_location = "Active Discovery" if discovery else "Collection"
 
     if set_file:
-        new_script = Path(set_file).read_text() if Path(set_file).exists() else (console.print(f"[red]File not found: {set_file}[/red]"), typer.Exit(1))[1]
-        if not isinstance(new_script, str):
-            raise typer.Exit(1)
+        if not Path(set_file).exists():
+            console.print(f"[red]File not found: {set_file}[/red]")
+            raise typer.Exit(1) from None
+        new_script = Path(set_file).read_text()
         old_script = _get_script_from_ds(ds, discovery, script_type)
         _set_script_in_ds(ds, discovery, script_type, new_script)
 
@@ -452,14 +453,14 @@ def datasource_script(
 
         if not typer.confirm(f"Update {script_location} {script_type} script?"):
             console.print("[dim]Cancelled[/dim]")
-            raise typer.Exit(0)
+            raise typer.Exit(0) from None
 
         try:
             get_client(console).put(f"/setting/datasources/{ds_id}", json_data=ds)
             console.print(f"[green]Updated {script_location} {script_type} script for DataSource {ds_id}[/green]")
         except Exception as e:
             console.print(f"[red]Failed to update script: {e}[/red]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
     else:
         script = _get_script_from_ds(ds, discovery, script_type)
         if not script:
@@ -484,7 +485,7 @@ def edit_datasource(
         ds = unwrap_response(svc.export_json(ds_id))
     except Exception as e:
         console.print(f"[red]Failed to get DataSource: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     ds_name = ds.get("name", f"ID:{ds_id}")
 
@@ -514,7 +515,7 @@ def edit_datasource(
             console.print(f"[green]Pushed {script_location} {script_type} script changes to DataSource {ds_id}[/green]")
         except Exception as e:
             console.print(f"[red]Failed to push changes: {e}[/red]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
     else:
         new_ds, was_modified = edit_json_in_editor(ds, console)
         if not was_modified:
@@ -532,7 +533,7 @@ def edit_datasource(
             console.print(f"[green]Pushed changes to DataSource '{ds_name}' (ID: {ds_id})[/green]")
         except Exception as e:
             console.print(f"[red]Failed to push changes: {e}[/red]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
 
 @app.command("push")
@@ -550,7 +551,7 @@ def push_datasource(
         current_ds = unwrap_response(svc.export_json(ds_id))
     except Exception as e:
         console.print(f"[red]Failed to get current DataSource: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     ds_name = current_ds.get("name", f"ID:{ds_id}")
 
@@ -564,11 +565,11 @@ def push_datasource(
 
     if not force and not typer.confirm(f"Push changes to DataSource '{ds_name}' (ID: {ds_id})?"):
         console.print("[dim]Cancelled[/dim]")
-        raise typer.Exit(0)
+        raise typer.Exit(0) from None
 
     try:
         get_client(console).put(f"/setting/datasources/{ds_id}", json_data=new_ds)
         console.print(f"[green]Pushed changes to DataSource '{ds_name}' (ID: {ds_id})[/green]")
     except Exception as e:
         console.print(f"[red]Failed to push changes: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None

@@ -6,7 +6,7 @@ Provides commands for listing LogicMonitor users (read-only).
 
 from __future__ import annotations
 
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 from rich.console import Console
@@ -33,7 +33,7 @@ def _get_client() -> LMClient:
     settings = get_settings()
     if not settings.has_credentials:
         console.print("[red]Error: LM credentials not configured[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     return LMClient.from_credentials(settings.credentials)  # type: ignore
 
 
@@ -44,8 +44,8 @@ def _get_service() -> UserService:
 
 @app.command("list")
 def list_users(
-    filter: Annotated[Optional[str], typer.Option("--filter", "-f", help="LM filter string")] = None,
-    role: Annotated[Optional[str], typer.Option("--role", "-r", help="Filter by role name")] = None,
+    filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
+    role: Annotated[str | None, typer.Option("--role", "-r", help="Filter by role name")] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
 ) -> None:
@@ -105,7 +105,7 @@ def get_user(
         results = svc.list(filter=f'username:"{identifier}"', max_items=1)
         if not results:
             console.print(f"[red]User not found: {identifier}[/red]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
         user = results[0]
         user_id = user["id"]
 

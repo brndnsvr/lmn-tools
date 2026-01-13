@@ -17,8 +17,8 @@ from lmn_tools.formatters.output import (
 
 __all__ = [
     "OutputFormatter",
-    "print_discovery",
     "print_collection",
-    "print_discovery_table",
     "print_collection_table",
+    "print_discovery",
+    "print_discovery_table",
 ]

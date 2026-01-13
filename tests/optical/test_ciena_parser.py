@@ -2,13 +2,13 @@
 Tests for Ciena WaveServer XML parsing and metric extraction.
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
+import yaml
 from lxml import etree
 
-from lmn_tools.collectors.optical.parser import XmlParser, DiscoveredInstance, MetricValue
-import yaml
-
+from lmn_tools.collectors.optical.parser import XmlParser
 
 # Load fixtures
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
@@ -32,7 +32,7 @@ def ciena_chassis_response():
 def ciena_config():
     """Load Ciena configuration."""
     config_path = Path(__file__).parent.parent.parent / "configs" / "collectors" / "ciena.yaml"
-    with open(config_path, "r") as f:
+    with open(config_path) as f:
         return yaml.safe_load(f)
 
 
@@ -40,7 +40,7 @@ def ciena_config():
 def ciena_chassis_config():
     """Load Ciena chassis configuration."""
     config_path = Path(__file__).parent.parent.parent / "configs" / "collectors" / "ciena_chassis.yaml"
-    with open(config_path, "r") as f:
+    with open(config_path) as f:
         return yaml.safe_load(f)
 
 
@@ -166,7 +166,7 @@ class TestCienaChassis:
         """Test software operational state extraction."""
         # For chassis metrics, we need to test the xpath extraction directly
         # since the chassis config uses a different structure
-        from lmn_tools.collectors.optical.utils import get_local_name, extract_element_text
+        from lmn_tools.collectors.optical.utils import extract_element_text, get_local_name
 
         # Find software-operational-state
         for elem in ciena_chassis_response.iter():
@@ -181,7 +181,7 @@ class TestCienaChassis:
 
     def test_active_version_label(self, ciena_chassis_response, ciena_chassis_config):
         """Test active version label extraction."""
-        from lmn_tools.collectors.optical.utils import get_local_name, extract_element_text
+        from lmn_tools.collectors.optical.utils import extract_element_text, get_local_name
 
         # Find active-version
         for elem in ciena_chassis_response.iter():

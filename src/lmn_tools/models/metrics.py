@@ -204,7 +204,7 @@ class MetricCollection(BaseModel):
         """Return number of metrics in collection."""
         return len(self.metrics)
 
-    def __iter__(self):
+    def __iter__(self) -> Any:
         """Iterate over metrics."""
         return iter(self.metrics)
 

@@ -230,6 +230,8 @@ class XmlParser:
 
         instances: list[DiscoveredInstance] = []
         elements = self.xpath(data, instance_xpath)
+        if elements is None:
+            elements = []
 
         self._debug_print(f"Found {len(elements)} elements at {instance_xpath}")
 
@@ -308,6 +310,8 @@ class XmlParser:
 
         metrics: list[MetricValue] = []
         elements = self.xpath(data, instance_xpath)
+        if elements is None:
+            elements = []
 
         self._debug_print(f"Found {len(elements)} elements, {len(metric_defs)} metrics defined")
 
@@ -377,7 +381,7 @@ class XmlParser:
         self,
         element: etree._Element,
         strip_ns: bool = True,
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any] | str:
         """
         Convert XML element tree to nested dictionary.
 
@@ -386,7 +390,7 @@ class XmlParser:
             strip_ns: Whether to strip namespace prefixes from keys
 
         Returns:
-            Nested dictionary representation
+            Nested dictionary representation or string for leaf text nodes
         """
         result: dict[str, Any] = {}
 
@@ -397,7 +401,8 @@ class XmlParser:
         # Handle text content
         if element.text and element.text.strip():
             if len(element) == 0:  # No children
-                return element.text.strip()
+                text: str = element.text.strip()
+                return text
             result["_text"] = element.text.strip()
 
         # Handle attributes

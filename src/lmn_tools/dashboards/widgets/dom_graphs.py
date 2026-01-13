@@ -7,15 +7,15 @@ This module provides functions to create DOM optics-related cgraph widgets:
 - DOM graph builder for multiple interfaces
 """
 
-import re
 import logging
-from typing import Optional
+import re
+from typing import Any
 
-from ..lm_client import LMClient, LMAPIError
+from ..lm_client import LMAPIError, LMClient
 from ..lm_helpers import ResolvedInterface
 from .common import (
-    WidgetPosition,
     DEFAULT_GRAPH_HEIGHT,
+    WidgetPosition,
 )
 from .text_widgets import create_section_header
 
@@ -33,7 +33,7 @@ def create_dom_graph_widget(
     position: WidgetPosition,
     width: int = 6,
     dom_datasource_full_name: str = 'Juniper DOM- (Juniper DOM-)'
-) -> Optional[int]:
+) -> int | None:
     """
     Create a DOM optics graph widget for a single datapoint.
 
@@ -106,7 +106,7 @@ def create_dom_graph_widget(
 
     try:
         response = client.post('/dashboard/widgets', json=widget_data)
-        widget_id = response.get('data', {}).get('id') or response.get('id')
+        widget_id: int | None = response.get('data', {}).get('id') or response.get('id')
         position.next_col(width)
         logger.debug(f"Created DOM graph widget: {title} -> {widget_id}")
         return widget_id
@@ -125,7 +125,7 @@ def create_dom_optical_power_graph(
     position: WidgetPosition,
     width: int = 6,
     dom_datasource_full_name: str = 'Juniper DOM- (Juniper DOM-)'
-) -> Optional[int]:
+) -> int | None:
     """
     Create a combined DOM optical power graph with Rx and Tx power.
 
@@ -200,7 +200,7 @@ def create_dom_optical_power_graph(
 
     try:
         response = client.post('/dashboard/widgets', json=widget_data)
-        widget_id = response.get('data', {}).get('id') or response.get('id')
+        widget_id: int | None = response.get('data', {}).get('id') or response.get('id')
         position.next_col(width)
         logger.debug(f"Created DOM optical power graph: {title} -> {widget_id}")
         return widget_id
@@ -212,7 +212,7 @@ def create_dom_optical_power_graph(
 def build_dom_graphs(
     client: LMClient,
     dashboard_id: int,
-    dom_interfaces: list,  # List of (interface, instance_id, instance_name, datasource_id, datasource_full_name)
+    dom_interfaces: list[tuple[Any, ...]],  # List of (interface, instance_id, instance_name, datasource_id, datasource_full_name)
     position: WidgetPosition
 ) -> int:
     """

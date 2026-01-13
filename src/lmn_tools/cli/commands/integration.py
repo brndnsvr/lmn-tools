@@ -7,7 +7,7 @@ Provides commands for managing LogicMonitor integrations (PagerDuty, Slack, etc)
 from __future__ import annotations
 
 import json
-from typing import Annotated, Optional
+from typing import Annotated, Any
 
 import typer
 from rich.console import Console
@@ -26,7 +26,7 @@ def _get_client() -> LMClient:
     settings = get_settings()
     if not settings.has_credentials:
         console.print("[red]Error: LM credentials not configured[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     return LMClient.from_credentials(settings.credentials)  # type: ignore
 
 
@@ -37,8 +37,8 @@ def _get_service() -> IntegrationService:
 
 @app.command("list")
 def list_integrations(
-    filter: Annotated[Optional[str], typer.Option("--filter", "-f", help="LM filter string")] = None,
-    type: Annotated[Optional[str], typer.Option("--type", "-t", help="Filter by integration type")] = None,
+    filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
+    type: Annotated[str | None, typer.Option("--type", "-t", help="Filter by integration type")] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
 ) -> None:
@@ -97,7 +97,7 @@ def get_integration(
         integrations = svc.list(filter=f"name:{identifier}")
         if not integrations:
             console.print(f"[red]Integration not found: {identifier}[/red]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
         integration = integrations[0]
         integration_id = integration["id"]
 
@@ -204,14 +204,14 @@ def list_integration_types() -> None:
 def create_integration(
     name: Annotated[str, typer.Argument(help="Integration name")],
     type: Annotated[str, typer.Option("--type", "-t", help="Integration type")],
-    description: Annotated[Optional[str], typer.Option("--description", "-d", help="Description")] = None,
-    extra: Annotated[Optional[str], typer.Option("--extra", "-e", help="Extra config as JSON")] = None,
+    description: Annotated[str | None, typer.Option("--description", "-d", help="Description")] = None,
+    extra: Annotated[str | None, typer.Option("--extra", "-e", help="Extra config as JSON")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Create a new integration."""
     svc = _get_service()
 
-    integration_data: dict = {
+    integration_data: dict[str, Any] = {
         "name": name,
         "type": type,
     }
@@ -224,7 +224,7 @@ def create_integration(
             integration_data["extra"] = json.loads(extra)
         except json.JSONDecodeError as e:
             console.print(f"[red]Invalid JSON for extra config: {e}[/red]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
     try:
         response = svc.create(integration_data)
@@ -237,21 +237,21 @@ def create_integration(
             console.print(f"[green]Created integration '{name}' (ID: {integration_id})[/green]")
     except Exception as e:
         console.print(f"[red]Failed to create integration: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("update")
 def update_integration(
     integration_id: Annotated[int, typer.Argument(help="Integration ID")],
-    name: Annotated[Optional[str], typer.Option("--name", "-n", help="New name")] = None,
-    description: Annotated[Optional[str], typer.Option("--description", "-d", help="New description")] = None,
-    extra: Annotated[Optional[str], typer.Option("--extra", "-e", help="Extra config as JSON")] = None,
+    name: Annotated[str | None, typer.Option("--name", "-n", help="New name")] = None,
+    description: Annotated[str | None, typer.Option("--description", "-d", help="New description")] = None,
+    extra: Annotated[str | None, typer.Option("--extra", "-e", help="Extra config as JSON")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Update an integration."""
     svc = _get_service()
 
-    update_data: dict = {}
+    update_data: dict[str, Any] = {}
 
     if name:
         update_data["name"] = name
@@ -262,11 +262,11 @@ def update_integration(
             update_data["extra"] = json.loads(extra)
         except json.JSONDecodeError as e:
             console.print(f"[red]Invalid JSON for extra config: {e}[/red]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
     if not update_data:
         console.print("[yellow]No updates specified[/yellow]")
-        raise typer.Exit(0)
+        raise typer.Exit(0) from None
 
     try:
         response = svc.update(integration_id, update_data)
@@ -278,7 +278,7 @@ def update_integration(
             console.print(f"[green]Updated integration {integration_id}[/green]")
     except Exception as e:
         console.print(f"[red]Failed to update integration: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("delete")
@@ -301,14 +301,14 @@ def delete_integration(
         confirm = typer.confirm(f"Delete integration '{integration_name}'?")
         if not confirm:
             console.print("[dim]Cancelled[/dim]")
-            raise typer.Exit(0)
+            raise typer.Exit(0) from None
 
     try:
         svc.delete(integration_id)
         console.print(f"[green]Deleted integration '{integration_name}'[/green]")
     except Exception as e:
         console.print(f"[red]Failed to delete integration: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("test")
@@ -332,4 +332,4 @@ def test_integration(
             console.print_json(data=result)
     except Exception as e:
         console.print(f"[red]Failed to test integration: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None

@@ -27,21 +27,21 @@ from lmn_tools.cli.utils.output import (
 )
 
 __all__ = [
-    # Client
-    "get_client",
-    # Helpers
-    "unwrap_response",
-    "load_json_file",
+    "add_table_rows",
     "build_filter",
+    "create_table",
     "edit_in_editor",
     "edit_json_in_editor",
+    "format_enabled",
+    "format_status",
+    # Client
+    "get_client",
+    "get_syntax_lexer",
+    "load_json_file",
     # Output
     "show_diff",
     "show_syntax",
-    "get_syntax_lexer",
-    "create_table",
-    "add_table_rows",
-    "format_status",
-    "format_enabled",
     "truncate",
+    # Helpers
+    "unwrap_response",
 ]

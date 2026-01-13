@@ -7,7 +7,7 @@ Provides commands for creating and managing maintenance windows.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 from rich.console import Console
@@ -26,7 +26,7 @@ def _get_client() -> LMClient:
     settings = get_settings()
     if not settings.has_credentials:
         console.print("[red]Error: LM credentials not configured[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     return LMClient.from_credentials(settings.credentials)  # type: ignore
 
 
@@ -41,9 +41,8 @@ def _format_timestamp(ts: int | None) -> str:
         return "N/A"
     try:
         # Timestamps >= 10^12 are in milliseconds, < 10^12 are in seconds
-        if ts >= 1e12:
-            ts = ts / 1000
-        return datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M")
+        ts_secs: float = ts / 1000 if ts >= 1e12 else float(ts)
+        return datetime.fromtimestamp(ts_secs).strftime("%Y-%m-%d %H:%M")
     except Exception:
         return str(ts)
 
@@ -66,8 +65,8 @@ def _format_duration(start: int, end: int) -> str:
 
 @app.command("list")
 def list_sdts(
-    filter: Annotated[Optional[str], typer.Option("--filter", "-f", help="LM filter string")] = None,
-    device: Annotated[Optional[int], typer.Option("--device", "-d", help="Filter by device ID")] = None,
+    filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
+    device: Annotated[int | None, typer.Option("--device", "-d", help="Filter by device ID")] = None,
     active: Annotated[bool, typer.Option("--active", "-a", help="Show only active SDTs")] = False,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
@@ -224,8 +223,8 @@ def list_upcoming_sdts(
 @app.command("create")
 def create_sdt(
     type: Annotated[str, typer.Option("--type", "-t", help="SDT type: device, group, datasource")] = "device",
-    device: Annotated[Optional[int], typer.Option("--device", "-d", help="Device ID")] = None,
-    group: Annotated[Optional[int], typer.Option("--group", "-g", help="Device group ID")] = None,
+    device: Annotated[int | None, typer.Option("--device", "-d", help="Device ID")] = None,
+    group: Annotated[int | None, typer.Option("--group", "-g", help="Device group ID")] = None,
     duration: Annotated[int, typer.Option("--duration", help="Duration in minutes")] = 60,
     comment: Annotated[str, typer.Option("--comment", "-c", help="SDT comment")] = "",
 ) -> None:
@@ -236,23 +235,23 @@ def create_sdt(
         if type == "device":
             if not device:
                 console.print("[red]--device is required for device SDT[/red]")
-                raise typer.Exit(1)
+                raise typer.Exit(1) from None
             result = svc.create_device_sdt(device, duration, comment)
         elif type == "group":
             if not group:
                 console.print("[red]--group is required for group SDT[/red]")
-                raise typer.Exit(1)
+                raise typer.Exit(1) from None
             result = svc.create_group_sdt(group, duration, comment)
         else:
             console.print(f"[red]Unknown SDT type: {type}[/red]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
         sdt_id = result.get("data", result).get("id") if "data" in result else result.get("id")
         console.print(f"[green]Created SDT {sdt_id} for {duration} minutes[/green]")
 
     except Exception as e:
         console.print(f"[red]Failed to create SDT: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("delete")
@@ -267,11 +266,11 @@ def delete_sdt(
         confirm = typer.confirm(f"Delete SDT {sdt_id}?")
         if not confirm:
             console.print("[dim]Cancelled[/dim]")
-            raise typer.Exit(0)
+            raise typer.Exit(0) from None
 
     try:
-        svc.delete(sdt_id)
+        svc.delete(int(sdt_id))
         console.print(f"[green]Deleted SDT {sdt_id}[/green]")
     except Exception as e:
         console.print(f"[red]Failed to delete SDT: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None

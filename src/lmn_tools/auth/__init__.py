@@ -12,8 +12,8 @@ from lmn_tools.auth.hmac import (
 )
 
 __all__ = [
-    "generate_lmv1_signature",
-    "generate_auth_headers",
     "AuthHeaders",
     "LMv1Authenticator",
+    "generate_auth_headers",
+    "generate_lmv1_signature",
 ]

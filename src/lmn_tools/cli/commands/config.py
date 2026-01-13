@@ -6,14 +6,13 @@ Provides commands for viewing and managing lmn configuration.
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 from rich.console import Console
 from rich.table import Table
 
-from lmn_tools.core.config import LMCredentials, get_settings, reset_settings
+from lmn_tools.core.config import get_settings, reset_settings
 
 app = typer.Typer(help="Manage lmn configuration")
 console = Console()
@@ -108,7 +107,7 @@ def test_connection() -> None:
     if not settings.has_credentials:
         console.print("[red]✗ LogicMonitor credentials not configured[/red]")
         console.print("Run 'lmn config show' for setup instructions")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     console.print(f"Testing connection to {settings.company}.logicmonitor.com...")
 
@@ -121,12 +120,12 @@ def test_connection() -> None:
         response = client.get("/device/devices", params={"size": 1})
         total = response.get("data", {}).get("total", 0)
 
-        console.print(f"[green]✓ Connected successfully![/green]")
+        console.print("[green]✓ Connected successfully![/green]")
         console.print(f"  Found {total} devices in LogicMonitor")
 
     except Exception as e:
         console.print(f"[red]✗ Connection failed: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("path")

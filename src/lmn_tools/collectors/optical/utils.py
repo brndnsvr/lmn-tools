@@ -4,16 +4,16 @@ Utility functions for the LogicMonitor NETCONF Optical collector.
 Includes string maps, sanitization, timestamp parsing, and other helpers.
 """
 
-import re
 import logging
+import re
 from datetime import datetime
-from typing import Any, Dict, Optional, Union
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
 # Common string maps for converting status values to numeric
-DEFAULT_STRING_MAPS: Dict[str, Dict[str, int]] = {
+DEFAULT_STRING_MAPS: dict[str, dict[str, int]] = {
     "status": {
         "down": 0,
         "up": 1,
@@ -134,7 +134,7 @@ def sanitize_metric_name(name: str) -> str:
 
 def apply_string_map(
     value: str,
-    string_map: Optional[Dict[str, int]] = None,
+    string_map: dict[str, int] | None = None,
     default: int = 0
 ) -> int:
     """
@@ -154,7 +154,7 @@ def apply_string_map(
     return string_map.get(value, default)
 
 
-def parse_string_map_definition(definition: str) -> Dict[str, int]:
+def parse_string_map_definition(definition: str) -> dict[str, int]:
     """
     Parse a string map definition from config format.
 
@@ -167,7 +167,7 @@ def parse_string_map_definition(definition: str) -> Dict[str, int]:
     Returns:
         Dictionary mapping strings to integers
     """
-    result = {}
+    result: dict[str, int] = {}
     if not definition:
         return result
 
@@ -187,7 +187,7 @@ def parse_string_map_definition(definition: str) -> Dict[str, int]:
     return result
 
 
-def parse_timestamp(value: str) -> Optional[float]:
+def parse_timestamp(value: str) -> float | None:
     """
     Parse various timestamp formats into Unix epoch seconds.
 
@@ -212,9 +212,10 @@ def parse_timestamp(value: str) -> Optional[float]:
 
     # Try dateutil parser for flexibility
     try:
-        from dateutil.parser import parse as dateutil_parse
+        from dateutil.parser import parse as dateutil_parse  # type: ignore[import-untyped]
         dt = dateutil_parse(value)
-        return dt.timestamp()
+        timestamp: float = dt.timestamp()
+        return timestamp
     except ImportError:
         pass
     except (ValueError, TypeError):
@@ -242,7 +243,7 @@ def parse_timestamp(value: str) -> Optional[float]:
     return None
 
 
-def safe_float(value: Any, default: Optional[float] = None) -> Optional[float]:
+def safe_float(value: Any, default: float | None = None) -> float | None:
     """
     Safely convert a value to float.
 
@@ -262,7 +263,7 @@ def safe_float(value: Any, default: Optional[float] = None) -> Optional[float]:
         return default
 
 
-def safe_int(value: Any, default: Optional[int] = None) -> Optional[int]:
+def safe_int(value: Any, default: int | None = None) -> int | None:
     """
     Safely convert a value to int.
 
@@ -282,7 +283,7 @@ def safe_int(value: Any, default: Optional[int] = None) -> Optional[int]:
         return default
 
 
-def extract_element_text(element, default: str = "") -> str:
+def extract_element_text(element: Any, default: str = "") -> str:
     """
     Safely extract text content from an XML element.
 
@@ -300,10 +301,11 @@ def extract_element_text(element, default: str = "") -> str:
     if text is None:
         return default
 
-    return text.strip()
+    result: str = text.strip()
+    return result
 
 
-def build_xpath_with_namespaces(xpath: str, namespaces: Dict[str, str]) -> str:
+def build_xpath_with_namespaces(xpath: str, namespaces: dict[str, str]) -> str:
     """
     Build an XPath expression with namespace prefixes.
 
@@ -337,7 +339,7 @@ def get_local_name(tag: str) -> str:
     return tag
 
 
-def format_dbm(value: Optional[float]) -> str:
+def format_dbm(value: float | None) -> str:
     """
     Format a dBm power value for display.
 
@@ -352,7 +354,7 @@ def format_dbm(value: Optional[float]) -> str:
     return f"{value:.1f} dBm"
 
 
-def format_db(value: Optional[float]) -> str:
+def format_db(value: float | None) -> str:
     """
     Format a dB value for display.
 

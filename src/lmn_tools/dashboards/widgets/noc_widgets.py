@@ -10,14 +10,13 @@ with colored indicators.
 """
 
 import logging
-from typing import Optional
 
-from ..lm_client import LMClient, LMAPIError
-from ..lm_helpers import ResolvedInterface, ResolvedBGPPeer
+from ..lm_client import LMAPIError, LMClient
+from ..lm_helpers import ResolvedBGPPeer, ResolvedInterface
 from .common import (
-    WidgetPosition,
-    GRID_COLUMNS,
     DEFAULT_TABLE_HEIGHT,
+    GRID_COLUMNS,
+    WidgetPosition,
 )
 
 logger = logging.getLogger(__name__)
@@ -30,7 +29,7 @@ def create_interface_table_widget(
     datasource_name: str,
     position: WidgetPosition,
     datasource_display_name: str = 'Interfaces-'
-) -> Optional[int]:
+) -> int | None:
     """
     Create an interface statistics table widget using deviceNOC widget type.
 
@@ -93,7 +92,7 @@ def create_interface_table_widget(
 
     try:
         response = client.post('/dashboard/widgets', json=widget_data)
-        widget_id = response.get('data', {}).get('id') or response.get('id')
+        widget_id: int | None = response.get('data', {}).get('id') or response.get('id')
         position.next_row(DEFAULT_TABLE_HEIGHT + 2)
         logger.info(f"Created interface table widget -> {widget_id}")
         return widget_id
@@ -108,7 +107,7 @@ def create_bgp_table_widget(
     bgp_peers: list[ResolvedBGPPeer],
     position: WidgetPosition,
     bgp_datasource_display_name: str = 'BGP-'
-) -> Optional[int]:
+) -> int | None:
     """
     Create a BGP peers table widget.
 
@@ -162,7 +161,7 @@ def create_bgp_table_widget(
 
     try:
         response = client.post('/dashboard/widgets', json=widget_data)
-        widget_id = response.get('data', {}).get('id') or response.get('id')
+        widget_id: int | None = response.get('data', {}).get('id') or response.get('id')
         position.next_row(DEFAULT_TABLE_HEIGHT)
         logger.info(f"Created BGP table widget -> {widget_id}")
         return widget_id

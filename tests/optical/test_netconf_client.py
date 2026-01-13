@@ -4,15 +4,15 @@ Tests for NETCONF client module.
 These tests use mocking since we can't connect to real devices in unit tests.
 """
 
+from unittest.mock import Mock, patch
+
 import pytest
-from unittest.mock import Mock, patch, MagicMock
 from lxml import etree
 
 from lmn_tools.collectors.optical.client import (
     NetconfClient,
     NetconfClientError,
     NetconfConnectionError,
-    NetconfRPCError,
     create_client_from_args,
 )
 

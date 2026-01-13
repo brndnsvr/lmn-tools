@@ -7,7 +7,7 @@ Provides commands for managing LogicMonitor escalation chains.
 from __future__ import annotations
 
 import json
-from typing import Annotated, Optional
+from typing import Annotated, Any
 
 import typer
 from rich.console import Console
@@ -26,7 +26,7 @@ def _get_client() -> LMClient:
     settings = get_settings()
     if not settings.has_credentials:
         console.print("[red]Error: LM credentials not configured[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     return LMClient.from_credentials(settings.credentials)  # type: ignore
 
 
@@ -37,7 +37,7 @@ def _get_service() -> EscalationChainService:
 
 @app.command("list")
 def list_chains(
-    filter: Annotated[Optional[str], typer.Option("--filter", "-f", help="LM filter string")] = None,
+    filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
 ) -> None:
@@ -102,7 +102,7 @@ def get_chain(
         chains = svc.list(filter=f"name:{identifier}")
         if not chains:
             console.print(f"[red]Escalation chain not found: {identifier}[/red]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
         chain = chains[0]
         chain_id = chain["id"]
 
@@ -189,8 +189,8 @@ def search_chains(
 @app.command("create")
 def create_chain(
     name: Annotated[str, typer.Argument(help="Chain name")],
-    description: Annotated[Optional[str], typer.Option("--description", "-d", help="Chain description")] = None,
-    destinations: Annotated[Optional[str], typer.Option("--destinations", help="Destinations as JSON")] = None,
+    description: Annotated[str | None, typer.Option("--description", "-d", help="Chain description")] = None,
+    destinations: Annotated[str | None, typer.Option("--destinations", help="Destinations as JSON")] = None,
     throttling_period: Annotated[int, typer.Option("--throttle-period", help="Throttling period in minutes")] = 0,
     throttling_alerts: Annotated[int, typer.Option("--throttle-alerts", help="Number of throttled alerts")] = 0,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
@@ -198,7 +198,7 @@ def create_chain(
     """Create a new escalation chain."""
     svc = _get_service()
 
-    chain_data: dict = {
+    chain_data: dict[str, Any] = {
         "name": name,
     }
 
@@ -210,7 +210,7 @@ def create_chain(
             chain_data["destinations"] = json.loads(destinations)
         except json.JSONDecodeError as e:
             console.print(f"[red]Invalid JSON for destinations: {e}[/red]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
     if throttling_period:
         chain_data["throttlingPeriod"] = throttling_period
@@ -227,23 +227,23 @@ def create_chain(
             console.print(f"[green]Created escalation chain '{name}' (ID: {chain_id})[/green]")
     except Exception as e:
         console.print(f"[red]Failed to create escalation chain: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("update")
 def update_chain(
     chain_id: Annotated[int, typer.Argument(help="Chain ID")],
-    name: Annotated[Optional[str], typer.Option("--name", "-n", help="New chain name")] = None,
-    description: Annotated[Optional[str], typer.Option("--description", "-d", help="New description")] = None,
-    destinations: Annotated[Optional[str], typer.Option("--destinations", help="Destinations as JSON")] = None,
-    throttling_period: Annotated[Optional[int], typer.Option("--throttle-period", help="Throttling period")] = None,
-    throttling_alerts: Annotated[Optional[int], typer.Option("--throttle-alerts", help="Throttled alerts")] = None,
+    name: Annotated[str | None, typer.Option("--name", "-n", help="New chain name")] = None,
+    description: Annotated[str | None, typer.Option("--description", "-d", help="New description")] = None,
+    destinations: Annotated[str | None, typer.Option("--destinations", help="Destinations as JSON")] = None,
+    throttling_period: Annotated[int | None, typer.Option("--throttle-period", help="Throttling period")] = None,
+    throttling_alerts: Annotated[int | None, typer.Option("--throttle-alerts", help="Throttled alerts")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Update an escalation chain."""
     svc = _get_service()
 
-    update_data: dict = {}
+    update_data: dict[str, Any] = {}
 
     if name:
         update_data["name"] = name
@@ -254,7 +254,7 @@ def update_chain(
             update_data["destinations"] = json.loads(destinations)
         except json.JSONDecodeError as e:
             console.print(f"[red]Invalid JSON for destinations: {e}[/red]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
     if throttling_period is not None:
         update_data["throttlingPeriod"] = throttling_period
     if throttling_alerts is not None:
@@ -262,7 +262,7 @@ def update_chain(
 
     if not update_data:
         console.print("[yellow]No updates specified[/yellow]")
-        raise typer.Exit(0)
+        raise typer.Exit(0) from None
 
     try:
         response = svc.update(chain_id, update_data)
@@ -274,7 +274,7 @@ def update_chain(
             console.print(f"[green]Updated escalation chain {chain_id}[/green]")
     except Exception as e:
         console.print(f"[red]Failed to update escalation chain: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("delete")
@@ -302,11 +302,11 @@ def delete_chain(
         confirm = typer.confirm(f"Delete escalation chain '{chain_name}'?")
         if not confirm:
             console.print("[dim]Cancelled[/dim]")
-            raise typer.Exit(0)
+            raise typer.Exit(0) from None
 
     try:
         svc.delete(chain_id)
         console.print(f"[green]Deleted escalation chain '{chain_name}'[/green]")
     except Exception as e:
         console.print(f"[red]Failed to delete escalation chain: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None

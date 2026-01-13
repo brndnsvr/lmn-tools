@@ -7,7 +7,7 @@ Provides commands for listing and viewing LogicMonitor device groups.
 from __future__ import annotations
 
 import json
-from typing import Annotated, Optional
+from typing import Annotated, Any
 
 import typer
 from rich.console import Console
@@ -27,7 +27,7 @@ def _get_client() -> LMClient:
     settings = get_settings()
     if not settings.has_credentials:
         console.print("[red]Error: LM credentials not configured[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     return LMClient.from_credentials(settings.credentials)  # type: ignore
 
 
@@ -38,8 +38,8 @@ def _get_service() -> DeviceGroupService:
 
 @app.command("list")
 def list_groups(
-    filter: Annotated[Optional[str], typer.Option("--filter", "-f", help="LM filter string")] = None,
-    parent: Annotated[Optional[int], typer.Option("--parent", "-p", help="Filter by parent group ID")] = None,
+    filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
+    parent: Annotated[int | None, typer.Option("--parent", "-p", help="Filter by parent group ID")] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 100,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
 ) -> None:
@@ -95,7 +95,7 @@ def get_group(
         group = svc.get_by_path(identifier)
         if not group:
             console.print(f"[red]Group not found: {identifier}[/red]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
         group_id = group["id"]
 
     if format == "json":
@@ -245,16 +245,16 @@ def list_children(
 def create_group(
     name: Annotated[str, typer.Argument(help="Group name")],
     parent: Annotated[int, typer.Option("--parent", "-p", help="Parent group ID")] = 1,
-    description: Annotated[Optional[str], typer.Option("--description", "-d", help="Group description")] = None,
-    applies_to: Annotated[Optional[str], typer.Option("--applies-to", "-a", help="AppliesTo expression for dynamic group")] = None,
-    properties: Annotated[Optional[str], typer.Option("--properties", help="Custom properties as JSON")] = None,
+    description: Annotated[str | None, typer.Option("--description", "-d", help="Group description")] = None,
+    applies_to: Annotated[str | None, typer.Option("--applies-to", "-a", help="AppliesTo expression for dynamic group")] = None,
+    properties: Annotated[str | None, typer.Option("--properties", help="Custom properties as JSON")] = None,
     disable_alerting: Annotated[bool, typer.Option("--disable-alerting", help="Disable alerting for group")] = False,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Create a new device group."""
     svc = _get_service()
 
-    group_data: dict = {
+    group_data: dict[str, Any] = {
         "name": name,
         "parentId": parent,
         "disableAlerting": disable_alerting,
@@ -274,7 +274,7 @@ def create_group(
             ]
         except json.JSONDecodeError as e:
             console.print(f"[red]Invalid JSON for properties: {e}[/red]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
     try:
         response = svc.create(group_data)
@@ -289,23 +289,23 @@ def create_group(
             console.print(f"[dim]Path: {full_path}[/dim]")
     except Exception as e:
         console.print(f"[red]Failed to create group: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("update")
 def update_group(
     group_id: Annotated[int, typer.Argument(help="Group ID")],
-    name: Annotated[Optional[str], typer.Option("--name", "-n", help="New group name")] = None,
-    description: Annotated[Optional[str], typer.Option("--description", "-d", help="New description")] = None,
-    parent: Annotated[Optional[int], typer.Option("--parent", "-p", help="New parent group ID (moves group)")] = None,
-    applies_to: Annotated[Optional[str], typer.Option("--applies-to", "-a", help="New AppliesTo expression")] = None,
-    disable_alerting: Annotated[Optional[bool], typer.Option("--disable-alerting/--enable-alerting", help="Toggle alerting")] = None,
+    name: Annotated[str | None, typer.Option("--name", "-n", help="New group name")] = None,
+    description: Annotated[str | None, typer.Option("--description", "-d", help="New description")] = None,
+    parent: Annotated[int | None, typer.Option("--parent", "-p", help="New parent group ID (moves group)")] = None,
+    applies_to: Annotated[str | None, typer.Option("--applies-to", "-a", help="New AppliesTo expression")] = None,
+    disable_alerting: Annotated[bool | None, typer.Option("--disable-alerting/--enable-alerting", help="Toggle alerting")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Update a device group."""
     svc = _get_service()
 
-    update_data: dict = {}
+    update_data: dict[str, Any] = {}
 
     if name:
         update_data["name"] = name
@@ -320,7 +320,7 @@ def update_group(
 
     if not update_data:
         console.print("[yellow]No updates specified[/yellow]")
-        raise typer.Exit(0)
+        raise typer.Exit(0) from None
 
     try:
         response = svc.update(group_id, update_data)
@@ -332,7 +332,7 @@ def update_group(
             console.print(f"[green]Updated group {group_id}[/green]")
     except Exception as e:
         console.print(f"[red]Failed to update group: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("delete")
@@ -362,7 +362,7 @@ def delete_group(
         confirm = typer.confirm(msg)
         if not confirm:
             console.print("[dim]Cancelled[/dim]")
-            raise typer.Exit(0)
+            raise typer.Exit(0) from None
 
     try:
         params = []
@@ -379,7 +379,7 @@ def delete_group(
         console.print(f"[green]Deleted group '{group_name}'[/green]")
     except Exception as e:
         console.print(f"[red]Failed to delete group: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("set-property")
@@ -399,7 +399,7 @@ def set_group_property(
         console.print(f"[green]Set property '{name}' = '{value}' on group {group_id}[/green]")
     except Exception as e:
         console.print(f"[red]Failed to set property: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("delete-property")
@@ -415,11 +415,11 @@ def delete_group_property(
         confirm = typer.confirm(f"Delete property '{name}' from group {group_id}?")
         if not confirm:
             console.print("[dim]Cancelled[/dim]")
-            raise typer.Exit(0)
+            raise typer.Exit(0) from None
 
     try:
         svc.client.delete(f"{svc.base_path}/{group_id}/properties/{name}")
         console.print(f"[green]Deleted property '{name}' from group {group_id}[/green]")
     except Exception as e:
         console.print(f"[red]Failed to delete property: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None

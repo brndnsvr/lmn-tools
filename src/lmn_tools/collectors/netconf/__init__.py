@@ -9,4 +9,4 @@ from __future__ import annotations
 
 from lmn_tools.collectors.netconf.client import DEVICE_CONFIGS, NetconfCollector
 
-__all__ = ["NetconfCollector", "DEVICE_CONFIGS"]
+__all__ = ["DEVICE_CONFIGS", "NetconfCollector"]

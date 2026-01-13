@@ -28,12 +28,12 @@ class WidgetPosition:
     col: int = 0
     row: int = 0
 
-    def next_row(self, height: int):
+    def next_row(self, height: int) -> None:
         """Move to next row."""
         self.row += height
         self.col = 0
 
-    def next_col(self, width: int):
+    def next_col(self, width: int) -> None:
         """Move to next column, wrapping if needed."""
         self.col += width
         if self.col >= GRID_COLUMNS:

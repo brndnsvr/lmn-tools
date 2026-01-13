@@ -10,14 +10,13 @@ color thresholds, and various display options.
 """
 
 import logging
-from typing import Optional
 
-from ..lm_client import LMClient, LMAPIError
+from ..lm_client import LMAPIError, LMClient
 from ..lm_helpers import ResolvedBGPPeer
 from .common import (
-    WidgetPosition,
-    GRID_COLUMNS,
     DEFAULT_TABLE_HEIGHT,
+    GRID_COLUMNS,
+    WidgetPosition,
 )
 
 logger = logging.getLogger(__name__)
@@ -29,7 +28,7 @@ def create_bgp_statistics_widget(
     bgp_peers: list[ResolvedBGPPeer],
     position: WidgetPosition,
     bgp_datasource_full_name: str = 'BGP- (BGP-)'
-) -> Optional[int]:
+) -> int | None:
     """
     Create a BGP statistics table widget using dynamicTable type.
 
@@ -156,7 +155,7 @@ def create_bgp_statistics_widget(
 
     try:
         response = client.post('/dashboard/widgets', json=widget_data)
-        widget_id = response.get('data', {}).get('id') or response.get('id')
+        widget_id: int | None = response.get('data', {}).get('id') or response.get('id')
         position.next_row(DEFAULT_TABLE_HEIGHT)
         logger.info(f"Created BGP statistics widget -> {widget_id}")
         return widget_id

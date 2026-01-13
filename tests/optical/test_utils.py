@@ -2,17 +2,16 @@
 Tests for utility functions.
 """
 
-import pytest
 from lmn_tools.collectors.optical.utils import (
-    sanitize_instance_id,
-    sanitize_metric_name,
     apply_string_map,
+    extract_element_text,
+    get_local_name,
     parse_string_map_definition,
     parse_timestamp,
     safe_float,
     safe_int,
-    get_local_name,
-    extract_element_text,
+    sanitize_instance_id,
+    sanitize_metric_name,
 )
 
 

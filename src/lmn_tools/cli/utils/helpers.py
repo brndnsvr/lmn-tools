@@ -34,7 +34,8 @@ def unwrap_response(response: dict[str, Any]) -> dict[str, Any]:
         Unwrapped data dictionary
     """
     if "data" in response:
-        return response["data"]
+        result: dict[str, Any] = response["data"]
+        return result
     return response
 
 
@@ -67,11 +68,13 @@ def load_json_file(
         data = json.loads(file_path.read_text())
     except json.JSONDecodeError as e:
         console.print(f"[red]Invalid JSON: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     if unwrap and "data" in data:
-        return data["data"]
-    return data
+        result: dict[str, Any] = data["data"]
+        return result
+    result2: dict[str, Any] = data
+    return result2
 
 
 def build_filter(*conditions: str | None) -> str | None:
@@ -127,12 +130,12 @@ def edit_in_editor(
     except subprocess.CalledProcessError as e:
         console.print(f"[red]Editor exited with error: {e}[/red]")
         Path(temp_path).unlink(missing_ok=True)
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     except FileNotFoundError:
         console.print(f"[red]Editor not found: {editor}[/red]")
         console.print("[dim]Set $EDITOR environment variable to your preferred editor[/dim]")
         Path(temp_path).unlink(missing_ok=True)
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     new_content = Path(temp_path).read_text()
     Path(temp_path).unlink(missing_ok=True)
@@ -175,6 +178,6 @@ def edit_json_in_editor(
         recovery_path = Path(tempfile.gettempdir()) / "lm_edit_recovery.json"
         recovery_path.write_text(new_json)
         console.print(f"[dim]Your changes saved to: {recovery_path}[/dim]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     return new_data, True

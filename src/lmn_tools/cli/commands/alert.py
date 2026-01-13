@@ -7,7 +7,7 @@ Provides commands for viewing and managing LogicMonitor alerts.
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Annotated, Optional
+from typing import Annotated
 
 import typer
 from rich.console import Console
@@ -26,7 +26,7 @@ def _get_client() -> LMClient:
     settings = get_settings()
     if not settings.has_credentials:
         console.print("[red]Error: LM credentials not configured[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     return LMClient.from_credentials(settings.credentials)  # type: ignore
 
 
@@ -41,9 +41,8 @@ def _format_timestamp(ts: int | None) -> str:
         return "N/A"
     try:
         # Timestamps >= 10^12 are in milliseconds, < 10^12 are in seconds
-        if ts >= 1e12:
-            ts = ts / 1000
-        return datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M")
+        ts_secs: float = ts / 1000 if ts >= 1e12 else float(ts)
+        return datetime.fromtimestamp(ts_secs).strftime("%Y-%m-%d %H:%M")
     except Exception:
         return str(ts)
 
@@ -76,11 +75,11 @@ def _severity_style(severity: str | int) -> str:
 
 @app.command("list")
 def list_alerts(
-    filter: Annotated[Optional[str], typer.Option("--filter", "-f", help="LM filter string")] = None,
-    severity: Annotated[Optional[str], typer.Option("--severity", "-s", help="Filter by severity")] = None,
-    acked: Annotated[Optional[bool], typer.Option("--acked", help="Filter by acked status")] = None,
+    filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
+    severity: Annotated[str | None, typer.Option("--severity", "-s", help="Filter by severity")] = None,
+    acked: Annotated[bool | None, typer.Option("--acked", help="Filter by acked status")] = None,
     cleared: Annotated[bool, typer.Option("--cleared", help="Include cleared alerts")] = False,
-    device: Annotated[Optional[int], typer.Option("--device", "-d", help="Filter by device ID")] = None,
+    device: Annotated[int | None, typer.Option("--device", "-d", help="Filter by device ID")] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
 ) -> None:
@@ -144,7 +143,7 @@ def list_alerts(
 
 @app.command("active")
 def list_active_alerts(
-    severity: Annotated[Optional[str], typer.Option("--severity", "-s", help="Filter by severity")] = None,
+    severity: Annotated[str | None, typer.Option("--severity", "-s", help="Filter by severity")] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
@@ -284,7 +283,7 @@ def acknowledge_alert(
         console.print(f"[green]Alert {alert_id} acknowledged[/green]")
     except Exception as e:
         console.print(f"[red]Failed to acknowledge alert: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("summary")

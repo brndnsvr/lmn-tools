@@ -7,7 +7,7 @@ Provides commands for listing and viewing LogicMonitor TopologySources.
 from __future__ import annotations
 
 import json
-from typing import Annotated, Optional
+from typing import Annotated, Any
 
 import typer
 from rich.console import Console
@@ -26,7 +26,7 @@ def _get_client() -> LMClient:
     settings = get_settings()
     if not settings.has_credentials:
         console.print("[red]Error: LM credentials not configured[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     return LMClient.from_credentials(settings.credentials)  # type: ignore
 
 
@@ -37,8 +37,8 @@ def _get_service() -> LogicModuleService:
 
 @app.command("list")
 def list_topologysources(
-    filter: Annotated[Optional[str], typer.Option("--filter", "-f", help="LM filter string")] = None,
-    group: Annotated[Optional[str], typer.Option("--group", "-g", help="Filter by group name")] = None,
+    filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
+    group: Annotated[str | None, typer.Option("--group", "-g", help="Filter by group name")] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
 ) -> None:
@@ -92,7 +92,7 @@ def get_topologysource(
         results = svc.list(filter=f'name:"{identifier}"', max_items=1)
         if not results:
             console.print(f"[red]TopologySource not found: {identifier}[/red]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
         ts = results[0]
         ts_id = ts["id"]
 
@@ -156,7 +156,7 @@ def search_topologysources(
 @app.command("export")
 def export_topologysource(
     ts_id: Annotated[int, typer.Argument(help="TopologySource ID to export")],
-    output: Annotated[Optional[str], typer.Option("--output", "-o", help="Output file path")] = None,
+    output: Annotated[str | None, typer.Option("--output", "-o", help="Output file path")] = None,
 ) -> None:
     """Export a TopologySource as JSON."""
     svc = _get_service()
@@ -192,13 +192,13 @@ def import_topologysource(
 
     if not file_path.exists():
         console.print(f"[red]File not found: {file}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     try:
         ts_data = json.loads(file_path.read_text())
     except json.JSONDecodeError as e:
         console.print(f"[red]Invalid JSON: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     # Handle wrapped data
     if "data" in ts_data:
@@ -212,7 +212,7 @@ def import_topologysource(
         if existing:
             console.print(f"[yellow]TopologySource '{ts_name}' already exists (ID: {existing[0]['id']})[/yellow]")
             console.print("Use --force to overwrite")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
     # Remove metadata that would cause conflicts
     for key in ["id", "checksum", "registeredOn", "modifiedOn", "version"]:
@@ -229,21 +229,21 @@ def import_topologysource(
             console.print(f"[green]Imported TopologySource '{ts_name}' (ID: {ts_id})[/green]")
     except Exception as e:
         console.print(f"[red]Failed to import: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("update")
 def update_topologysource(
     ts_id: Annotated[int, typer.Argument(help="TopologySource ID")],
-    group: Annotated[Optional[str], typer.Option("--group", "-g", help="New group name")] = None,
-    technology: Annotated[Optional[str], typer.Option("--technology", "-t", help="New technology")] = None,
-    applies_to: Annotated[Optional[str], typer.Option("--applies-to", "-a", help="New AppliesTo expression")] = None,
+    group: Annotated[str | None, typer.Option("--group", "-g", help="New group name")] = None,
+    technology: Annotated[str | None, typer.Option("--technology", "-t", help="New technology")] = None,
+    applies_to: Annotated[str | None, typer.Option("--applies-to", "-a", help="New AppliesTo expression")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Update a TopologySource."""
     svc = _get_service()
 
-    update_data: dict = {}
+    update_data: dict[str, Any] = {}
 
     if group is not None:
         update_data["group"] = group
@@ -254,7 +254,7 @@ def update_topologysource(
 
     if not update_data:
         console.print("[yellow]No updates specified[/yellow]")
-        raise typer.Exit(0)
+        raise typer.Exit(0) from None
 
     try:
         response = svc.update(ts_id, update_data)
@@ -266,7 +266,7 @@ def update_topologysource(
             console.print(f"[green]Updated TopologySource {ts_id}[/green]")
     except Exception as e:
         console.print(f"[red]Failed to update TopologySource: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("delete")
@@ -289,21 +289,21 @@ def delete_topologysource(
         confirm = typer.confirm(f"Delete TopologySource '{ts_name}'?")
         if not confirm:
             console.print("[dim]Cancelled[/dim]")
-            raise typer.Exit(0)
+            raise typer.Exit(0) from None
 
     try:
         svc.delete(ts_id)
         console.print(f"[green]Deleted TopologySource '{ts_name}'[/green]")
     except Exception as e:
         console.print(f"[red]Failed to delete TopologySource: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("clone")
 def clone_topologysource(
     ts_id: Annotated[int, typer.Argument(help="TopologySource ID to clone")],
     name: Annotated[str, typer.Option("--name", "-n", help="New TopologySource name")],
-    display_name: Annotated[Optional[str], typer.Option("--display-name", "-d", help="New display name")] = None,
+    display_name: Annotated[str | None, typer.Option("--display-name", "-d", help="New display name")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Clone a TopologySource with a new name."""
@@ -320,4 +320,4 @@ def clone_topologysource(
             console.print(f"[green]Cloned TopologySource {ts_id} → '{name}' (ID: {new_id})[/green]")
     except Exception as e:
         console.print(f"[red]Failed to clone TopologySource: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None

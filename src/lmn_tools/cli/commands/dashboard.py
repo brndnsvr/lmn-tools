@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Annotated, Optional
+from typing import Annotated, Any
 
 import typer
 from rich.console import Console
@@ -16,7 +16,7 @@ from rich.table import Table
 from rich.tree import Tree
 
 from lmn_tools.cli.utils import build_filter, get_client, load_json_file, unwrap_response
-from lmn_tools.services.dashboards import DashboardService, DashboardGroupService
+from lmn_tools.services.dashboards import DashboardGroupService, DashboardService
 
 app = typer.Typer(help="Manage dashboards")
 console = Console()
@@ -34,8 +34,8 @@ def _get_group_service() -> DashboardGroupService:
 
 @app.command("list")
 def list_dashboards(
-    filter: Annotated[Optional[str], typer.Option("--filter", "-f", help="LM filter string")] = None,
-    group: Annotated[Optional[int], typer.Option("--group", "-g", help="Filter by group ID")] = None,
+    filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
+    group: Annotated[int | None, typer.Option("--group", "-g", help="Filter by group ID")] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
 ) -> None:
@@ -84,7 +84,7 @@ def get_dashboard(
         results = svc.list(filter=f'name:"{identifier}"', max_items=1)
         if not results:
             console.print(f"[red]Dashboard not found: {identifier}[/red]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
         dashboard = results[0]
         dashboard_id = dashboard["id"]
 
@@ -180,7 +180,7 @@ def search_dashboards(
 @app.command("export")
 def export_dashboard(
     dashboard_id: Annotated[int, typer.Argument(help="Dashboard ID to export")],
-    output: Annotated[Optional[str], typer.Option("--output", "-o", help="Output file path")] = None,
+    output: Annotated[str | None, typer.Option("--output", "-o", help="Output file path")] = None,
 ) -> None:
     """Export a dashboard as JSON (includes widgets)."""
     svc = _get_service()
@@ -198,7 +198,7 @@ def export_dashboard(
 def clone_dashboard(
     dashboard_id: Annotated[int, typer.Argument(help="Dashboard ID to clone")],
     name: Annotated[str, typer.Option("--name", "-n", help="Name for the cloned dashboard")],
-    group: Annotated[Optional[int], typer.Option("--group", "-g", help="Group ID for the clone")] = None,
+    group: Annotated[int | None, typer.Option("--group", "-g", help="Group ID for the clone")] = None,
 ) -> None:
     """Clone a dashboard."""
     svc = _get_service()
@@ -209,13 +209,13 @@ def clone_dashboard(
         console.print(f"[green]Cloned dashboard {dashboard_id} -> {new_id} as '{name}'[/green]")
     except Exception as e:
         console.print(f"[red]Failed to clone dashboard: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 # Dashboard Group commands
 @app.command("groups")
 def list_groups(
-    parent: Annotated[Optional[int], typer.Option("--parent", "-p", help="Parent group ID")] = None,
+    parent: Annotated[int | None, typer.Option("--parent", "-p", help="Parent group ID")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
 ) -> None:
     """List dashboard groups."""
@@ -283,9 +283,9 @@ def show_group_tree(
 def create_dashboard(
     name: Annotated[str, typer.Argument(help="Dashboard name")],
     group: Annotated[int, typer.Option("--group", "-g", help="Dashboard group ID")] = 1,
-    description: Annotated[Optional[str], typer.Option("--description", "-d", help="Dashboard description")] = None,
+    description: Annotated[str | None, typer.Option("--description", "-d", help="Dashboard description")] = None,
     sharable: Annotated[bool, typer.Option("--sharable/--private", help="Make dashboard sharable")] = True,
-    template: Annotated[Optional[str], typer.Option("--template", "-t", help="Template file (JSON)")] = None,
+    template: Annotated[str | None, typer.Option("--template", "-t", help="Template file (JSON)")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Create a new dashboard."""
@@ -314,22 +314,22 @@ def create_dashboard(
             console.print(f"[green]Created dashboard '{name}' (ID: {dashboard_id})[/green]")
     except Exception as e:
         console.print(f"[red]Failed to create dashboard: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("update")
 def update_dashboard(
     dashboard_id: Annotated[int, typer.Argument(help="Dashboard ID")],
-    name: Annotated[Optional[str], typer.Option("--name", "-n", help="New name")] = None,
-    description: Annotated[Optional[str], typer.Option("--description", "-d", help="New description")] = None,
-    group: Annotated[Optional[int], typer.Option("--group", "-g", help="New group ID")] = None,
-    sharable: Annotated[Optional[bool], typer.Option("--sharable/--private", help="Toggle sharable")] = None,
+    name: Annotated[str | None, typer.Option("--name", "-n", help="New name")] = None,
+    description: Annotated[str | None, typer.Option("--description", "-d", help="New description")] = None,
+    group: Annotated[int | None, typer.Option("--group", "-g", help="New group ID")] = None,
+    sharable: Annotated[bool | None, typer.Option("--sharable/--private", help="Toggle sharable")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Update a dashboard."""
     svc = _get_service()
 
-    update_data: dict = {}
+    update_data: dict[str, Any] = {}
     if name:
         update_data["name"] = name
     if description is not None:
@@ -341,7 +341,7 @@ def update_dashboard(
 
     if not update_data:
         console.print("[yellow]No updates specified[/yellow]")
-        raise typer.Exit(0)
+        raise typer.Exit(0) from None
 
     try:
         result = unwrap_response(svc.update(dashboard_id, update_data))
@@ -351,7 +351,7 @@ def update_dashboard(
             console.print(f"[green]Updated dashboard {dashboard_id}[/green]")
     except Exception as e:
         console.print(f"[red]Failed to update dashboard: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("delete")
@@ -372,21 +372,21 @@ def delete_dashboard(
         confirm = typer.confirm(f"Delete dashboard '{dashboard_name}'?")
         if not confirm:
             console.print("[dim]Cancelled[/dim]")
-            raise typer.Exit(0)
+            raise typer.Exit(0) from None
 
     try:
         svc.delete(dashboard_id)
         console.print(f"[green]Deleted dashboard '{dashboard_name}'[/green]")
     except Exception as e:
         console.print(f"[red]Failed to delete dashboard: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("import")
 def import_dashboard(
     file: Annotated[str, typer.Argument(help="JSON file to import")],
-    group: Annotated[Optional[int], typer.Option("--group", "-g", help="Target group ID")] = None,
-    name: Annotated[Optional[str], typer.Option("--name", "-n", help="Override dashboard name")] = None,
+    group: Annotated[int | None, typer.Option("--group", "-g", help="Target group ID")] = None,
+    name: Annotated[str | None, typer.Option("--name", "-n", help="Override dashboard name")] = None,
     force: Annotated[bool, typer.Option("--force", "-f", help="Overwrite if name exists")] = False,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
@@ -409,7 +409,7 @@ def import_dashboard(
         if existing:
             console.print(f"[yellow]Dashboard '{dashboard_name}' already exists (ID: {existing[0]['id']})[/yellow]")
             console.print("Use --force to overwrite or --name to rename")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
 
     try:
         result = unwrap_response(svc.create(dashboard_data))
@@ -421,7 +421,7 @@ def import_dashboard(
             console.print(f"[green]Imported dashboard '{dashboard_name}' (ID: {dashboard_id})[/green]")
     except Exception as e:
         console.print(f"[red]Failed to import dashboard: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 # Dashboard Group write operations
@@ -430,13 +430,13 @@ def import_dashboard(
 def create_dashboard_group(
     name: Annotated[str, typer.Argument(help="Group name")],
     parent: Annotated[int, typer.Option("--parent", "-p", help="Parent group ID")] = 1,
-    description: Annotated[Optional[str], typer.Option("--description", "-d", help="Group description")] = None,
+    description: Annotated[str | None, typer.Option("--description", "-d", help="Group description")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Create a new dashboard group."""
     svc = _get_group_service()
 
-    group_data: dict = {"name": name, "parentId": parent}
+    group_data: dict[str, Any] = {"name": name, "parentId": parent}
     if description:
         group_data["description"] = description
 
@@ -450,7 +450,7 @@ def create_dashboard_group(
             console.print(f"[green]Created dashboard group '{name}' (ID: {group_id})[/green]")
     except Exception as e:
         console.print(f"[red]Failed to create group: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("delete-group")
@@ -471,11 +471,11 @@ def delete_dashboard_group(
         confirm = typer.confirm(f"Delete dashboard group '{group_name}'?")
         if not confirm:
             console.print("[dim]Cancelled[/dim]")
-            raise typer.Exit(0)
+            raise typer.Exit(0) from None
 
     try:
         svc.delete(group_id)
         console.print(f"[green]Deleted dashboard group '{group_name}'[/green]")
     except Exception as e:
         console.print(f"[red]Failed to delete group: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None

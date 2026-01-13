@@ -7,8 +7,8 @@ and executing RPC operations against Coriant and Ciena devices.
 
 import logging
 import socket
-import sys
-from typing import Optional, List, Union
+from typing import Any, ClassVar
+
 from lxml import etree
 
 from .debug import get_debug_helper
@@ -58,7 +58,7 @@ class NetconfClient:
     DEFAULT_TIMEOUT = 60
 
     # Known device types and their capabilities
-    DEVICE_TYPES = {
+    DEVICE_TYPES: ClassVar[dict[str, Any]] = {
         "coriant": {
             "device_params": {"name": "default"},
             "namespaces": {
@@ -82,7 +82,7 @@ class NetconfClient:
         port: int = DEFAULT_PORT,
         timeout: int = DEFAULT_TIMEOUT,
         hostkey_verify: bool = False,
-        device_type: Optional[str] = None,
+        device_type: str | None = None,
         debug: bool = False
     ):
         """
@@ -107,23 +107,22 @@ class NetconfClient:
         self.device_type = device_type
         self.debug = debug
 
-        self._manager = None
+        self._manager: Any = None
         self._connected = False
-        self._capabilities = []
+        self._capabilities: list[str] = []
         self._debug_helper = get_debug_helper(enabled=debug)
 
         if debug:
             logging.getLogger("ncclient").setLevel(logging.DEBUG)
 
-    def __enter__(self):
+    def __enter__(self) -> "NetconfClient":
         """Context manager entry - establish connection."""
         self.connect()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         """Context manager exit - close connection."""
         self.disconnect()
-        return False  # Don't suppress exceptions
 
     @property
     def connected(self) -> bool:
@@ -131,7 +130,7 @@ class NetconfClient:
         return self._connected and self._manager is not None
 
     @property
-    def capabilities(self) -> List[str]:
+    def capabilities(self) -> list[str]:
         """Get device NETCONF capabilities (after connection)."""
         return self._capabilities
 
@@ -163,7 +162,7 @@ class NetconfClient:
                 f"ncclient library not installed or import failed. "
                 f"Run: pip install ncclient lxml\n"
                 f"Import error: {e}"
-            )
+            ) from e
 
         # Get device-specific parameters if known
         device_params = {"name": "default"}
@@ -187,7 +186,8 @@ class NetconfClient:
                 look_for_keys=False,
             )
             self._connected = True
-            self._capabilities = list(self._manager.server_capabilities)
+            if self._manager is not None:
+                self._capabilities = list(self._manager.server_capabilities)
 
             logger.info(
                 f"Connected to {self.hostname} - "
@@ -196,7 +196,7 @@ class NetconfClient:
 
             # Output session info in debug mode
             session_id = None
-            if hasattr(self._manager, 'session_id'):
+            if self._manager is not None and hasattr(self._manager, 'session_id'):
                 session_id = str(self._manager.session_id)
             detected_type = self.detect_device_type()
 
@@ -214,7 +214,7 @@ class NetconfClient:
                 f"  - User has NETCONF access permissions\n"
                 f"  - NETCONF is enabled on the device\n"
                 f"Error: {e}"
-            )
+            ) from e
         except SSHError as e:
             error_str = str(e).lower()
             if "connection refused" in error_str:
@@ -226,7 +226,7 @@ class NetconfClient:
                     f"  - No firewall blocking the connection\n"
                     f"  - Correct port (default NETCONF: 830, SSH: 22)\n"
                     f"Error: {e}"
-                )
+                ) from e
             elif "timed out" in error_str or "timeout" in error_str:
                 raise NetconfConnectionError(
                     f"Connection timed out to {self.hostname}:{self.port}. "
@@ -235,19 +235,19 @@ class NetconfClient:
                     f"  - Network path is available\n"
                     f"  - Try increasing timeout (current: {self.timeout}s)\n"
                     f"Error: {e}"
-                )
+                ) from e
             elif "host key" in error_str:
                 raise NetconfConnectionError(
                     f"SSH host key verification failed for {self.hostname}. "
                     f"Set hostkey_verify=False or add host key to known_hosts.\n"
                     f"Error: {e}"
-                )
+                ) from e
             else:
                 raise NetconfConnectionError(
                     f"SSH connection failed to {self.hostname}:{self.port}. "
                     f"Please verify device is reachable and NETCONF is enabled.\n"
                     f"Error: {e}"
-                )
+                ) from e
         except socket.gaierror as e:
             raise NetconfConnectionError(
                 f"DNS resolution failed for hostname '{self.hostname}'. "
@@ -255,20 +255,20 @@ class NetconfClient:
                 f"  - Hostname is spelled correctly\n"
                 f"  - DNS is working (try IP address instead)\n"
                 f"Error: {e}"
-            )
-        except socket.timeout as e:
+            ) from e
+        except TimeoutError as e:
             raise NetconfConnectionError(
                 f"Socket timeout connecting to {self.hostname}:{self.port}. "
                 f"The device may be unreachable or overloaded.\n"
                 f"Error: {e}"
-            )
+            ) from e
         except Exception as e:
             # Catch-all for unexpected errors
             error_type = type(e).__name__
             raise NetconfConnectionError(
                 f"Failed to connect to {self.hostname}:{self.port}. "
                 f"Unexpected error ({error_type}): {e}"
-            )
+            ) from e
 
     def disconnect(self) -> None:
         """Close NETCONF connection."""
@@ -285,7 +285,7 @@ class NetconfClient:
 
     def get(
         self,
-        filter_xml: Union[str, etree._Element, None] = None
+        filter_xml: str | etree._Element | None = None
     ) -> etree._Element:
         """
         Execute NETCONF <get> RPC operation.
@@ -321,6 +321,8 @@ class NetconfClient:
 
             logger.debug(f"Executing get RPC on {self.hostname}")
 
+            if self._manager is None:
+                raise NetconfClientError("Not connected to device")
             response = self._manager.get(filter=filter_spec)
 
             # Response is an GetReply object, get the data element
@@ -343,12 +345,12 @@ class NetconfClient:
 
         except Exception as e:
             self._debug_helper.error("Get RPC failed", exception=e)
-            raise NetconfRPCError(f"Get RPC failed: {e}")
+            raise NetconfRPCError(f"Get RPC failed: {e}") from e
 
     def get_config(
         self,
         source: str = "running",
-        filter_xml: Union[str, etree._Element, None] = None
+        filter_xml: str | etree._Element | None = None
     ) -> etree._Element:
         """
         Execute NETCONF <get-config> RPC operation.
@@ -378,6 +380,8 @@ class NetconfClient:
 
             logger.debug(f"Executing get-config RPC on {self.hostname}")
 
+            if self._manager is None:
+                raise NetconfClientError("Not connected to device")
             response = self._manager.get_config(source=source, filter=filter_spec)
 
             if hasattr(response, "data_ele"):
@@ -390,9 +394,9 @@ class NetconfClient:
                 return etree.fromstring(str(response).encode())
 
         except Exception as e:
-            raise NetconfRPCError(f"Get-config RPC failed: {e}")
+            raise NetconfRPCError(f"Get-config RPC failed: {e}") from e
 
-    def build_filter(self, config_xml: Union[str, etree._Element]) -> etree._Element:
+    def build_filter(self, config_xml: str | etree._Element) -> etree._Element:
         """
         Build a subtree filter from a configuration template.
 
@@ -441,7 +445,7 @@ class NetconfClient:
         for child in element:
             self._clean_filter_attributes(child)
 
-    def detect_device_type(self) -> Optional[str]:
+    def detect_device_type(self) -> str | None:
         """
         Attempt to detect device type from capabilities.
 
@@ -462,7 +466,7 @@ class NetconfClient:
         return None
 
 
-def create_client_from_args(args) -> NetconfClient:
+def create_client_from_args(args: Any) -> NetconfClient:
     """
     Create a NetconfClient from parsed command-line arguments.
 

@@ -118,11 +118,9 @@ class BaseCollector(ABC, Generic[CredentialT]):
         exc_type: type[BaseException] | None,
         exc_val: BaseException | None,
         exc_tb: Any,
-    ) -> bool:
+    ) -> None:
         """Exit context manager - disconnect from device."""
         self.disconnect()
-        # Don't suppress exceptions
-        return False
 
     def _debug_print(self, message: str) -> None:
         """Print debug message if debug mode is enabled."""

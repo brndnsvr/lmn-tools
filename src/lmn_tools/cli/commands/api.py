@@ -7,7 +7,7 @@ Provides direct access to the LogicMonitor API for power users.
 from __future__ import annotations
 
 import json
-from typing import Annotated, Optional
+from typing import Annotated, Any
 
 import typer
 from rich.console import Console
@@ -24,15 +24,15 @@ def _get_client() -> LMClient:
     settings = get_settings()
     if not settings.has_credentials:
         console.print("[red]Error: LM credentials not configured[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     return LMClient.from_credentials(settings.credentials)  # type: ignore
 
 
 @app.command("get")
 def api_get(
     path: Annotated[str, typer.Argument(help="API path (e.g., /device/devices)")],
-    filter: Annotated[Optional[str], typer.Option("--filter", "-f", help="Filter string")] = None,
-    fields: Annotated[Optional[str], typer.Option("--fields", help="Comma-separated fields")] = None,
+    filter: Annotated[str | None, typer.Option("--filter", "-f", help="Filter string")] = None,
+    fields: Annotated[str | None, typer.Option("--fields", help="Comma-separated fields")] = None,
     size: Annotated[int, typer.Option("--size", "-s", help="Page size")] = 50,
     offset: Annotated[int, typer.Option("--offset", "-o", help="Offset")] = 0,
     raw: Annotated[bool, typer.Option("--raw", "-r", help="Show raw response without formatting")] = False,
@@ -40,7 +40,7 @@ def api_get(
     """Make a GET request to the API."""
     client = _get_client()
 
-    params = {"size": size, "offset": offset}
+    params: dict[str, Any] = {"size": size, "offset": offset}
     if filter:
         params["filter"] = filter
     if fields:
@@ -54,7 +54,7 @@ def api_get(
             console.print_json(data=response)
     except Exception as e:
         console.print(f"[red]API Error: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("post")
@@ -70,7 +70,7 @@ def api_post(
         json_data = json.loads(data)
     except json.JSONDecodeError as e:
         console.print(f"[red]Invalid JSON: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     try:
         response = client.post(path, json_data=json_data)
@@ -80,7 +80,7 @@ def api_post(
             console.print_json(data=response)
     except Exception as e:
         console.print(f"[red]API Error: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("patch")
@@ -96,7 +96,7 @@ def api_patch(
         json_data = json.loads(data)
     except json.JSONDecodeError as e:
         console.print(f"[red]Invalid JSON: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     try:
         response = client.patch(path, json_data=json_data)
@@ -106,7 +106,7 @@ def api_patch(
             console.print_json(data=response)
     except Exception as e:
         console.print(f"[red]API Error: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("put")
@@ -122,7 +122,7 @@ def api_put(
         json_data = json.loads(data)
     except json.JSONDecodeError as e:
         console.print(f"[red]Invalid JSON: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     try:
         response = client.put(path, json_data=json_data)
@@ -132,7 +132,7 @@ def api_put(
             console.print_json(data=response)
     except Exception as e:
         console.print(f"[red]API Error: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("delete")
@@ -146,7 +146,7 @@ def api_delete(
         confirm = typer.confirm(f"Delete {path}?")
         if not confirm:
             console.print("[dim]Cancelled[/dim]")
-            raise typer.Exit(0)
+            raise typer.Exit(0) from None
 
     client = _get_client()
 
@@ -158,7 +158,7 @@ def api_delete(
             console.print_json(data=response)
     except Exception as e:
         console.print(f"[red]API Error: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("endpoints")

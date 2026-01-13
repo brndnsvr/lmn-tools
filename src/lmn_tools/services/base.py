@@ -165,7 +165,8 @@ class BaseService(ABC):
             params["filter"] = filter
 
         response = self.client.get(self.base_path, params)
-        return response.get("data", {}).get("total", 0)
+        total: int = response.get("data", {}).get("total", 0)
+        return total
 
     def exists(self, id: int) -> bool:
         """

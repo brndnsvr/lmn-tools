@@ -10,16 +10,15 @@ This module provides functions to create NOC alert widgets:
 These widgets are designed for NOC technicians troubleshooting customer issues.
 """
 
-import re
 import logging
-from typing import Optional
+import re
 
-from ..lm_client import LMClient, LMAPIError
+from ..lm_client import LMAPIError, LMClient
 from ..lm_helpers import ResolvedInterface
 from .common import (
-    WidgetPosition,
-    GRID_COLUMNS,
     DEFAULT_TABLE_HEIGHT,
+    GRID_COLUMNS,
+    WidgetPosition,
 )
 
 logger = logging.getLogger(__name__)
@@ -30,7 +29,7 @@ def create_resource_alerts_widget(
     dashboard_id: int,
     devices: list[str],
     position: WidgetPosition
-) -> Optional[int]:
+) -> int | None:
     """
     Create NOC grid widget showing alerts for customer devices.
 
@@ -84,7 +83,7 @@ def create_resource_alerts_widget(
 
     try:
         response = client.post('/dashboard/widgets', json=widget_data)
-        widget_id = response.get('data', {}).get('id') or response.get('id')
+        widget_id: int | None = response.get('data', {}).get('id') or response.get('id')
         position.next_row(3)
         logger.info(f"Created resource alerts widget -> {widget_id}")
         return widget_id
@@ -99,7 +98,7 @@ def create_interface_alerts_widget(
     interfaces: list[ResolvedInterface],
     position: WidgetPosition,
     datasource_display_name: str = 'Interfaces-'
-) -> Optional[int]:
+) -> int | None:
     """
     Create NOC grid showing alerts for customer interfaces.
 
@@ -154,7 +153,7 @@ def create_interface_alerts_widget(
 
     try:
         response = client.post('/dashboard/widgets', json=widget_data)
-        widget_id = response.get('data', {}).get('id') or response.get('id')
+        widget_id: int | None = response.get('data', {}).get('id') or response.get('id')
         position.next_row(3)
         logger.info(f"Created interface alerts widget -> {widget_id}")
         return widget_id
@@ -168,7 +167,7 @@ def create_errors_discards_table(
     dashboard_id: int,
     interfaces: list[ResolvedInterface],
     position: WidgetPosition
-) -> Optional[int]:
+) -> int | None:
     """
     Create dynamicTable showing error/discard metrics for troubleshooting.
 
@@ -319,7 +318,7 @@ def create_errors_discards_table(
 
     try:
         response = client.post('/dashboard/widgets', json=widget_data)
-        widget_id = response.get('data', {}).get('id') or response.get('id')
+        widget_id: int | None = response.get('data', {}).get('id') or response.get('id')
         position.next_row(DEFAULT_TABLE_HEIGHT)
         logger.info(f"Created errors/discards table widget -> {widget_id}")
         return widget_id
@@ -333,7 +332,7 @@ def create_discard_percentage_graph(
     dashboard_id: int,
     interfaces: list[ResolvedInterface],
     position: WidgetPosition
-) -> Optional[int]:
+) -> int | None:
     """
     Create graph showing discard percentages over time for troubleshooting.
 
@@ -399,7 +398,7 @@ def create_discard_percentage_graph(
 
     try:
         response = client.post('/dashboard/widgets', json=widget_data)
-        widget_id = response.get('data', {}).get('id') or response.get('id')
+        widget_id: int | None = response.get('data', {}).get('id') or response.get('id')
         position.next_row(5)
         logger.info(f"Created discard percentage graph -> {widget_id}")
         return widget_id

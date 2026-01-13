@@ -7,18 +7,18 @@ Provides SNMP v2c/v3 connectivity and data collection.
 from __future__ import annotations
 
 import logging
-from typing import Any, Union
+from typing import Any
 
 from lmn_tools.collectors.base import BaseCollector
 from lmn_tools.core.config import SNMPv2cCredentials, SNMPv3Credentials
-from lmn_tools.core.exceptions import SNMPAuthenticationError, SNMPConnectionError, SNMPTimeoutError
+from lmn_tools.core.exceptions import SNMPConnectionError, SNMPTimeoutError
 from lmn_tools.models.discovery import DiscoveredInstance
 from lmn_tools.models.metrics import MetricValue
 
 logger = logging.getLogger(__name__)
 
-# Union type for SNMP credentials
-SNMPCredentials = Union[SNMPv2cCredentials, SNMPv3Credentials]
+# Type alias for SNMP credentials
+SNMPCredentials = SNMPv2cCredentials | SNMPv3Credentials
 
 
 class SNMPCollector(BaseCollector[SNMPCredentials]):
@@ -66,12 +66,12 @@ class SNMPCollector(BaseCollector[SNMPCredentials]):
                 usmHMACMD5AuthProtocol,
                 usmHMACSHAAuthProtocol,
             )
-        except ImportError:
+        except ImportError as e:
             raise SNMPConnectionError(
                 self.hostname,
                 self.credentials.port,
                 "pysnmp not installed. Install with: pip install lmn-tools[snmp]",
-            )
+            ) from e
 
         if isinstance(self.credentials, SNMPv2cCredentials):
             return CommunityData(self.credentials.community.get_secret_value())
@@ -111,12 +111,12 @@ class SNMPCollector(BaseCollector[SNMPCredentials]):
         """
         try:
             from pysnmp.hlapi import SnmpEngine
-        except ImportError:
+        except ImportError as e:
             raise SNMPConnectionError(
                 self.hostname,
                 self.credentials.port,
                 "pysnmp not installed. Install with: pip install lmn-tools[snmp]",
-            )
+            ) from e
 
         self._engine = SnmpEngine()
         self._auth = self._get_auth()
@@ -154,10 +154,10 @@ class SNMPCollector(BaseCollector[SNMPCredentials]):
                 UdpTransportTarget,
                 getCmd,
             )
-        except ImportError:
+        except ImportError as e:
             raise SNMPConnectionError(
                 self.hostname, self.credentials.port, "pysnmp not installed"
-            )
+            ) from e
 
         iterator = getCmd(
             self._engine,
@@ -171,7 +171,7 @@ class SNMPCollector(BaseCollector[SNMPCredentials]):
             ObjectType(ObjectIdentity(oid)),
         )
 
-        error_indication, error_status, error_index, var_binds = next(iterator)
+        error_indication, error_status, _error_index, var_binds = next(iterator)
 
         if error_indication:
             if "timeout" in str(error_indication).lower():
@@ -186,7 +186,7 @@ class SNMPCollector(BaseCollector[SNMPCredentials]):
 
         for var_bind in var_binds:
             _, value = var_bind
-            value_str = value.prettyPrint()
+            value_str: str = value.prettyPrint()
             if "noSuch" in value_str:
                 return None
             return value_str
@@ -217,14 +217,14 @@ class SNMPCollector(BaseCollector[SNMPCredentials]):
                 UdpTransportTarget,
                 nextCmd,
             )
-        except ImportError:
+        except ImportError as e:
             raise SNMPConnectionError(
                 self.hostname, self.credentials.port, "pysnmp not installed"
-            )
+            ) from e
 
         results: dict[str, str] = {}
 
-        for error_indication, error_status, error_index, var_binds in nextCmd(
+        for error_indication, error_status, _error_index, var_binds in nextCmd(
             self._engine,
             self._auth,
             UdpTransportTarget(
@@ -276,14 +276,14 @@ class SNMPCollector(BaseCollector[SNMPCredentials]):
                 UdpTransportTarget,
                 bulkCmd,
             )
-        except ImportError:
+        except ImportError as e:
             raise SNMPConnectionError(
                 self.hostname, self.credentials.port, "pysnmp not installed"
-            )
+            ) from e
 
         results: dict[str, str] = {}
 
-        for error_indication, error_status, error_index, var_binds in bulkCmd(
+        for error_indication, error_status, _error_index, var_binds in bulkCmd(
             self._engine,
             self._auth,
             UdpTransportTarget(
@@ -387,10 +387,10 @@ class SNMPCollector(BaseCollector[SNMPCredentials]):
                         continue
             else:
                 # Single OID get
-                value = self.get(oid)
-                if value:
+                single_value: str | None = self.get(oid)
+                if single_value:
                     try:
-                        float_value = float(value)
+                        float_value = float(single_value)
                         metrics.append(MetricValue(name=name, value=float_value))
                     except (ValueError, TypeError):
                         continue
@@ -401,6 +401,7 @@ class SNMPCollector(BaseCollector[SNMPCredentials]):
     def _sanitize_id(self, value: str) -> str:
         """Sanitize value for use as instance ID."""
         import re
+
         from lmn_tools.constants import Patterns
 
         if not value:

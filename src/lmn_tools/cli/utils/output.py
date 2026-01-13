@@ -7,7 +7,8 @@ Provides formatted output helpers for diffs, syntax highlighting, and tables.
 from __future__ import annotations
 
 import difflib
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from rich.console import Console
 from rich.syntax import Syntax

@@ -2,12 +2,12 @@
 Tests for XML parser module.
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 from lxml import etree
 
-from lmn_tools.collectors.optical.parser import XmlParser, DiscoveredInstance, MetricValue
-
+from lmn_tools.collectors.optical.parser import DiscoveredInstance, MetricValue, XmlParser
 
 # Path to test fixtures
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"

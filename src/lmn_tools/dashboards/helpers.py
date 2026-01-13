@@ -8,7 +8,7 @@ including finding devices, resolving datasource instances, and managing dashboar
 import logging
 import re
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Any
 
 from lmn_tools.api.client import LMClient
 from lmn_tools.core.exceptions import APIError as LMAPIError
@@ -29,10 +29,10 @@ class ResolvedInterface:
     include_in_traffic_graphs: bool = True
     include_in_table: bool = True
     dom: bool = False
-    datasource_id: int = None
-    device_datasource_id: int = None
-    datasource_name: str = None  # Internal datasource name (e.g., SNMP_Network_Interfaces)
-    datasource_display_name: str = None  # Display name (e.g., Network Interfaces)
+    datasource_id: int | None = None
+    device_datasource_id: int | None = None
+    datasource_name: str | None = None  # Internal datasource name (e.g., SNMP_Network_Interfaces)
+    datasource_display_name: str | None = None  # Display name (e.g., Network Interfaces)
 
 
 @dataclass
@@ -43,8 +43,8 @@ class ResolvedBGPPeer:
     instance_id: int
     neighbor_ip: str
     description: str
-    datasource_id: int = None
-    device_datasource_id: int = None
+    datasource_id: int | None = None
+    device_datasource_id: int | None = None
 
 
 @dataclass
@@ -56,12 +56,12 @@ class ResolutionSummary:
     interfaces_resolved: int = 0
     bgp_peers_defined: int = 0
     bgp_peers_resolved: int = 0
-    unresolved_devices: list = field(default_factory=list)
-    unresolved_interfaces: list = field(default_factory=list)
-    unresolved_bgp_peers: list = field(default_factory=list)
+    unresolved_devices: list[str] = field(default_factory=list)
+    unresolved_interfaces: list[str] = field(default_factory=list)
+    unresolved_bgp_peers: list[str] = field(default_factory=list)
 
 
-def find_device_by_hostname(client: LMClient, hostname: str) -> Optional[int]:
+def find_device_by_hostname(client: LMClient, hostname: str) -> int | None:
     """
     Find a device by hostname in LogicMonitor.
 
@@ -94,7 +94,7 @@ def find_device_by_hostname(client: LMClient, hostname: str) -> Optional[int]:
         if len(items) > 1:
             logger.warning(f"Multiple devices found for hostname {hostname}, using first match")
         device = items[0]
-        device_id = device['id']
+        device_id: int = device['id']
         logger.info(f"Found device {hostname} -> deviceId: {device_id}")
         return device_id
 
@@ -116,15 +116,15 @@ def find_device_by_hostname(client: LMClient, hostname: str) -> Optional[int]:
     items = response.get('data', {}).get('items', [])
     if items:
         device = items[0]
-        device_id = device['id']
-        logger.info(f"Found device {hostname} via sysname -> deviceId: {device_id}")
-        return device_id
+        found_device_id: int = device['id']
+        logger.info(f"Found device {hostname} via sysname -> deviceId: {found_device_id}")
+        return found_device_id
 
     logger.warning(f"Device not found in LogicMonitor: {hostname}")
     return None
 
 
-def find_datasource_by_name(client: LMClient, datasource_name: str) -> Optional[int]:
+def find_datasource_by_name(client: LMClient, datasource_name: str) -> int | None:
     """
     Find a datasource by name.
 
@@ -155,8 +155,9 @@ def find_datasource_by_name(client: LMClient, datasource_name: str) -> Optional[
     items = response.get('data', {}).get('items', [])
     if items:
         ds = items[0]
-        logger.debug(f"Found datasource {datasource_name} -> id: {ds['id']}")
-        return ds['id']
+        ds_id: int = ds['id']
+        logger.debug(f"Found datasource {datasource_name} -> id: {ds_id}")
+        return ds_id
 
     # Try by internal name
     filter_str = f'name:"{search_name}"'
@@ -166,14 +167,15 @@ def find_datasource_by_name(client: LMClient, datasource_name: str) -> Optional[
             'fields': 'id,name,displayName',
             'size': 10
         })
-    except LMAPIError as e:
+    except LMAPIError:
         return None
 
     items = response.get('data', {}).get('items', [])
     if items:
         ds = items[0]
-        logger.debug(f"Found datasource {datasource_name} by name -> id: {ds['id']}")
-        return ds['id']
+        found_ds_id: int = ds['id']
+        logger.debug(f"Found datasource {datasource_name} by name -> id: {found_ds_id}")
+        return found_ds_id
 
     logger.warning(f"Datasource not found: {datasource_name}")
     return None
@@ -183,7 +185,7 @@ def find_device_datasource(
     client: LMClient,
     device_id: int,
     datasource_name: str
-) -> Optional[tuple]:
+) -> tuple[int, int, str, str] | None:
     """
     Find the deviceDatasource for a specific device and datasource.
 
@@ -263,8 +265,8 @@ def find_datasource_instance(
     device_id: int,
     device_datasource_id: int,
     interface_name: str,
-    alias: str = None
-) -> Optional[tuple]:
+    alias: str | None = None
+) -> tuple[int, str] | None:
     """
     Find a datasource instance by interface name or alias.
 
@@ -337,7 +339,7 @@ def find_dom_instance(
     device_id: int,
     device_datasource_id: int,
     interface_name: str
-) -> Optional[tuple]:
+) -> tuple[int, str] | None:
     """
     Find a DOM datasource instance for a given interface.
 
@@ -395,7 +397,7 @@ def find_bgp_instance(
     device_id: int,
     device_datasource_id: int,
     neighbor_ip: str
-) -> Optional[tuple]:
+) -> tuple[int, str] | None:
     """
     Find a BGP datasource instance by neighbor IP.
 
@@ -438,7 +440,7 @@ def find_bgp_instance(
     return None
 
 
-def ensure_dashboard_group(client: LMClient, group_path: str) -> Optional[int]:
+def ensure_dashboard_group(client: LMClient, group_path: str) -> int | None:
     """
     Ensure a dashboard group exists, creating nested groups as needed.
 
@@ -482,26 +484,27 @@ def ensure_dashboard_group(client: LMClient, group_path: str) -> Optional[int]:
             # Create the group
             logger.info(f"Creating dashboard group: {part} under parent {parent_id}")
             try:
-                response = client.post('/dashboard/groups', json={
+                response = client.post('/dashboard/groups', json_data={
                     'name': part,
                     'parentId': parent_id,
-                    'description': f'Auto-created by LM Dashboard Builder'
+                    'description': 'Auto-created by LM Dashboard Builder'
                 })
             except LMAPIError as e:
                 logger.error(f"Error creating dashboard group {part}: {e}")
                 return None
 
-            parent_id = response.get('data', {}).get('id') or response.get('id')
-            if not parent_id:
+            result_id = response.get('data', {}).get('id') or response.get('id')
+            if not result_id:
                 logger.error(f"Failed to get ID for created group {part}")
                 return None
 
+            parent_id = int(result_id)
             logger.info(f"Created dashboard group: {part} -> {parent_id}")
 
     return parent_id
 
 
-def find_dashboard_by_name(client: LMClient, group_id: int, name: str) -> Optional[dict]:
+def find_dashboard_by_name(client: LMClient, group_id: int, name: str) -> dict[str, Any] | None:
     """
     Find a dashboard by name within a group.
 
@@ -527,7 +530,8 @@ def find_dashboard_by_name(client: LMClient, group_id: int, name: str) -> Option
 
     for item in items:
         if item['name'] == name:
-            return item
+            result: dict[str, Any] = item
+            return result
 
     return None
 
@@ -552,9 +556,9 @@ def ensure_dashboard(
     client: LMClient,
     group_id: int,
     name: str,
-    tokens: dict,
+    tokens: dict[str, Any],
     description: str = ''
-) -> Optional[int]:
+) -> int | None:
     """
     Ensure a dashboard exists with the specified tokens.
 
@@ -582,12 +586,12 @@ def ensure_dashboard(
     ]
 
     if existing:
-        dashboard_id = existing['id']
+        dashboard_id: int = existing['id']
         logger.info(f"Found existing dashboard: {name} -> {dashboard_id}")
 
         # Update tokens if needed
         try:
-            client.patch(f'/dashboard/dashboards/{dashboard_id}', json={
+            client.patch(f'/dashboard/dashboards/{dashboard_id}', json_data={
                 'widgetTokens': widget_tokens,
                 'description': description
             })
@@ -601,7 +605,7 @@ def ensure_dashboard(
     logger.info(f"Creating dashboard: {name}")
 
     try:
-        response = client.post('/dashboard/dashboards', json={
+        response = client.post('/dashboard/dashboards', json_data={
             'name': name,
             'groupId': group_id,
             'description': description,
@@ -612,13 +616,14 @@ def ensure_dashboard(
         logger.error(f"Error creating dashboard {name}: {e}")
         return None
 
-    dashboard_id = response.get('data', {}).get('id') or response.get('id')
-    if not dashboard_id:
+    result_id = response.get('data', {}).get('id') or response.get('id')
+    if not result_id:
         logger.error(f"Failed to get ID for created dashboard {name}")
         return None
 
-    logger.info(f"Created dashboard: {name} -> {dashboard_id}")
-    return dashboard_id
+    new_dashboard_id: int = result_id
+    logger.info(f"Created dashboard: {name} -> {new_dashboard_id}")
+    return new_dashboard_id
 
 
 def delete_dashboard_widgets(client: LMClient, dashboard_id: int) -> int:
@@ -657,7 +662,7 @@ def delete_dashboard_widgets(client: LMClient, dashboard_id: int) -> int:
     return deleted_count
 
 
-def get_datapoint_info(client: LMClient, datasource_id: int) -> dict:
+def get_datapoint_info(client: LMClient, datasource_id: int) -> dict[str, Any]:
     """
     Get datapoint information for a datasource.
 

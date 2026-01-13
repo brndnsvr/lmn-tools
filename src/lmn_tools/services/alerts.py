@@ -65,7 +65,8 @@ class AlertService(BaseService):
         """
         filters = ['cleared:"false"']
         if severity:
-            filters.append(f'severity:"{severity.value}"')
+            sev_value = severity.value if isinstance(severity, AlertSeverity) else severity
+            filters.append(f'severity:"{sev_value}"')
         if device_id:
             filters.append(f"monitorObjectId:{device_id}")
 
@@ -90,7 +91,7 @@ class AlertService(BaseService):
         Returns:
             Updated alert
         """
-        data = {"acked": True}
+        data: dict[str, Any] = {"acked": True}
         if comment:
             data["ackedNote"] = comment
         return self.client.patch(f"{self.base_path}/{alert_id}", json_data=data)
@@ -278,7 +279,8 @@ class WebsiteService(BaseService):
     def list_checks(self, website_id: int) -> list[dict[str, Any]]:
         """List checks for a website."""
         response = self.client.get(f"{self.base_path}/{website_id}/checkpoints")
-        return response.get("items", response.get("data", {}).get("items", []))
+        items: list[dict[str, Any]] = response.get("items", response.get("data", {}).get("items", []))
+        return items
 
     def list_by_group(self, group_id: int) -> list[dict[str, Any]]:
         """List websites in a group."""

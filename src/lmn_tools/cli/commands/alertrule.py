@@ -6,8 +6,7 @@ Provides commands for managing LogicMonitor alert threshold rules.
 
 from __future__ import annotations
 
-import json
-from typing import Annotated, Optional
+from typing import Annotated, Any
 
 import typer
 from rich.console import Console
@@ -26,7 +25,7 @@ def _get_client() -> LMClient:
     settings = get_settings()
     if not settings.has_credentials:
         console.print("[red]Error: LM credentials not configured[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     return LMClient.from_credentials(settings.credentials)  # type: ignore
 
 
@@ -37,9 +36,9 @@ def _get_service() -> AlertRuleService:
 
 @app.command("list")
 def list_alertrules(
-    filter: Annotated[Optional[str], typer.Option("--filter", "-f", help="LM filter string")] = None,
-    datasource: Annotated[Optional[int], typer.Option("--datasource", "-d", help="Filter by DataSource ID")] = None,
-    severity: Annotated[Optional[str], typer.Option("--severity", "-s", help="Filter by severity (warning, error, critical)")] = None,
+    filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
+    datasource: Annotated[int | None, typer.Option("--datasource", "-d", help="Filter by DataSource ID")] = None,
+    severity: Annotated[str | None, typer.Option("--severity", "-s", help="Filter by severity (warning, error, critical)")] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
 ) -> None:
@@ -104,9 +103,9 @@ def get_alertrule(
     try:
         response = svc.get(rule_id)
         rule = response.get("data", response) if "data" in response else response
-    except Exception as e:
+    except Exception:
         console.print(f"[red]Alert rule not found: {rule_id}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
     if format == "json":
         console.print_json(data=rule)
@@ -173,7 +172,7 @@ def create_alertrule(
     datapoint: Annotated[str, typer.Option("--datapoint", "-p", help="Datapoint name")],
     threshold: Annotated[str, typer.Option("--threshold", "-t", help="Alert threshold expression (e.g., '> 90')")],
     severity: Annotated[str, typer.Option("--severity", "-s", help="Severity level: warning, error, critical")] = "error",
-    escalation_chain: Annotated[Optional[int], typer.Option("--chain", "-c", help="Escalation chain ID")] = None,
+    escalation_chain: Annotated[int | None, typer.Option("--chain", "-c", help="Escalation chain ID")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Create a new alert rule."""
@@ -206,22 +205,22 @@ def create_alertrule(
             console.print(f"[green]Created alert rule '{name}' (ID: {rule_id})[/green]")
     except Exception as e:
         console.print(f"[red]Failed to create alert rule: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("update")
 def update_alertrule(
     rule_id: Annotated[int, typer.Argument(help="Alert rule ID")],
-    name: Annotated[Optional[str], typer.Option("--name", "-n", help="New name")] = None,
-    threshold: Annotated[Optional[str], typer.Option("--threshold", "-t", help="New threshold expression")] = None,
-    severity: Annotated[Optional[str], typer.Option("--severity", "-s", help="New severity level")] = None,
-    escalation_chain: Annotated[Optional[int], typer.Option("--chain", "-c", help="Escalation chain ID")] = None,
+    name: Annotated[str | None, typer.Option("--name", "-n", help="New name")] = None,
+    threshold: Annotated[str | None, typer.Option("--threshold", "-t", help="New threshold expression")] = None,
+    severity: Annotated[str | None, typer.Option("--severity", "-s", help="New severity level")] = None,
+    escalation_chain: Annotated[int | None, typer.Option("--chain", "-c", help="Escalation chain ID")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Update an alert rule."""
     svc = _get_service()
 
-    update_data: dict = {}
+    update_data: dict[str, Any] = {}
 
     if name is not None:
         update_data["name"] = name
@@ -236,7 +235,7 @@ def update_alertrule(
 
     if not update_data:
         console.print("[yellow]No updates specified[/yellow]")
-        raise typer.Exit(0)
+        raise typer.Exit(0) from None
 
     try:
         response = svc.update(rule_id, update_data)
@@ -248,7 +247,7 @@ def update_alertrule(
             console.print(f"[green]Updated alert rule {rule_id}[/green]")
     except Exception as e:
         console.print(f"[red]Failed to update alert rule: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("delete")
@@ -271,14 +270,14 @@ def delete_alertrule(
         confirm = typer.confirm(f"Delete alert rule '{rule_name}'?")
         if not confirm:
             console.print("[dim]Cancelled[/dim]")
-            raise typer.Exit(0)
+            raise typer.Exit(0) from None
 
     try:
         svc.delete(rule_id)
         console.print(f"[green]Deleted alert rule '{rule_name}'[/green]")
     except Exception as e:
         console.print(f"[red]Failed to delete alert rule: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("enable")
@@ -293,7 +292,7 @@ def enable_alertrule(
         console.print(f"[green]Enabled alert rule {rule_id}[/green]")
     except Exception as e:
         console.print(f"[red]Failed to enable alert rule: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("disable")
@@ -308,4 +307,4 @@ def disable_alertrule(
         console.print(f"[yellow]Disabled alert rule {rule_id}[/yellow]")
     except Exception as e:
         console.print(f"[red]Failed to disable alert rule: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None

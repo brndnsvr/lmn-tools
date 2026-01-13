@@ -6,7 +6,7 @@ Provides commands for viewing LogicMonitor collectors.
 
 from __future__ import annotations
 
-from typing import Annotated, Optional
+from typing import Annotated, Any
 
 import typer
 from rich.console import Console
@@ -33,7 +33,7 @@ def _get_client() -> LMClient:
     settings = get_settings()
     if not settings.has_credentials:
         console.print("[red]Error: LM credentials not configured[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     return LMClient.from_credentials(settings.credentials)  # type: ignore
 
 
@@ -59,8 +59,8 @@ def _status_name(status: str | int) -> str:
 
 @app.command("list")
 def list_collectors(
-    filter: Annotated[Optional[str], typer.Option("--filter", "-f", help="LM filter string")] = None,
-    status: Annotated[Optional[str], typer.Option("--status", "-s", help="Filter by status")] = None,
+    filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
+    status: Annotated[str | None, typer.Option("--status", "-s", help="Filter by status")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
 ) -> None:
     """List collectors."""
@@ -148,7 +148,7 @@ def collector_status(
 
     # Count by status
     status_counts: dict[str, int] = {}
-    down_collectors: list[dict] = []
+    down_collectors: list[dict[str, Any]] = []
 
     for c in collectors:
         status = _status_name(c.get("status", "unknown"))

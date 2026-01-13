@@ -163,10 +163,10 @@ def apply_string_map(
     if string_map is None and string_map_name:
         try:
             string_map = StringMaps.get_map(string_map_name)
-        except KeyError:
+        except KeyError as e:
             logger.warning(f"Unknown string map: {string_map_name}")
             if strict:
-                raise StringMapError(value, string_map_name)
+                raise StringMapError(value, string_map_name) from e
             return default
 
     if string_map is None:
@@ -215,9 +215,10 @@ def parse_timestamp(value: str) -> float | None:
 
     # Try python-dateutil first (most flexible)
     try:
-        from dateutil.parser import parse as dateutil_parse
+        from dateutil.parser import parse as dateutil_parse  # type: ignore[import-untyped]
 
-        return dateutil_parse(value).timestamp()
+        result: float = dateutil_parse(value).timestamp()
+        return result
     except ImportError:
         pass
     except (ValueError, TypeError):

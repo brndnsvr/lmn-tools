@@ -6,8 +6,7 @@ Provides commands for managing LogicMonitor website monitors.
 
 from __future__ import annotations
 
-import json
-from typing import Annotated, Optional
+from typing import Annotated, Any
 
 import typer
 from rich.console import Console
@@ -26,7 +25,7 @@ def _get_client() -> LMClient:
     settings = get_settings()
     if not settings.has_credentials:
         console.print("[red]Error: LM credentials not configured[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
     return LMClient.from_credentials(settings.credentials)  # type: ignore
 
 
@@ -37,9 +36,9 @@ def _get_service() -> WebsiteService:
 
 @app.command("list")
 def list_websites(
-    filter: Annotated[Optional[str], typer.Option("--filter", "-f", help="LM filter string")] = None,
-    group: Annotated[Optional[int], typer.Option("--group", "-g", help="Filter by group ID")] = None,
-    type: Annotated[Optional[str], typer.Option("--type", "-t", help="Filter by type: webcheck, pingcheck")] = None,
+    filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
+    group: Annotated[int | None, typer.Option("--group", "-g", help="Filter by group ID")] = None,
+    type: Annotated[str | None, typer.Option("--type", "-t", help="Filter by type: webcheck, pingcheck")] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
 ) -> None:
@@ -117,7 +116,7 @@ def get_website(
         websites = svc.list(filter=f"name:{identifier}")
         if not websites:
             console.print(f"[red]Website not found: {identifier}[/red]")
-            raise typer.Exit(1)
+            raise typer.Exit(1) from None
         website = websites[0]
         website_id = website["id"]
 
@@ -218,21 +217,24 @@ def website_status(
     websites = svc.list(max_items=500)
 
     if format == "json":
-        summary = {
-            "total": len(websites),
-            "by_status": {},
-            "by_alert_level": {},
-            "by_type": {},
-        }
+        by_status: dict[str, int] = {}
+        by_alert_level: dict[str, int] = {}
+        by_type: dict[str, int] = {}
         for w in websites:
             status = w.get("status", "unknown")
             alert = w.get("overallAlertLevel", "unknown")
             wtype = w.get("type", "unknown")
 
-            summary["by_status"][status] = summary["by_status"].get(status, 0) + 1
-            summary["by_alert_level"][alert] = summary["by_alert_level"].get(alert, 0) + 1
-            summary["by_type"][wtype] = summary["by_type"].get(wtype, 0) + 1
+            by_status[status] = by_status.get(status, 0) + 1
+            by_alert_level[alert] = by_alert_level.get(alert, 0) + 1
+            by_type[wtype] = by_type.get(wtype, 0) + 1
 
+        summary: dict[str, Any] = {
+            "total": len(websites),
+            "by_status": by_status,
+            "by_alert_level": by_alert_level,
+            "by_type": by_type,
+        }
         console.print_json(data=summary)
         return
 
@@ -315,7 +317,7 @@ def create_website(
     domain: Annotated[str, typer.Option("--domain", "-d", help="Domain or URL to monitor")],
     type: Annotated[str, typer.Option("--type", "-t", help="Monitor type: webcheck, pingcheck")] = "webcheck",
     group: Annotated[int, typer.Option("--group", "-g", help="Website group ID")] = 1,
-    description: Annotated[Optional[str], typer.Option("--description", help="Description")] = None,
+    description: Annotated[str | None, typer.Option("--description", help="Description")] = None,
     polling_interval: Annotated[int, typer.Option("--interval", help="Polling interval in minutes")] = 5,
     use_ssl: Annotated[bool, typer.Option("--ssl/--no-ssl", help="Use SSL")] = True,
     disable_alerting: Annotated[bool, typer.Option("--disable-alerting", help="Disable alerting")] = False,
@@ -324,7 +326,7 @@ def create_website(
     """Create a new website monitor."""
     svc = _get_service()
 
-    website_data: dict = {
+    website_data: dict[str, Any] = {
         "name": name,
         "type": type,
         "domain": domain,
@@ -351,23 +353,23 @@ def create_website(
             console.print(f"[green]Created website monitor '{name}' (ID: {website_id})[/green]")
     except Exception as e:
         console.print(f"[red]Failed to create website: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("update")
 def update_website(
     website_id: Annotated[int, typer.Argument(help="Website ID")],
-    name: Annotated[Optional[str], typer.Option("--name", "-n", help="New name")] = None,
-    description: Annotated[Optional[str], typer.Option("--description", "-d", help="New description")] = None,
-    domain: Annotated[Optional[str], typer.Option("--domain", help="New domain")] = None,
-    polling_interval: Annotated[Optional[int], typer.Option("--interval", help="Polling interval")] = None,
-    disable_alerting: Annotated[Optional[bool], typer.Option("--disable-alerting/--enable-alerting", help="Toggle alerting")] = None,
+    name: Annotated[str | None, typer.Option("--name", "-n", help="New name")] = None,
+    description: Annotated[str | None, typer.Option("--description", "-d", help="New description")] = None,
+    domain: Annotated[str | None, typer.Option("--domain", help="New domain")] = None,
+    polling_interval: Annotated[int | None, typer.Option("--interval", help="Polling interval")] = None,
+    disable_alerting: Annotated[bool | None, typer.Option("--disable-alerting/--enable-alerting", help="Toggle alerting")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Update a website monitor."""
     svc = _get_service()
 
-    update_data: dict = {}
+    update_data: dict[str, Any] = {}
 
     if name:
         update_data["name"] = name
@@ -382,7 +384,7 @@ def update_website(
 
     if not update_data:
         console.print("[yellow]No updates specified[/yellow]")
-        raise typer.Exit(0)
+        raise typer.Exit(0) from None
 
     try:
         response = svc.update(website_id, update_data)
@@ -394,7 +396,7 @@ def update_website(
             console.print(f"[green]Updated website {website_id}[/green]")
     except Exception as e:
         console.print(f"[red]Failed to update website: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None
 
 
 @app.command("delete")
@@ -417,11 +419,11 @@ def delete_website(
         confirm = typer.confirm(f"Delete website monitor '{website_name}'?")
         if not confirm:
             console.print("[dim]Cancelled[/dim]")
-            raise typer.Exit(0)
+            raise typer.Exit(0) from None
 
     try:
         svc.delete(website_id)
         console.print(f"[green]Deleted website monitor '{website_name}'[/green]")
     except Exception as e:
         console.print(f"[red]Failed to delete website: {e}[/red]")
-        raise typer.Exit(1)
+        raise typer.Exit(1) from None

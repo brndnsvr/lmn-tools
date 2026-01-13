@@ -9,7 +9,8 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Generator
+from collections.abc import Generator
+from typing import Any
 
 import requests
 from pydantic import SecretStr
@@ -148,7 +149,8 @@ class LMClient:
         if "items" in data and "data" not in data:
             data = {"data": data}
 
-        return data
+        result: dict[str, Any] = data
+        return result
 
     def request(
         self,
@@ -193,9 +195,9 @@ class LMClient:
                 timeout=self.timeout,
             )
         except requests.exceptions.Timeout as e:
-            raise APITimeoutError(f"Request timed out: {e}")
+            raise APITimeoutError(f"Request timed out: {e}") from e
         except requests.exceptions.ConnectionError as e:
-            raise APIConnectionError(f"Connection failed: {e}")
+            raise APIConnectionError(f"Connection failed: {e}") from e
 
         return self._handle_response(response)
 

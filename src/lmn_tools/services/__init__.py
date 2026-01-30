@@ -40,7 +40,7 @@ from lmn_tools.services.serviceinsight import (
 from lmn_tools.services.tokens import APITokenService, api_token_service
 from lmn_tools.services.topology import TopologyService, topology_service
 
-__all__ = [
+__all__ = [  # noqa: RUF022
     # Base
     "BaseService",
     # LogicModules

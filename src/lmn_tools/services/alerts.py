@@ -7,6 +7,7 @@ Provides operations for managing alerts and maintenance windows.
 from __future__ import annotations
 
 import time
+from datetime import datetime
 from enum import Enum
 from typing import Any
 
@@ -194,7 +195,6 @@ class AlertService(BaseService):
             start_epoch = alert.get("startEpoch", 0)
             if start_epoch:
                 start_secs = start_epoch / 1000 if start_epoch >= 1e12 else start_epoch
-                from datetime import datetime
                 day = datetime.fromtimestamp(start_secs).strftime("%Y-%m-%d")
                 daily_counts[day] = daily_counts.get(day, 0) + 1
 

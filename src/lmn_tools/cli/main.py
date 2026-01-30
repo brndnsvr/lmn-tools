@@ -12,7 +12,7 @@ Provides the `lmn` command with subcommands for:
 - topologysource: TopologySource management (alias: ts)
 - device: Device management
 - group: Device group management
-- alert: Alert management
+- alert: Alert management (includes history, trends)
 - alertrule: Alert rule management (alias: ar)
 - chain: Escalation chain management
 - integration: Integration management
@@ -23,6 +23,16 @@ Provides the `lmn` command with subcommands for:
 - user: User management (read-only)
 - report: Report management
 - api: Raw API access
+- widget: Dashboard widget management
+- opsnote: Operational notes management
+- netscan: Network discovery scan management
+- batch: Batch job management
+- recipient: Recipient group management
+- token: API token management
+- accessgroup: Access group (RBAC) management
+- audit: Audit log viewing
+- topology: Topology/resource map management
+- service: Service Insight management
 """
 
 from __future__ import annotations
@@ -37,9 +47,12 @@ from rich.logging import RichHandler
 
 from lmn_tools import __version__
 from lmn_tools.cli.commands import (
+    accessgroup,
     alert,
     alertrule,
     api,
+    audit,
+    batch,
     chain,
     collect,
     collector,
@@ -52,12 +65,19 @@ from lmn_tools.cli.commands import (
     eventsource,
     group,
     integration,
+    netscan,
+    opsnote,
     propertysource,
+    recipient,
     report,
     sdt,
+    service,
+    token,
+    topology,
     topologysource,
     user,
     website,
+    widget,
 )
 from lmn_tools.core.config import get_settings
 
@@ -160,6 +180,18 @@ app.add_typer(website.app, name="website", help="Manage website monitors (synthe
 app.add_typer(user.app, name="user", help="View users (read-only)")
 app.add_typer(report.app, name="report", help="View reports")
 app.add_typer(api.app, name="api", help="Raw API access")
+
+# New API resource commands
+app.add_typer(widget.app, name="widget", help="Manage dashboard widgets")
+app.add_typer(opsnote.app, name="opsnote", help="Manage operational notes")
+app.add_typer(netscan.app, name="netscan", help="Manage network discovery scans")
+app.add_typer(batch.app, name="batch", help="View batch jobs")
+app.add_typer(recipient.app, name="recipient", help="Manage recipient groups")
+app.add_typer(token.app, name="token", help="Manage API tokens")
+app.add_typer(accessgroup.app, name="accessgroup", help="Manage access groups (RBAC)")
+app.add_typer(audit.app, name="audit", help="View audit logs")
+app.add_typer(topology.app, name="topology", help="Manage topology maps")
+app.add_typer(service.app, name="service", help="Manage services (Service Insight)")
 
 
 @app.command()

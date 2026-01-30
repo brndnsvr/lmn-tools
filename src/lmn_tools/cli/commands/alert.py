@@ -310,3 +310,118 @@ def alert_summary() -> None:
     table.add_row("[bold]Total Active[/bold]", f"[bold]{critical + errors + warnings}[/bold]")
 
     console.print(table)
+
+
+@app.command("history")
+def alert_history(
+    device: Annotated[int | None, typer.Option("--device", "-d", help="Filter by device ID")] = None,
+    group: Annotated[int | None, typer.Option("--group", "-g", help="Filter by group ID")] = None,
+    severity: Annotated[str | None, typer.Option("--severity", "-s", help="Filter by severity")] = None,
+    days: Annotated[int, typer.Option("--days", help="Number of days to look back")] = 7,
+    limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 100,
+    format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
+) -> None:
+    """List historical alerts (including cleared)."""
+    import time
+
+    svc = _get_service()
+
+    now = int(time.time() * 1000)
+    start_time = now - (days * 24 * 60 * 60 * 1000)
+
+    alerts = svc.list_history(
+        device_id=device,
+        group_id=group,
+        severity=severity,
+        start_time=start_time,
+        max_items=limit,
+    )
+
+    if format == "json":
+        console.print_json(data=alerts)
+        return
+
+    if not alerts:
+        console.print(f"[dim]No alerts in last {days} days[/dim]")
+        return
+
+    table = Table(title=f"Alert History (last {days} days, {len(alerts)} alerts)")
+    table.add_column("ID", style="dim", no_wrap=True)
+    table.add_column("Severity")
+    table.add_column("Device", style="cyan")
+    table.add_column("DataSource")
+    table.add_column("Start")
+    table.add_column("Cleared")
+
+    for a in alerts:
+        sev = a.get("severity", "")
+        sev_name = _severity_name(sev)
+        severity_styled = f"[{_severity_style(sev)}]{sev_name}[/{_severity_style(sev)}]"
+        cleared = "[green]Yes[/green]" if a.get("cleared") else "[dim]No[/dim]"
+
+        table.add_row(
+            str(a.get("id", "")),
+            severity_styled,
+            a.get("monitorObjectName", ""),
+            a.get("dataSourceName", ""),
+            _format_timestamp(a.get("startEpoch")),
+            cleared,
+        )
+    console.print(table)
+
+
+@app.command("trends")
+def alert_trends(
+    period: Annotated[str, typer.Option("--period", "-p", help="Time period: 7d, 30d, 90d")] = "7d",
+    format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
+) -> None:
+    """Show alert trends over time."""
+    svc = _get_service()
+
+    # Parse period
+    period_days = 7
+    if period.endswith("d"):
+        try:
+            period_days = int(period[:-1])
+        except ValueError:
+            console.print("[red]Invalid period format. Use: 7d, 30d, 90d[/red]")
+            raise typer.Exit(1) from None
+
+    trends = svc.get_trends(days=period_days)
+
+    if format == "json":
+        console.print_json(data=trends)
+        return
+
+    console.print(f"\n[bold]Alert Trends (last {period_days} days)[/bold]")
+    console.print(f"\nTotal Alerts: {trends['total_alerts']}")
+
+    # By severity
+    console.print("\n[bold]By Severity:[/bold]")
+    severity_table = Table(show_header=False, box=None)
+    severity_table.add_column("Severity", style="dim")
+    severity_table.add_column("Count", justify="right")
+
+    severity_map = {2: "warning", 3: "error", 4: "critical"}
+    for sev, count in trends["by_severity"].items():
+        sev_name = severity_map.get(int(sev), str(sev)) if sev.isdigit() else sev
+        severity_table.add_row(sev_name, str(count))
+    console.print(severity_table)
+
+    # Top devices
+    if trends["by_device"]:
+        console.print("\n[bold]Top Devices:[/bold]")
+        for device, count in list(trends["by_device"].items())[:10]:
+            console.print(f"  {device}: {count}")
+
+    # Top datasources
+    if trends["by_datasource"]:
+        console.print("\n[bold]Top DataSources:[/bold]")
+        for ds, count in list(trends["by_datasource"].items())[:10]:
+            console.print(f"  {ds}: {count}")
+
+    # Daily breakdown
+    if trends["by_day"]:
+        console.print("\n[bold]Daily Breakdown:[/bold]")
+        for day, count in list(trends["by_day"].items())[-7:]:
+            console.print(f"  {day}: {count}")

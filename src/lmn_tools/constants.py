@@ -112,6 +112,7 @@ class LMEndpoints:
     DASHBOARD_GROUP_BY_ID: Final[str] = "/dashboard/groups/{group_id}"
 
     # Widgets
+    WIDGETS: Final[str] = "/dashboard/widgets"
     WIDGET_BY_ID: Final[str] = "/dashboard/widgets/{widget_id}"
 
     # =========================================================================
@@ -140,6 +141,64 @@ class LMEndpoints:
     # =========================================================================
     REPORTS: Final[str] = "/report/reports"
     REPORT_BY_ID: Final[str] = "/report/reports/{report_id}"
+
+    # =========================================================================
+    # OpsNotes
+    # =========================================================================
+    OPSNOTES: Final[str] = "/setting/opsnotes"
+    OPSNOTE_BY_ID: Final[str] = "/setting/opsnotes/{note_id}"
+
+    # =========================================================================
+    # Netscans (Device Discovery)
+    # =========================================================================
+    NETSCANS: Final[str] = "/setting/netscans"
+    NETSCAN_BY_ID: Final[str] = "/setting/netscans/{netscan_id}"
+
+    # =========================================================================
+    # Batch Jobs
+    # =========================================================================
+    BATCHJOBS: Final[str] = "/setting/batchjobs"
+    BATCHJOB_BY_ID: Final[str] = "/setting/batchjobs/{job_id}"
+
+    # =========================================================================
+    # Recipient Groups
+    # =========================================================================
+    RECIPIENT_GROUPS: Final[str] = "/setting/recipientgroups"
+    RECIPIENT_GROUP_BY_ID: Final[str] = "/setting/recipientgroups/{group_id}"
+
+    # =========================================================================
+    # API Tokens
+    # =========================================================================
+    API_TOKENS: Final[str] = "/setting/admins/{admin_id}/apitokens"
+    API_TOKEN_BY_ID: Final[str] = "/setting/admins/{admin_id}/apitokens/{token_id}"
+    API_TOKENS_ALL: Final[str] = "/setting/apitokens"
+
+    # =========================================================================
+    # Access Groups (RBAC)
+    # =========================================================================
+    ACCESS_GROUPS: Final[str] = "/setting/accessgroup"
+    ACCESS_GROUP_BY_ID: Final[str] = "/setting/accessgroup/{group_id}"
+
+    # =========================================================================
+    # Audit Logs
+    # =========================================================================
+    ACCESS_LOGS: Final[str] = "/setting/accesslogs"
+    ACCESS_LOG_BY_ID: Final[str] = "/setting/accesslogs/{log_id}"
+
+    # =========================================================================
+    # Topology Maps (Resource Maps)
+    # =========================================================================
+    TOPOLOGY_MAPS: Final[str] = "/topology/topologies"
+    TOPOLOGY_MAP_BY_ID: Final[str] = "/topology/topologies/{map_id}"
+    TOPOLOGY_MAP_DATA: Final[str] = "/topology/topologies/{map_id}/data"
+
+    # =========================================================================
+    # Services (Service Insight)
+    # =========================================================================
+    SERVICES: Final[str] = "/service/services"
+    SERVICE_BY_ID: Final[str] = "/service/services/{service_id}"
+    SERVICE_GROUPS: Final[str] = "/service/groups"
+    SERVICE_GROUP_BY_ID: Final[str] = "/service/groups/{group_id}"
 
     # =========================================================================
     # Websites (Synthetic Monitoring)

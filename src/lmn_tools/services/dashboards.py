@@ -136,3 +136,85 @@ def dashboard_service(client: LMClient) -> DashboardService:
 def dashboard_group_service(client: LMClient) -> DashboardGroupService:
     """Create a dashboard group service."""
     return DashboardGroupService(client)
+
+
+class WidgetService(BaseService):
+    """
+    Service for managing LogicMonitor dashboard widgets.
+
+    Usage:
+        svc = WidgetService(client)
+        widget = svc.get(widget_id)
+        svc.update(widget_id, {"name": "New Name"})
+    """
+
+    @property
+    def base_path(self) -> str:
+        return "/dashboard/widgets"
+
+    def list_by_dashboard(self, dashboard_id: int) -> list[dict[str, Any]]:
+        """
+        List widgets for a dashboard.
+
+        Args:
+            dashboard_id: Dashboard ID
+
+        Returns:
+            List of widgets
+        """
+        response = self.client.get(f"/dashboard/dashboards/{dashboard_id}/widgets")
+        items = response.get("items", response.get("data", {}).get("items", []))
+        if isinstance(items, list):
+            return items
+        return []
+
+    def create_for_dashboard(
+        self,
+        dashboard_id: int,
+        widget_data: dict[str, Any],
+    ) -> dict[str, Any]:
+        """
+        Create a widget on a dashboard.
+
+        Args:
+            dashboard_id: Dashboard ID
+            widget_data: Widget configuration
+
+        Returns:
+            Created widget
+        """
+        widget_data["dashboardId"] = dashboard_id
+        return self.client.post(
+            f"/dashboard/dashboards/{dashboard_id}/widgets",
+            json_data=widget_data,
+        )
+
+    def clone(
+        self,
+        widget_id: int,
+        target_dashboard_id: int,
+    ) -> dict[str, Any]:
+        """
+        Clone a widget to another dashboard.
+
+        Args:
+            widget_id: Widget ID to clone
+            target_dashboard_id: Target dashboard ID
+
+        Returns:
+            Cloned widget
+        """
+        response = self.get(widget_id)
+        original = response.get("data", response) if "data" in response else response
+
+        # Create a copy without ID
+        new_widget = original.copy()
+        new_widget.pop("id", None)
+        new_widget["dashboardId"] = target_dashboard_id
+
+        return self.create_for_dashboard(target_dashboard_id, new_widget)
+
+
+def widget_service(client: LMClient) -> WidgetService:
+    """Create a widget service."""
+    return WidgetService(client)

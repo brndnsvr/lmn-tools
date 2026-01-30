@@ -112,6 +112,101 @@ class AlertService(BaseService):
             json_data={"note": note},
         )
 
+    def list_history(
+        self,
+        device_id: int | None = None,
+        group_id: int | None = None,
+        severity: AlertSeverity | str | None = None,
+        start_time: int | None = None,
+        end_time: int | None = None,
+        max_items: int | None = None,
+    ) -> list[dict[str, Any]]:
+        """
+        List historical alerts (including cleared).
+
+        Args:
+            device_id: Optional device ID filter
+            group_id: Optional device group ID filter
+            severity: Optional severity filter
+            start_time: Optional start timestamp (epoch ms)
+            end_time: Optional end timestamp (epoch ms)
+            max_items: Maximum alerts to return
+
+        Returns:
+            List of historical alerts
+        """
+        filters = []
+        if device_id:
+            filters.append(f"monitorObjectId:{device_id}")
+        if group_id:
+            filters.append(f"monitorObjectGroups~{group_id}")
+        if severity:
+            sev_value = severity.value if isinstance(severity, AlertSeverity) else severity
+            filters.append(f'severity:"{sev_value}"')
+        if start_time:
+            filters.append(f"startEpoch>{start_time}")
+        if end_time:
+            filters.append(f"startEpoch<{end_time}")
+
+        filter_str = ",".join(filters) if filters else None
+        return self.list(filter=filter_str, max_items=max_items)
+
+    def get_trends(
+        self,
+        days: int = 7,
+        group_by: str = "severity",
+    ) -> dict[str, Any]:
+        """
+        Get alert trends over a time period.
+
+        Args:
+            days: Number of days to analyze
+            group_by: Group results by (severity, device, datasource)
+
+        Returns:
+            Trend data with counts
+        """
+        now = int(time.time() * 1000)
+        start_time = now - (days * 24 * 60 * 60 * 1000)
+
+        alerts = self.list_history(start_time=start_time, max_items=10000)
+
+        # Count by severity
+        severity_counts: dict[str, int] = {}
+        device_counts: dict[str, int] = {}
+        datasource_counts: dict[str, int] = {}
+        daily_counts: dict[str, int] = {}
+
+        for alert in alerts:
+            # Severity
+            sev = str(alert.get("severity", "unknown"))
+            severity_counts[sev] = severity_counts.get(sev, 0) + 1
+
+            # Device
+            device = alert.get("monitorObjectName", "unknown")
+            device_counts[device] = device_counts.get(device, 0) + 1
+
+            # DataSource
+            ds = alert.get("dataSourceName", "unknown")
+            datasource_counts[ds] = datasource_counts.get(ds, 0) + 1
+
+            # Daily
+            start_epoch = alert.get("startEpoch", 0)
+            if start_epoch:
+                start_secs = start_epoch / 1000 if start_epoch >= 1e12 else start_epoch
+                from datetime import datetime
+                day = datetime.fromtimestamp(start_secs).strftime("%Y-%m-%d")
+                daily_counts[day] = daily_counts.get(day, 0) + 1
+
+        return {
+            "period_days": days,
+            "total_alerts": len(alerts),
+            "by_severity": severity_counts,
+            "by_device": dict(sorted(device_counts.items(), key=lambda x: x[1], reverse=True)[:20]),
+            "by_datasource": dict(sorted(datasource_counts.items(), key=lambda x: x[1], reverse=True)[:20]),
+            "by_day": dict(sorted(daily_counts.items())),
+        }
+
 
 class SDTService(BaseService):
     """

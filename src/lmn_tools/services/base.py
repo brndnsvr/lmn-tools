@@ -11,6 +11,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from lmn_tools.api.client import LMClient
+from lmn_tools.core.exceptions import APINotFoundError
 
 
 class BaseService(ABC):
@@ -181,5 +182,5 @@ class BaseService(ABC):
         try:
             self.get(id)
             return True
-        except Exception:
+        except APINotFoundError:
             return False

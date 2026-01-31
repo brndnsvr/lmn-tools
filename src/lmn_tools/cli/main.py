@@ -3,8 +3,6 @@ Main CLI entry point for lmn-tools.
 
 Provides the `lmn` command with subcommands for:
 - config: Configuration management
-- discover: Active Discovery on devices
-- collect: Metric collection from devices
 - datasource: DataSource management (alias: ds)
 - propertysource: PropertySource management (alias: ps)
 - eventsource: EventSource management (alias: es)
@@ -54,14 +52,12 @@ from lmn_tools.cli.commands import (
     audit,
     batch,
     chain,
-    collect,
     collector,
     config,
     configsource,
     dashboard,
     datasource,
     device,
-    discover,
     eventsource,
     group,
     integration,
@@ -133,8 +129,8 @@ def main(
     """
     LMN - LogicMonitor Network Tools.
 
-    A unified CLI for LogicMonitor operations including device discovery,
-    metric collection, dashboard management, and DataSource management.
+    A unified CLI for LogicMonitor API operations including device management,
+    dashboard management, and DataSource management.
     """
     # Configure logging
     level = logging.DEBUG if debug else logging.INFO
@@ -152,8 +148,6 @@ def main(
 
 # Register command groups
 app.add_typer(config.app, name="config", help="Manage lmn configuration")
-app.add_typer(discover.app, name="discover", help="Run Active Discovery on devices")
-app.add_typer(collect.app, name="collect", help="Collect metrics from devices")
 
 # LogicMonitor API management commands
 app.add_typer(datasource.app, name="datasource", help="Manage DataSources")

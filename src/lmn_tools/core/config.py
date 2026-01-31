@@ -47,65 +47,6 @@ class LMCredentials(BaseModel):
 
 
 # =============================================================================
-# NETCONF Credentials
-# =============================================================================
-
-
-class NetconfCredentials(BaseModel):
-    """
-    NETCONF connection credentials.
-
-    Attributes:
-        username: NETCONF username
-        password: NETCONF password
-        port: NETCONF port (default: 830)
-        timeout: Operation timeout in seconds
-        hostkey_verify: Whether to verify SSH host keys
-    """
-
-    model_config = ConfigDict(frozen=True, str_strip_whitespace=True)
-
-    username: str
-    password: SecretStr
-    port: Annotated[int, Field(default=830, ge=1, le=65535)]
-    timeout: Annotated[int, Field(default=60, ge=1, le=600)]
-    hostkey_verify: bool = False
-
-
-# =============================================================================
-# SNMP Credentials
-# =============================================================================
-
-
-class SNMPv2cCredentials(BaseModel):
-    """SNMPv2c credentials using community string."""
-
-    model_config = ConfigDict(frozen=True)
-
-    community: SecretStr = Field(default=SecretStr("public"))
-    port: Annotated[int, Field(default=161, ge=1, le=65535)]
-    timeout: Annotated[int, Field(default=5, ge=1, le=60)]
-    retries: Annotated[int, Field(default=2, ge=0, le=10)]
-
-
-class SNMPv3Credentials(BaseModel):
-    """SNMPv3 credentials with authentication and privacy."""
-
-    model_config = ConfigDict(frozen=True)
-
-    username: str
-    auth_password: SecretStr
-    priv_password: SecretStr
-    auth_protocol: Annotated[str, Field(default="SHA", pattern=r"^(MD5|SHA|SHA256)$")]
-    priv_protocol: Annotated[
-        str, Field(default="AES128", pattern=r"^(DES|3DES|AES128|AES192|AES256)$")
-    ]
-    port: Annotated[int, Field(default=161, ge=1, le=65535)]
-    timeout: Annotated[int, Field(default=5, ge=1, le=60)]
-    retries: Annotated[int, Field(default=2, ge=0, le=10)]
-
-
-# =============================================================================
 # Main Settings
 # =============================================================================
 
@@ -220,21 +161,3 @@ class LMClientConfig(BaseModel):
     page_size: Annotated[int, Field(default=250, ge=1, le=1000)]
 
 
-# =============================================================================
-# NETCONF Client Configuration
-# =============================================================================
-
-
-class NetconfClientConfig(BaseModel):
-    """
-    NETCONF client configuration.
-
-    Attributes:
-        credentials: Connection credentials
-        device_type: Device type hint for connection parameters
-    """
-
-    model_config = ConfigDict(str_strip_whitespace=True)
-
-    credentials: NetconfCredentials
-    device_type: str | None = None

@@ -1,228 +1,85 @@
 # lmn-tools Roadmap
 
-Tracking code quality improvements and technical debt from code reviews.
+Project direction and completed milestones.
+
+> **Note:** Detailed technical tasks and code quality improvements are tracked in [TODO.md](./TODO.md).
 
 ---
 
-## Critical - Must Fix
-
-### [ ] 1. Missing Test Coverage for Core Modules
-**Location:** `tests/`
-
-The API client (`api/client.py`) and authentication (`auth/hmac.py`) have zero unit tests.
-
-**Tasks:**
-- [ ] Add tests for `LMClient.request()` with mocked responses
-- [ ] Add tests for `LMClient.paginate()` edge cases
-- [ ] Add tests for `generate_lmv1_signature()` with known test vectors
-- [ ] Add tests for error handling paths (`_handle_response`)
-
----
-
-### [ ] 2. Credential Exposure Risk in Debug Output
-**Location:** `src/lmn_tools/collectors/netconf/client.py:125-126`
-
-The `_debug_print` pattern bypasses structured logging and could expose sensitive data.
-
-**Tasks:**
-- [ ] Review all `_debug_print` calls for sensitive data
-- [ ] Use structured logging with level controls consistently
-- [ ] Consider adding a log filter for sensitive data patterns
-
----
-
-### [ ] 3. Broad Exception Handler in BaseService.exists()
-**Location:** `src/lmn_tools/services/base.py:181-185`
-
-Swallows all exceptions including network errors, auth failures, and rate limits.
-
-**Fix:**
-```python
-from lmn_tools.core.exceptions import APINotFoundError
-
-def exists(self, id: int) -> bool:
-    try:
-        self.get(id)
-        return True
-    except APINotFoundError:
-        return False
-    # Let other exceptions propagate
-```
-
----
-
-## Suggestions - Should Fix
-
-### [ ] 4. No Retry Logic for Transient Failures
-**Location:** `src/lmn_tools/api/client.py`
-
-The client raises `APIRateLimitError` with `retry_after` but doesn't implement automatic retries.
-
-**Tasks:**
-- [ ] Add optional retry with exponential backoff
-- [ ] Consider using `tenacity` library or implement simple retry in `request()` method
-- [ ] Make retry behavior configurable
-
----
-
-### [ ] 5. Hardcoded SDT Time Calculation
-**Location:** `src/lmn_tools/services/alerts.py:267-270`
-
-Uses local system time which may drift or be in wrong timezone. LM API expects UTC milliseconds.
-
-**Tasks:**
-- [ ] Use `datetime.utcnow()` for time calculations
-- [ ] Document that all times are UTC
-- [ ] Consider adding timezone-aware helpers
-
----
-
-### [ ] 6. Missing Input Validation in CLI Commands
-**Location:** `src/lmn_tools/cli/commands/device.py:318-322`
-
-No validation that JSON properties are actually a dict with string keys/values.
-
-**Fix:**
-```python
-if not isinstance(props, dict):
-    raise typer.BadParameter("Properties must be a JSON object")
-if not all(isinstance(k, str) and isinstance(v, str) for k, v in props.items()):
-    raise typer.BadParameter("Property keys and values must be strings")
-```
-
----
-
-### [ ] 7. Inconsistent Response Unwrapping
-**Location:** Multiple service files
-
-Some services manually unwrap `data` wrapper, but `LMClient._handle_response()` already normalizes responses. Creates confusion about where normalization happens.
-
-**Tasks:**
-- [ ] Audit all service files for manual response unwrapping
-- [ ] Standardize response handling in one place (client)
-- [ ] Document the response contract
-
----
-
-### [ ] 8. Document Settings Singleton Behavior
-**Location:** `src/lmn_tools/core/config.py:137-138`
-
-`Path.home()` is evaluated at import time inside the lambda. Cached `_settings` won't reflect `$HOME` changes.
-
-**Tasks:**
-- [ ] Document singleton caching behavior
-- [ ] Add note about when settings are evaluated
-
----
-
-### [ ] 9. Missing CLI Test Coverage
-**Location:** `tests/`
-
-No tests for CLI commands. 31 command modules have significant logic that could break silently.
-
-**Tasks:**
-- [ ] Add smoke tests for critical commands using `typer.testing.CliRunner`
-- [ ] Test credential validation paths
-- [ ] Test error handling for common failures
-
-**Example:**
-```python
-from typer.testing import CliRunner
-from lmn_tools.cli.main import app
-
-def test_device_list_requires_credentials():
-    runner = CliRunner()
-    result = runner.invoke(app, ["device", "list"])
-    assert "credentials not configured" in result.output
-```
-
----
-
-### [ ] 10. Session Not Closed on Context Exit
-**Location:** `src/lmn_tools/api/client.py`
-
-`LMClient` uses `requests.Session()` but doesn't implement context manager protocol.
-
-**Fix:**
-```python
-def close(self) -> None:
-    self._session.close()
-
-def __enter__(self) -> LMClient:
-    return self
-
-def __exit__(self, *args) -> None:
-    self.close()
-```
-
----
-
-## Nitpicks - Optional
-
-### [ ] 11. Shadow Builtin `filter`
-**Location:** `src/lmn_tools/services/base.py:50`, CLI commands
-
-Parameter shadows builtin `filter()`. Consider renaming to `filter_str` or `query`.
-
----
-
-### [ ] 12. Shadow Builtin `id`
-**Location:** `src/lmn_tools/services/base.py:79`
-
-Parameter shadows builtin `id()`. Consider renaming to `resource_id` or `item_id`.
-
----
-
-### [ ] 13. Type Ignore Without Explanation
-**Location:** `src/lmn_tools/cli/utils/client.py:42`
-
-```python
-return LMClient.from_credentials(settings.credentials)  # type: ignore
-```
-
-**Fix:** Add explanation or use assertion:
-```python
-assert settings.credentials is not None  # Checked by has_credentials
-return LMClient.from_credentials(settings.credentials)
-```
-
----
-
-### [ ] 14. Audit Unused Exports
-**Location:** `src/lmn_tools/services/__init__.py`
-
-Check if all exported services are actually used. Some may have been added speculatively.
-
----
-
-### [ ] 15. Document Dataclass vs Pydantic Convention
-**Location:** `src/lmn_tools/auth/hmac.py:24-47`
-
-Mixing dataclasses and pydantic models requires developers to know which to use when.
-
-**Tasks:**
-- [ ] Document when to use dataclass vs pydantic
-- [ ] Add to contributing guidelines
-
----
-
-## Summary
-
-| Category | Count | Completed |
-|----------|-------|-----------|
-| Critical | 3 | 0 |
-| Suggestions | 7 | 0 |
-| Nitpicks | 5 | 0 |
-
-**Priority Order:**
-1. Add tests for `LMClient` and HMAC auth (#1)
-2. Fix broad exception handling in `BaseService.exists()` (#3)
-3. Add CLI smoke tests (#9)
-4. Implement retry logic for rate limits (#4)
-5. Add context manager to LMClient (#10)
+## Current Focus
+
+### Architecture & Quality
+- Maintain pure API wrapper design (no direct device connections)
+- Ensure consistent patterns across all services and CLI commands
+- Improve test coverage for core modules
+
+### Planned Features
+- Retry logic for rate-limited API requests
+- Context manager support for `LMClient`
+- CLI smoke tests for regression prevention
+
+See [TODO.md](./TODO.md) for detailed implementation tasks.
 
 ---
 
 ## Completed
 
-_Items will be moved here when done._
+### [x] Remove Local Collectors - Make Pure API Wrapper
+**Completed:** 2026-01-31
+
+Removed all local device connection code (NETCONF, SNMP, optical collectors) to make `lmn` a pure LogicMonitor API wrapper. The tool no longer makes direct connections to network devices.
+
+**Changes:**
+- Deleted `collectors/` directory (~3,600 lines)
+- Deleted `discover` and `collect` CLI commands (~590 lines)
+- Deleted collector tests (~1,500 lines)
+- Removed `netconf`, `snmp`, and `all` optional dependencies
+- Removed unused credential classes and formatters
+
+**Alternative Commands:**
+| Old Command | New API-Based Alternative |
+|-------------|---------------------------|
+| `lmn discover snmp <host>` | `lmn netscan run <id>` (for device discovery) |
+| `lmn discover netconf <host>` | `lmn ds test <ds-id> --device <id>` (for AD testing) |
+| `lmn collect snmp <host>` | `lmn ds test <ds-id> --device <id>` (for collection testing) |
+
+---
+
+### [x] Comprehensive Architectural Review
+**Completed:** 2026-01-31
+
+Conducted full architectural review with multiple specialized agents:
+- Identified core pattern: Layered Service Architecture with Template Method
+- Documented 22 improvement items in TODO.md
+- Verified all planned work aligns with existing patterns
+- Architecture score: 8/10
+
+**Key Patterns Established:**
+1. **Service Layer**: `BaseService` with abstract `base_path` property
+2. **CLI Pattern**: Typer apps with `_get_service()` helpers using `get_client(console)`
+3. **Exception Hierarchy**: Typed exceptions with context in `core/exceptions.py`
+4. **Configuration**: Pydantic Settings with `LM_` prefix environment variables
+
+---
+
+## Architecture Decisions
+
+### Pure API Wrapper
+- lmn-tools interacts exclusively with LogicMonitor REST API
+- No direct device connections (NETCONF, SNMP, SSH)
+- Device discovery via `lmn netscan` API commands
+- DataSource testing via `lmn ds test` API commands
+
+### Layered Architecture
+```
+CLI Commands → Services → API Client → Auth/HMAC
+```
+- CLI never calls `LMClient` directly
+- Services encapsulate business logic
+- API client handles HTTP, pagination, error normalization
+
+### Adding New API Resources
+1. Create service in `services/{resource}.py` extending `BaseService`
+2. Add factory function and export in `services/__init__.py`
+3. Create CLI commands in `cli/commands/{resource}.py`
+4. Register in `cli/main.py`

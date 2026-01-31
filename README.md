@@ -1,20 +1,11 @@
 # lmn-tools
 
-Unified CLI for LogicMonitor operations.
+A pure LogicMonitor API wrapper CLI. This tool interacts exclusively with the LogicMonitor REST API and never makes direct connections to network devices.
 
 ## Installation
 
 ```bash
 pip install lmn-tools
-
-# With NETCONF support (for optical/transport devices)
-pip install lmn-tools[netconf]
-
-# With SNMP support
-pip install lmn-tools[snmp]
-
-# All features
-pip install lmn-tools[all]
 ```
 
 ## Configuration
@@ -40,8 +31,6 @@ lmn --help
 | Command | Description |
 |---------|-------------|
 | `config` | Manage lmn configuration |
-| `discover` | Run Active Discovery on devices (NETCONF/SNMP) |
-| `collect` | Collect metrics from devices |
 | `device` | Manage devices |
 | `group` | Manage device groups |
 | `datasource` | Manage DataSources (alias: `ds`) |
@@ -59,6 +48,7 @@ lmn --help
 | `website` | Manage website monitors (synthetic) |
 | `user` | View users (read-only) |
 | `report` | View reports |
+| `netscan` | Manage network discovery scans |
 | `api` | Raw API access |
 
 ### Examples
@@ -73,11 +63,11 @@ lmn device get 12345
 # List datasources
 lmn ds list
 
-# Run NETCONF discovery
-lmn discover netconf router1.example.com -u admin -c config.yaml
+# Test a datasource on a device
+lmn ds test 12345 --device 67890
 
-# Collect metrics via SNMP
-lmn collect snmp switch1.example.com -c public
+# Run a network scan for device discovery
+lmn netscan run 123
 
 # Raw API access
 lmn api get /device/devices --filter "displayName:*router*"

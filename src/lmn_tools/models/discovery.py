@@ -1,102 +1,13 @@
 """
-Discovery models for LogicMonitor Active Discovery output.
+Discovery models for LogicMonitor resource resolution.
 
-These models represent instances discovered on devices and the
-resolved LogicMonitor resource identifiers needed for dashboards
-and other operations.
+These models represent resolved LogicMonitor resource identifiers
+needed for dashboards and other operations.
 """
 
 from __future__ import annotations
 
-from typing import Annotated
-
 from pydantic import BaseModel, ConfigDict, Field
-
-from lmn_tools.constants import LMOutputFormat
-
-
-class DiscoveredInstance(BaseModel):
-    """
-    Instance for LogicMonitor Active Discovery output.
-
-    Represents a single discovered instance that will be output
-    in the LogicMonitor Active Discovery format.
-
-    Attributes:
-        instance_id: Unique identifier for the instance (no special chars)
-        instance_name: Display name for the instance
-        description: Optional description
-        properties: Auto-properties to attach to the instance
-    """
-
-    model_config = ConfigDict(frozen=True, str_strip_whitespace=True)
-
-    instance_id: Annotated[str, Field(min_length=1, description="Unique instance identifier")]
-    instance_name: str = Field(description="Display name for the instance")
-    description: str = Field(default="", description="Optional description")
-    properties: dict[str, str] = Field(
-        default_factory=dict,
-        description="Auto-properties (auto.* prefix added automatically)",
-    )
-
-    def to_discovery_line(self) -> str:
-        """
-        Format instance for LogicMonitor Active Discovery output.
-
-        Output format:
-            instance_id##instance_name##description####auto.prop1=val1&auto.prop2=val2
-
-        Returns:
-            Formatted discovery line string
-        """
-        sep = LMOutputFormat.DISCOVERY_FIELD_SEPARATOR
-        parts = [self.instance_id, self.instance_name]
-
-        # Add description if present or if we have properties
-        if self.description or self.properties:
-            parts.append(self.description)
-
-        # Add properties section if present
-        if self.properties:
-            prefix = LMOutputFormat.PROPERTY_PREFIX
-            kv_sep = LMOutputFormat.PROPERTY_KEY_VALUE_SEPARATOR
-            prop_sep = LMOutputFormat.PROPERTY_SEPARATOR
-
-            props_str = prop_sep.join(
-                f"{prefix}{k}{kv_sep}{v}" for k, v in sorted(self.properties.items())
-            )
-            # Empty field before properties
-            parts.append("")
-            parts.append(props_str)
-
-        return sep.join(parts)
-
-    @classmethod
-    def from_dict(
-        cls,
-        instance_id: str,
-        instance_name: str | None = None,
-        description: str = "",
-        **properties: str,
-    ) -> DiscoveredInstance:
-        """
-        Create instance from keyword arguments.
-
-        Args:
-            instance_id: Unique identifier
-            instance_name: Display name (defaults to instance_id)
-            description: Optional description
-            **properties: Additional properties as keyword args
-
-        Returns:
-            DiscoveredInstance object
-        """
-        return cls(
-            instance_id=instance_id,
-            instance_name=instance_name or instance_id,
-            description=description,
-            properties=properties,
-        )
 
 
 class ResolvedInterface(BaseModel):

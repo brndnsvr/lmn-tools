@@ -9,9 +9,6 @@ from __future__ import annotations
 from lmn_tools.core.config import (
     LMCredentials,
     LMToolsSettings,
-    NetconfCredentials,
-    SNMPv2cCredentials,
-    SNMPv3Credentials,
     get_settings,
 )
 from lmn_tools.core.exceptions import (
@@ -19,8 +16,6 @@ from lmn_tools.core.exceptions import (
     AuthenticationError,
     ConfigurationError,
     LMToolsError,
-    NetconfError,
-    SNMPError,
 )
 
 __all__ = [
@@ -28,14 +23,7 @@ __all__ = [
     "AuthenticationError",
     "ConfigurationError",
     "LMCredentials",
-    # Exceptions
     "LMToolsError",
     "LMToolsSettings",
-    "NetconfCredentials",
-    "NetconfError",
-    "SNMPError",
-    "SNMPv2cCredentials",
-    "SNMPv3Credentials",
-    # Settings
     "get_settings",
 ]

@@ -4,9 +4,7 @@ Constants, string maps, default values, and API endpoints for lmn-tools.
 This module provides centralized configuration for:
 - LogicMonitor API endpoints and defaults
 - String-to-numeric conversion maps
-- NETCONF defaults and namespaces
 - Common regex patterns
-- Output format constants
 """
 
 from __future__ import annotations
@@ -343,40 +341,6 @@ class StringMaps:
 
 
 # =============================================================================
-# NETCONF Configuration
-# =============================================================================
-
-
-class NetconfDefaults:
-    """Default values for NETCONF connections."""
-
-    PORT: Final[int] = 830
-    TIMEOUT: Final[int] = 60
-
-    # SSH options
-    HOSTKEY_VERIFY: Final[bool] = False
-    ALLOW_AGENT: Final[bool] = False
-    LOOK_FOR_KEYS: Final[bool] = False
-
-
-class NetconfNamespaces:
-    """Common NETCONF namespace URIs."""
-
-    # Standard NETCONF
-    NETCONF_BASE_1_0: Final[str] = "urn:ietf:params:xml:ns:netconf:base:1.0"
-    NETCONF_BASE_1_1: Final[str] = "urn:ietf:params:xml:ns:netconf:base:1.1"
-
-    # Coriant/Infinera
-    CORIANT_NE: Final[str] = "http://coriant.com/yang/os/ne"
-
-    # Ciena WaveServer
-    CIENA_WS_PTPS: Final[str] = "urn:ciena:params:xml:ns:yang:ciena-ws-ptps"
-    CIENA_WS_PTP: Final[str] = "urn:ciena:params:xml:ns:yang:ciena-ws-ptp"
-    CIENA_WS_PORT: Final[str] = "urn:ciena:params:xml:ns:yang:ciena-ws-port"
-    CIENA_WS_XCVR: Final[str] = "urn:ciena:params:xml:ns:yang:ciena-ws-xcvr"
-
-
-# =============================================================================
 # Regex Patterns
 # =============================================================================
 
@@ -407,25 +371,6 @@ class Patterns:
 
     # Metric name validation (lowercase alphanumeric with underscores)
     VALID_METRIC_NAME: Final[re.Pattern[str]] = re.compile(r"^[a-z][a-z0-9_]*$")
-
-
-# =============================================================================
-# LogicMonitor Output Format Constants
-# =============================================================================
-
-
-class LMOutputFormat:
-    """Constants for LogicMonitor script output formats."""
-
-    # Discovery output separators
-    DISCOVERY_FIELD_SEPARATOR: Final[str] = "##"
-    PROPERTY_KEY_VALUE_SEPARATOR: Final[str] = "="
-    PROPERTY_SEPARATOR: Final[str] = "&"
-    PROPERTY_PREFIX: Final[str] = "auto."
-
-    # Collection output separator
-    METRIC_SEPARATOR: Final[str] = "."
-    METRIC_VALUE_SEPARATOR: Final[str] = "="
 
 
 # =============================================================================

@@ -15,8 +15,6 @@ authors = [
 keywords = [
     "logicmonitor",
     "monitoring",
-    "netconf",
-    "snmp",
     "network",
     "automation",
 ]
@@ -44,17 +42,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-netconf = [
-    "ncclient>=0.6.13",
-    "lxml>=4.9.0",
-    "python-dateutil>=2.8.0",
-]
-snmp = [
-    "pysnmp>=4.4.12",
-]
-all = [
-    "lmn-tools[netconf,snmp]",
-]
 dev = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
@@ -63,7 +50,6 @@ dev = [
     "ruff>=0.1.0",
     "types-requests>=2.28.0",
     "types-PyYAML>=6.0.0",
-    "types-python-dateutil>=2.8.0",
 ]
 
 [project.scripts]

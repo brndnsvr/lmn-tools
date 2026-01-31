@@ -14,37 +14,6 @@
 
 ## Next
 
-### T-001: Standardize client acquisition in CLI commands
-**Labels:** `refactor`
-**Location:** `src/lmn_tools/cli/commands/alert.py:24-30`
-
-The `alert.py` command duplicates client creation logic instead of using the shared utility.
-
-**Current (wrong):**
-```python
-def _get_client() -> LMClient:
-    settings = get_settings()
-    if not settings.has_credentials:
-        console.print("[red]Error: LM credentials not configured[/red]")
-        raise typer.Exit(1) from None
-    return LMClient.from_credentials(settings.credentials)  # type: ignore
-```
-
-**Should be:**
-```python
-from lmn_tools.cli.utils import get_client
-
-def _get_service() -> AlertService:
-    return AlertService(get_client(console))
-```
-
-**Acceptance Criteria:**
-- [ ] Remove duplicate `_get_client()` from alert.py
-- [ ] Use `get_client(console)` from cli.utils
-- [ ] Verify error handling matches other commands
-
----
-
 ### T-002: Move convenience methods from LMClient to services
 **Labels:** `refactor`
 **Location:** `src/lmn_tools/api/client.py:293-361`
@@ -78,41 +47,6 @@ Contains 6 unrelated service classes in one file:
 - [ ] Move classes to appropriate files
 - [ ] Update `__init__.py` exports
 - [ ] Verify no import cycles
-
----
-
-### T-004: Fix broad exception handler in BaseService.exists()
-**Labels:** `bug`
-**Location:** `src/lmn_tools/services/base.py:181-185`
-
-Currently swallows all exceptions including network errors, auth failures, rate limits.
-
-**Current:**
-```python
-def exists(self, id: int) -> bool:
-    try:
-        self.get(id)
-        return True
-    except Exception:
-        return False
-```
-
-**Fix:**
-```python
-from lmn_tools.core.exceptions import APINotFoundError
-
-def exists(self, id: int) -> bool:
-    try:
-        self.get(id)
-        return True
-    except APINotFoundError:
-        return False
-    # Let other exceptions propagate
-```
-
-**Acceptance Criteria:**
-- [ ] Catch only `APINotFoundError`
-- [ ] Add test for network error propagation
 
 ---
 
@@ -388,7 +322,15 @@ Recommended ADRs to document:
 
 ## Done
 
-*Empty*
+### T-001: Standardize client acquisition in CLI commands ✓
+**Labels:** `refactor`
+Removed duplicate `_get_client()` from alert.py, now uses shared `get_client(console)`.
+
+---
+
+### T-004: Fix broad exception handler in BaseService.exists() ✓
+**Labels:** `bug`
+Now catches only `APINotFoundError` instead of swallowing all exceptions.
 
 ---
 

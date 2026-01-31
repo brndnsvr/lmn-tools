@@ -1,12 +1,21 @@
-# lmn-tools Architecture & Code Quality TODO
+# Tasks
 
-Generated from comprehensive architectural review on 2026-01-31.
+## Inbox
+
+*Empty*
 
 ---
 
-## Critical - Must Fix
+## Inflight
 
-### [ ] 1. Standardize Client Acquisition in CLI Commands
+*Empty*
+
+---
+
+## Next
+
+### T-001: Standardize client acquisition in CLI commands
+**Labels:** `refactor`
 **Location:** `src/lmn_tools/cli/commands/alert.py:24-30`
 
 The `alert.py` command duplicates client creation logic instead of using the shared utility.
@@ -29,11 +38,15 @@ def _get_service() -> AlertService:
     return AlertService(get_client(console))
 ```
 
-**Impact:** Inconsistent error handling, maintenance burden, violates DRY.
+**Acceptance Criteria:**
+- [ ] Remove duplicate `_get_client()` from alert.py
+- [ ] Use `get_client(console)` from cli.utils
+- [ ] Verify error handling matches other commands
 
 ---
 
-### [ ] 2. Move Convenience Methods from LMClient to Services
+### T-002: Move convenience methods from LMClient to services
+**Labels:** `refactor`
 **Location:** `src/lmn_tools/api/client.py:293-361`
 
 These methods belong in the service layer, not the API client:
@@ -41,11 +54,15 @@ These methods belong in the service layer, not the API client:
 - `get_device_datasources()` → `DeviceService`
 - `get_datasource_instances()` → `DeviceService`
 
-**Impact:** Violates single responsibility principle, makes testing harder.
+**Acceptance Criteria:**
+- [ ] Move methods to DeviceService
+- [ ] Add deprecation warnings to LMClient methods
+- [ ] Update any callers to use DeviceService
 
 ---
 
-### [ ] 3. Split alerts.py into Separate Service Files
+### T-003: Split alerts.py into separate service files
+**Labels:** `refactor`
 **Location:** `src/lmn_tools/services/alerts.py`
 
 Contains 6 unrelated service classes in one file:
@@ -56,11 +73,16 @@ Contains 6 unrelated service classes in one file:
 - `IntegrationService` → move to `services/integrations.py`
 - `WebsiteService` → move to `services/websites.py`
 
-**Impact:** Violates single responsibility, harder to navigate codebase.
+**Acceptance Criteria:**
+- [ ] Create new service files for SDT, Escalation, Integration, Website
+- [ ] Move classes to appropriate files
+- [ ] Update `__init__.py` exports
+- [ ] Verify no import cycles
 
 ---
 
-### [ ] 4. Fix Broad Exception Handler in BaseService.exists()
+### T-004: Fix broad exception handler in BaseService.exists()
+**Labels:** `bug`
 **Location:** `src/lmn_tools/services/base.py:181-185`
 
 Currently swallows all exceptions including network errors, auth failures, rate limits.
@@ -88,33 +110,44 @@ def exists(self, id: int) -> bool:
     # Let other exceptions propagate
 ```
 
+**Acceptance Criteria:**
+- [ ] Catch only `APINotFoundError`
+- [ ] Add test for network error propagation
+
 ---
 
-### [ ] 5. Add Test Coverage for Core Modules
+### T-005: Add test coverage for core modules
+**Labels:** `infra`
 **Location:** `tests/`
 
 The API client and authentication modules have zero unit tests.
 
 **Tasks:**
-- [ ] Create `tests/api/test_client.py`
+- Create `tests/api/test_client.py`
   - Test `LMClient.request()` with mocked responses
   - Test `LMClient.paginate()` edge cases
   - Test error handling paths (`_handle_response`)
-- [ ] Create `tests/auth/test_hmac.py`
+- Create `tests/auth/test_hmac.py`
   - Test `generate_lmv1_signature()` with known test vectors
   - Test `AuthHeaders` dataclass
 
+**Acceptance Criteria:**
+- [ ] test_client.py with request/paginate/error tests
+- [ ] test_hmac.py with signature verification tests
+- [ ] Coverage report shows >80% for client.py and hmac.py
+
 ---
 
-## Suggestions - Should Fix
+## Backlog
 
-### [ ] 6. Extract Duplicate _format_timestamp() to Utility
+### T-006: Extract duplicate _format_timestamp() to utility
+**Labels:** `refactor`
 **Locations:**
 - `src/lmn_tools/cli/commands/alert.py:38-47`
 - `src/lmn_tools/cli/commands/token.py:28-36`
 - `src/lmn_tools/cli/commands/opsnote.py:28-36`
 
-**Fix:** Create shared function in `src/lmn_tools/cli/utils/helpers.py`:
+Create shared function in `src/lmn_tools/cli/utils/helpers.py`:
 ```python
 def format_timestamp(epoch_ms: int | None) -> str:
     """Format epoch milliseconds to human-readable datetime."""
@@ -126,10 +159,10 @@ def format_timestamp(epoch_ms: int | None) -> str:
 
 ---
 
-### [ ] 7. Standardize Response Unwrapping Pattern
-**Locations:** Various services and CLI commands
+### T-007: Standardize response unwrapping pattern
+**Labels:** `refactor`
 
-**Problem:** Mixed patterns for handling API response wrappers:
+Mixed patterns for handling API response wrappers:
 - Some use `response.get("data", response)`
 - Some use `response.get("items", response.get("data", {}).get("items", []))`
 - CLI has `unwrap_response()` but services don't use it
@@ -141,8 +174,8 @@ def format_timestamp(epoch_ms: int | None) -> str:
 
 ---
 
-### [ ] 8. Use Endpoint Constants Instead of Hardcoded Strings
-**Location:** Various services
+### T-008: Use endpoint constants instead of hardcoded strings
+**Labels:** `refactor`
 
 `constants.LMEndpoints` defines all API endpoints but services hardcode paths.
 
@@ -164,7 +197,8 @@ def base_path(self) -> str:
 
 ---
 
-### [ ] 9. Add Missing Factory Functions for Services
+### T-009: Add missing factory functions for services
+**Labels:** `refactor`
 **Location:** `src/lmn_tools/services/alerts.py`
 
 Some services lack factory functions:
@@ -176,20 +210,22 @@ Some services lack factory functions:
 
 ---
 
-### [ ] 10. Add Retry Logic for Transient Failures
+### T-010: Add retry logic for transient failures
+**Labels:** `feature`
 **Location:** `src/lmn_tools/api/client.py`
 
 The client raises `APIRateLimitError` with `retry_after` but doesn't implement automatic retries.
 
 **Tasks:**
-- [ ] Add optional retry with exponential backoff in `request()` method
-- [ ] Consider using `tenacity` library or simple retry loop
-- [ ] Make retry behavior configurable via `LMClientConfig`
-- [ ] Only retry on rate limits and connection errors, not auth/validation
+- Add optional retry with exponential backoff in `request()` method
+- Consider using `tenacity` library or simple retry loop
+- Make retry behavior configurable via `LMClientConfig`
+- Only retry on rate limits and connection errors, not auth/validation
 
 ---
 
-### [ ] 11. Fix Hardcoded SDT Time Calculation
+### T-011: Fix hardcoded SDT time calculation
+**Labels:** `bug`
 **Location:** `src/lmn_tools/services/alerts.py:267-270`
 
 Uses local system time which may be in wrong timezone. LM API expects UTC milliseconds.
@@ -209,7 +245,8 @@ def utc_timestamp_ms(dt: datetime) -> int:
 
 ---
 
-### [ ] 12. Add Input Validation in CLI Commands
+### T-012: Add input validation in CLI commands
+**Labels:** `bug`
 **Location:** `src/lmn_tools/cli/commands/device.py:318-322`
 
 No validation that JSON properties are actually a dict with string keys/values.
@@ -224,31 +261,22 @@ if not all(isinstance(k, str) and isinstance(v, str) for k, v in props.items()):
 
 ---
 
-### [ ] 13. Add CLI Test Coverage
+### T-013: Add CLI test coverage
+**Labels:** `infra`
 **Location:** `tests/`
 
 No tests for CLI commands. 31 command modules have significant logic.
 
 **Tasks:**
-- [ ] Create `tests/cli/conftest.py` with common fixtures
-- [ ] Add smoke tests using `typer.testing.CliRunner`
-- [ ] Test credential validation paths
-- [ ] Test error handling for common failures
-
-**Example:**
-```python
-from typer.testing import CliRunner
-from lmn_tools.cli.main import app
-
-def test_device_list_requires_credentials():
-    runner = CliRunner()
-    result = runner.invoke(app, ["device", "list"])
-    assert "credentials not configured" in result.output.lower()
-```
+- Create `tests/cli/conftest.py` with common fixtures
+- Add smoke tests using `typer.testing.CliRunner`
+- Test credential validation paths
+- Test error handling for common failures
 
 ---
 
-### [ ] 14. Add Context Manager to LMClient
+### T-014: Add context manager to LMClient
+**Labels:** `feature`
 **Location:** `src/lmn_tools/api/client.py`
 
 `LMClient` uses `requests.Session()` but doesn't implement context manager protocol.
@@ -268,40 +296,36 @@ def __exit__(self, *args) -> None:
 
 ---
 
-### [ ] 15. Standardize Delete Confirmation Pattern
+### T-015: Standardize delete confirmation pattern
+**Labels:** `refactor`
 **Locations:**
 - `src/lmn_tools/cli/commands/device.py:392-397` - fetches resource name before confirmation
 - `src/lmn_tools/cli/commands/opsnote.py:213-217` - just uses ID in confirmation
 
-**Fix:** Standardize on fetching resource name/displayName before confirmation for better UX.
+Standardize on fetching resource name/displayName before confirmation for better UX.
 
 ---
 
-## Nitpicks - Optional
-
-### [ ] 16. Rename Parameter Shadowing Builtin `filter`
+### T-016: Rename parameter shadowing builtin `filter`
+**Labels:** `refactor`, `breaking`
 **Location:** `src/lmn_tools/services/base.py:50`, various CLI commands
 
-Parameter shadows builtin `filter()`.
-
-**Fix:** Rename to `filter_str` or `query`.
-
-**Note:** Breaking change for programmatic users.
+Parameter shadows builtin `filter()`. Rename to `filter_str` or `query`.
 
 ---
 
-### [ ] 17. Rename Parameter Shadowing Builtin `id`
+### T-017: Rename parameter shadowing builtin `id`
+**Labels:** `refactor`, `breaking`
 **Location:** `src/lmn_tools/services/base.py:79`
 
-Parameter shadows builtin `id()`.
+Parameter shadows builtin `id()`. Rename to `resource_id` or `item_id`.
 
-**Fix:** Rename to `resource_id` or `item_id`.
-
-**Note:** Breaking change - coordinate with filter rename.
+**Note:** Coordinate with T-016 for breaking changes.
 
 ---
 
-### [ ] 18. Fix Type Ignore Without Explanation
+### T-018: Fix type ignore without explanation
+**Labels:** `refactor`
 **Location:** `src/lmn_tools/cli/utils/client.py:42`
 
 ```python
@@ -316,14 +340,16 @@ return LMClient.from_credentials(settings.credentials)
 
 ---
 
-### [ ] 19. Audit Unused Service Exports
+### T-019: Audit unused service exports
+**Labels:** `refactor`
 **Location:** `src/lmn_tools/services/__init__.py`
 
 Check if all exported services are actually used. Some may have been added speculatively.
 
 ---
 
-### [ ] 20. Document Dataclass vs Pydantic Convention
+### T-020: Document dataclass vs Pydantic convention
+**Labels:** `docs`
 **Location:** `src/lmn_tools/auth/hmac.py:24-47`
 
 Mixing dataclasses and pydantic models requires documentation.
@@ -332,50 +358,38 @@ Mixing dataclasses and pydantic models requires documentation.
 - **Dataclasses**: Internal DTOs (like `AuthHeaders`)
 - **Pydantic**: Configuration and external data validation (like `LMCredentials`)
 
-Document in CONTRIBUTING.md or README.md.
+Document in CONTRIBUTING.md or architecture docs.
 
 ---
 
-## Documentation Tasks
-
-### [ ] 21. Document Settings Singleton Behavior
+### T-021: Document Settings singleton behavior
+**Labels:** `docs`
 **Location:** `src/lmn_tools/core/config.py:137-138`
 
 `Path.home()` is evaluated at import time inside the lambda. Cached `_settings` won't reflect `$HOME` changes.
 
 **Tasks:**
-- [ ] Document singleton caching behavior in `get_settings()` docstring
-- [ ] Note when settings are evaluated
-- [ ] Document `reset_settings()` for testing
+- Document singleton caching behavior in `get_settings()` docstring
+- Note when settings are evaluated
+- Document `reset_settings()` for testing
 
 ---
 
-### [ ] 22. Create Architecture Decision Records (ADRs)
+### T-022: Create Architecture Decision Records (ADRs)
+**Labels:** `docs`
 
 Recommended ADRs to document:
-
-- [ ] **ADR-001**: Service Layer Pattern - Template Method via `BaseService`
-- [ ] **ADR-002**: CLI-Service-Client Layering - CLI never calls `LMClient` directly
-- [ ] **ADR-003**: Response Normalization Contract - where unwrapping happens
-- [ ] **ADR-004**: Dataclass vs Pydantic usage guidelines
+- **ADR-001**: Service Layer Pattern - Template Method via `BaseService`
+- **ADR-002**: CLI-Service-Client Layering - CLI never calls `LMClient` directly
+- **ADR-003**: Response Normalization Contract - where unwrapping happens
+- **ADR-004**: Dataclass vs Pydantic usage guidelines
 
 ---
 
-## Summary
+## Done
 
-| Category | Count | Priority |
-|----------|-------|----------|
-| Critical | 5 | Must fix before next release |
-| Suggestions | 10 | Should fix for maintainability |
-| Nitpicks | 5 | Optional improvements |
-| Documentation | 2 | Capture decisions |
+*Empty*
 
-**Recommended Priority Order:**
-1. #5 - Add tests for `LMClient` and HMAC auth (enables safe refactoring)
-2. #1 - Standardize client acquisition (quick win)
-3. #4 - Fix broad exception in `exists()` (one-line fix)
-4. #3 - Split alerts.py (improves navigability)
-5. #2 - Move convenience methods to services
-6. #14 - Add context manager to LMClient
-7. #10 - Add retry logic for rate limits
-8. #13 - Add CLI smoke tests
+---
+
+**Next ID:** T-023

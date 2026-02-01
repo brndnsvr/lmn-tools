@@ -14,22 +14,6 @@
 
 ## Next
 
-### T-002: Move convenience methods from LMClient to services
-**Labels:** `refactor`
-**Location:** `src/lmn_tools/api/client.py:293-361`
-
-These methods belong in the service layer, not the API client:
-- `find_device_by_hostname()` → `DeviceService`
-- `get_device_datasources()` → `DeviceService`
-- `get_datasource_instances()` → `DeviceService`
-
-**Acceptance Criteria:**
-- [ ] Move methods to DeviceService
-- [ ] Add deprecation warnings to LMClient methods
-- [ ] Update any callers to use DeviceService
-
----
-
 ### T-003: Split alerts.py into separate service files
 **Labels:** `refactor`
 **Location:** `src/lmn_tools/services/alerts.py`
@@ -47,28 +31,6 @@ Contains 6 unrelated service classes in one file:
 - [ ] Move classes to appropriate files
 - [ ] Update `__init__.py` exports
 - [ ] Verify no import cycles
-
----
-
-### T-005: Add test coverage for core modules
-**Labels:** `infra`
-**Location:** `tests/`
-
-The API client and authentication modules have zero unit tests.
-
-**Tasks:**
-- Create `tests/api/test_client.py`
-  - Test `LMClient.request()` with mocked responses
-  - Test `LMClient.paginate()` edge cases
-  - Test error handling paths (`_handle_response`)
-- Create `tests/auth/test_hmac.py`
-  - Test `generate_lmv1_signature()` with known test vectors
-  - Test `AuthHeaders` dataclass
-
-**Acceptance Criteria:**
-- [ ] test_client.py with request/paginate/error tests
-- [ ] test_hmac.py with signature verification tests
-- [ ] Coverage report shows >80% for client.py and hmac.py
 
 ---
 
@@ -331,6 +293,21 @@ Removed duplicate `_get_client()` from alert.py, now uses shared `get_client(con
 ### T-004: Fix broad exception handler in BaseService.exists() ✓
 **Labels:** `bug`
 Now catches only `APINotFoundError` instead of swallowing all exceptions.
+
+---
+
+### T-005: Add test coverage for core modules ✓
+**Labels:** `infra`
+Added 67 unit tests for `api/client.py` (88% coverage) and `auth/hmac.py` (100% coverage).
+Total coverage: 91% for both modules.
+
+---
+
+### T-002: Remove redundant convenience methods from LMClient ✓
+**Labels:** `refactor`
+Removed `find_device_by_hostname()`, `get_device_datasources()`, and `get_datasource_instances()`
+from LMClient. DeviceService already provides equivalent functionality with `find_by_hostname()`,
+`get_datasources()`, and `get_instances()`.
 
 ---
 

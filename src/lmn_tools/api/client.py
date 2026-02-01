@@ -16,7 +16,6 @@ import requests
 from pydantic import SecretStr
 
 from lmn_tools.auth.hmac import generate_auth_headers
-from lmn_tools.constants import LMAPIConfig
 from lmn_tools.core.config import LMCredentials
 from lmn_tools.core.exceptions import (
     APIConnectionError,
@@ -72,13 +71,17 @@ class LMClient:
         """
         self.company = company
         self.access_id = access_id
-        self._access_key = access_key if isinstance(access_key, SecretStr) else SecretStr(access_key)
+        self._access_key = (
+            access_key if isinstance(access_key, SecretStr) else SecretStr(access_key)
+        )
         self.timeout = timeout
         self.base_url = f"https://{company}.logicmonitor.com{self.BASE_PATH}"
         self._session = requests.Session()
 
     @classmethod
-    def from_credentials(cls, credentials: LMCredentials, timeout: int = DEFAULT_TIMEOUT) -> LMClient:
+    def from_credentials(
+        cls, credentials: LMCredentials, timeout: int = DEFAULT_TIMEOUT
+    ) -> LMClient:
         """
         Create client from LMCredentials object.
 
@@ -285,77 +288,3 @@ class LMClient:
             List of all items
         """
         return list(self.paginate(path, params, page_size, max_items))
-
-    # =========================================================================
-    # Convenience Methods
-    # =========================================================================
-
-    def find_device_by_hostname(
-        self,
-        hostname: str,
-        fields: str = "id,displayName,name,systemProperties",
-    ) -> dict[str, Any] | None:
-        """
-        Find a device by hostname.
-
-        Args:
-            hostname: Device hostname (displayName)
-            fields: Fields to return
-
-        Returns:
-            Device data or None if not found
-        """
-        params = {
-            "filter": f'displayName:"{hostname}"',
-            "fields": fields,
-            "size": 1,
-        }
-        response = self.get("/device/devices", params)
-        items = response.get("data", {}).get("items", [])
-        return items[0] if items else None
-
-    def get_device_datasources(
-        self,
-        device_id: int,
-        datasource_name: str | None = None,
-    ) -> list[dict[str, Any]]:
-        """
-        Get datasources applied to a device.
-
-        Args:
-            device_id: Device ID
-            datasource_name: Optional datasource name filter
-
-        Returns:
-            List of device datasources
-        """
-        params: dict[str, Any] = {"size": LMAPIConfig.MAX_PAGE_SIZE}
-        if datasource_name:
-            params["filter"] = f'dataSourceName:"{datasource_name}"'
-
-        path = f"/device/devices/{device_id}/devicedatasources"
-        return self.get_all(path, params)
-
-    def get_datasource_instances(
-        self,
-        device_id: int,
-        device_datasource_id: int,
-        instance_name: str | None = None,
-    ) -> list[dict[str, Any]]:
-        """
-        Get instances for a device datasource.
-
-        Args:
-            device_id: Device ID
-            device_datasource_id: Device datasource ID
-            instance_name: Optional instance name filter
-
-        Returns:
-            List of instances
-        """
-        params: dict[str, Any] = {"size": LMAPIConfig.MAX_PAGE_SIZE}
-        if instance_name:
-            params["filter"] = f'displayName:"{instance_name}"'
-
-        path = f"/device/devices/{device_id}/devicedatasources/{device_datasource_id}/instances"
-        return self.get_all(path, params)

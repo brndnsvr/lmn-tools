@@ -54,7 +54,9 @@ class TestServiceService:
         assert "groupId:10" in call_args[0][1]["filter"]
         assert len(result) == 2
 
-    def test_list_by_group_with_max_items(self, service: ServiceService, mock_client: MagicMock) -> None:
+    def test_list_by_group_with_max_items(
+        self, service: ServiceService, mock_client: MagicMock
+    ) -> None:
         """Test list_by_group with max_items."""
         mock_client.get_all.return_value = []
 
@@ -81,7 +83,9 @@ class TestServiceService:
         assert result["alertStatus"] == 0
         assert result["sdtStatus"] == "none"
 
-    def test_get_status_with_data_wrapper(self, service: ServiceService, mock_client: MagicMock) -> None:
+    def test_get_status_with_data_wrapper(
+        self, service: ServiceService, mock_client: MagicMock
+    ) -> None:
         """Test get_status when response has data wrapper."""
         mock_client.get.return_value = {
             "data": {
@@ -119,13 +123,11 @@ class TestServiceService:
 
         assert result == []
 
-    def test_get_members_with_data_wrapper(self, service: ServiceService, mock_client: MagicMock) -> None:
+    def test_get_members_with_data_wrapper(
+        self, service: ServiceService, mock_client: MagicMock
+    ) -> None:
         """Test get_members when response has data wrapper."""
-        mock_client.get.return_value = {
-            "data": {
-                "members": [{"type": "device", "id": 30}]
-            }
-        }
+        mock_client.get.return_value = {"data": {"members": [{"type": "device", "id": 30}]}}
 
         result = service.get_members(123)
 
@@ -152,7 +154,9 @@ class TestServiceService:
         assert len(data["members"]) == 3
         assert data["members"][0] == {"type": "device", "id": 1}
 
-    def test_create_simple_no_devices(self, service: ServiceService, mock_client: MagicMock) -> None:
+    def test_create_simple_no_devices(
+        self, service: ServiceService, mock_client: MagicMock
+    ) -> None:
         """Test creating a service without devices."""
         mock_client.post.return_value = {"id": 457}
 
@@ -180,7 +184,9 @@ class TestServiceService:
         assert len(data["members"]) == 2
         assert {"type": "device", "id": 20} in data["members"]
 
-    def test_add_device_to_empty_service(self, service: ServiceService, mock_client: MagicMock) -> None:
+    def test_add_device_to_empty_service(
+        self, service: ServiceService, mock_client: MagicMock
+    ) -> None:
         """Test adding a device to a service with no members."""
         mock_client.get.return_value = {"id": 123, "members": []}
         mock_client.patch.return_value = {"id": 123}

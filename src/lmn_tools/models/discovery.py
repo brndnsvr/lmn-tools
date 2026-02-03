@@ -134,9 +134,7 @@ class ResolutionSummary(BaseModel):
     def all_resolved(self) -> bool:
         """Check if all resources were successfully resolved."""
         return not (
-            self.unresolved_devices
-            or self.unresolved_interfaces
-            or self.unresolved_bgp_peers
+            self.unresolved_devices or self.unresolved_interfaces or self.unresolved_bgp_peers
         )
 
     @property

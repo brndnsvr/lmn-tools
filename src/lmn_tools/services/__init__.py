@@ -8,6 +8,13 @@ and collectors, such as device resolution and dashboard building.
 from __future__ import annotations
 
 from lmn_tools.services.access import AccessGroupService, access_group_service
+from lmn_tools.services.alerts import (
+    AlertRuleService,
+    AlertService,
+    AlertSeverity,
+    alert_rule_service,
+    alert_service,
+)
 from lmn_tools.services.audit import AuditLogService, audit_log_service
 from lmn_tools.services.base import BaseService
 from lmn_tools.services.batch import BatchJobService, batchjob_service
@@ -20,6 +27,14 @@ from lmn_tools.services.dashboards import (
     widget_service,
 )
 from lmn_tools.services.discovery import NetscanService, netscan_service
+from lmn_tools.services.escalation import (
+    EscalationChainService,
+    escalation_chain_service,
+)
+from lmn_tools.services.integrations import (
+    IntegrationService,
+    integration_service,
+)
 from lmn_tools.services.modules import (
     LogicModuleService,
     ModuleType,
@@ -31,6 +46,11 @@ from lmn_tools.services.modules import (
 )
 from lmn_tools.services.notifications import RecipientGroupService, recipient_group_service
 from lmn_tools.services.operations import OpsNoteService, opsnote_service
+from lmn_tools.services.sdt import (
+    SDTService,
+    SDTType,
+    sdt_service,
+)
 from lmn_tools.services.serviceinsight import (
     ServiceGroupService,
     ServiceService,
@@ -39,10 +59,26 @@ from lmn_tools.services.serviceinsight import (
 )
 from lmn_tools.services.tokens import APITokenService, api_token_service
 from lmn_tools.services.topology import TopologyService, topology_service
+from lmn_tools.services.websites import (
+    WebsiteService,
+    website_service,
+)
 
 __all__ = [  # noqa: RUF022
     # Base
     "BaseService",
+    # Alerts
+    "AlertService",
+    "AlertSeverity",
+    "AlertRuleService",
+    "alert_service",
+    "alert_rule_service",
+    # Escalation
+    "EscalationChainService",
+    "escalation_chain_service",
+    # Integrations
+    "IntegrationService",
+    "integration_service",
     # LogicModules
     "LogicModuleService",
     "ModuleType",
@@ -70,6 +106,10 @@ __all__ = [  # noqa: RUF022
     # Notifications
     "RecipientGroupService",
     "recipient_group_service",
+    # SDT
+    "SDTService",
+    "SDTType",
+    "sdt_service",
     # Tokens
     "APITokenService",
     "api_token_service",
@@ -87,4 +127,7 @@ __all__ = [  # noqa: RUF022
     "ServiceGroupService",
     "service_service",
     "service_group_service",
+    # Websites
+    "WebsiteService",
+    "website_service",
 ]

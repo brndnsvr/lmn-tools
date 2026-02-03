@@ -43,7 +43,9 @@ class TestBatchJobService:
         assert result["progress"] == 50
         assert result["id"] == 123
 
-    def test_get_status_with_data_wrapper(self, service: BatchJobService, mock_client: MagicMock) -> None:
+    def test_get_status_with_data_wrapper(
+        self, service: BatchJobService, mock_client: MagicMock
+    ) -> None:
         """Test get_status when response has data wrapper."""
         mock_client.get.return_value = {
             "data": {
@@ -56,7 +58,9 @@ class TestBatchJobService:
 
         assert result["status"] == "completed"
 
-    def test_list_by_status_with_enum(self, service: BatchJobService, mock_client: MagicMock) -> None:
+    def test_list_by_status_with_enum(
+        self, service: BatchJobService, mock_client: MagicMock
+    ) -> None:
         """Test listing batch jobs by status using enum."""
         mock_client.get_all.return_value = [{"id": 1, "status": "completed"}]
 
@@ -66,7 +70,9 @@ class TestBatchJobService:
         assert "status:completed" in call_args[0][1]["filter"]
         assert len(result) == 1
 
-    def test_list_by_status_with_string(self, service: BatchJobService, mock_client: MagicMock) -> None:
+    def test_list_by_status_with_string(
+        self, service: BatchJobService, mock_client: MagicMock
+    ) -> None:
         """Test listing batch jobs by status using string."""
         mock_client.get_all.return_value = []
 
@@ -124,7 +130,9 @@ class TestBatchJobService:
             json_data={"status": "cancelled"},
         )
 
-    def test_wait_for_completion_already_done(self, service: BatchJobService, mock_client: MagicMock) -> None:
+    def test_wait_for_completion_already_done(
+        self, service: BatchJobService, mock_client: MagicMock
+    ) -> None:
         """Test wait_for_completion when job is already done."""
         mock_client.get.return_value = {"status": "completed"}
 
@@ -133,7 +141,9 @@ class TestBatchJobService:
         assert result["status"] == "completed"
         mock_client.get.assert_called_once()
 
-    def test_wait_for_completion_failed(self, service: BatchJobService, mock_client: MagicMock) -> None:
+    def test_wait_for_completion_failed(
+        self, service: BatchJobService, mock_client: MagicMock
+    ) -> None:
         """Test wait_for_completion when job fails."""
         mock_client.get.return_value = {"status": "failed"}
 
@@ -141,7 +151,9 @@ class TestBatchJobService:
 
         assert result["status"] == "failed"
 
-    def test_wait_for_completion_cancelled(self, service: BatchJobService, mock_client: MagicMock) -> None:
+    def test_wait_for_completion_cancelled(
+        self, service: BatchJobService, mock_client: MagicMock
+    ) -> None:
         """Test wait_for_completion when job is cancelled."""
         mock_client.get.return_value = {"status": "cancelled"}
 

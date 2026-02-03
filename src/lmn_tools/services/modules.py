@@ -87,7 +87,9 @@ class LogicModuleService(BaseService):
             List of datapoint dictionaries
         """
         response = self.client.get(f"{self.base_path}/{module_id}/datapoints")
-        items: list[dict[str, Any]] = response.get("items", response.get("data", {}).get("items", []))
+        items: list[dict[str, Any]] = response.get(
+            "items", response.get("data", {}).get("items", [])
+        )
         return items
 
     def get_graphs(self, module_id: int) -> list[dict[str, Any]]:
@@ -101,7 +103,9 @@ class LogicModuleService(BaseService):
             List of graph dictionaries
         """
         response = self.client.get(f"{self.base_path}/{module_id}/graphs")
-        items: list[dict[str, Any]] = response.get("items", response.get("data", {}).get("items", []))
+        items: list[dict[str, Any]] = response.get(
+            "items", response.get("data", {}).get("items", [])
+        )
         return items
 
     def get_overview_graphs(self, module_id: int) -> list[dict[str, Any]]:
@@ -115,7 +119,9 @@ class LogicModuleService(BaseService):
             List of overview graph dictionaries
         """
         response = self.client.get(f"{self.base_path}/{module_id}/ographs")
-        items: list[dict[str, Any]] = response.get("items", response.get("data", {}).get("items", []))
+        items: list[dict[str, Any]] = response.get(
+            "items", response.get("data", {}).get("items", [])
+        )
         return items
 
     def get_audit_log(self, module_id: int) -> list[dict[str, Any]]:
@@ -129,7 +135,9 @@ class LogicModuleService(BaseService):
             List of audit log entries
         """
         response = self.client.get(f"{self.base_path}/{module_id}/audit")
-        items: list[dict[str, Any]] = response.get("items", response.get("data", {}).get("items", []))
+        items: list[dict[str, Any]] = response.get(
+            "items", response.get("data", {}).get("items", [])
+        )
         return items
 
     # =========================================================================
@@ -148,7 +156,9 @@ class LogicModuleService(BaseService):
         """
         return self.get(module_id)
 
-    def clone(self, module_id: int, new_name: str, new_display_name: str | None = None) -> dict[str, Any]:
+    def clone(
+        self, module_id: int, new_name: str, new_display_name: str | None = None
+    ) -> dict[str, Any]:
         """
         Clone a LogicModule with a new name.
 

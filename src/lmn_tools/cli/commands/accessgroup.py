@@ -28,7 +28,9 @@ def _get_service() -> AccessGroupService:
 def list_groups(
     filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List access groups."""
     svc = _get_service()
@@ -117,7 +119,9 @@ def get_group(
 @app.command("create")
 def create_group(
     name: Annotated[str, typer.Option("--name", "-n", help="Group name")],
-    description: Annotated[str | None, typer.Option("--description", "-d", help="Description")] = None,
+    description: Annotated[
+        str | None, typer.Option("--description", "-d", help="Description")
+    ] = None,
     config_file: Annotated[str | None, typer.Option("--config", help="JSON config file")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
@@ -149,7 +153,9 @@ def create_group(
 def update_group(
     group_id: Annotated[int, typer.Argument(help="Access group ID")],
     name: Annotated[str | None, typer.Option("--name", "-n", help="New name")] = None,
-    description: Annotated[str | None, typer.Option("--description", "-d", help="New description")] = None,
+    description: Annotated[
+        str | None, typer.Option("--description", "-d", help="New description")
+    ] = None,
     config_file: Annotated[str | None, typer.Option("--config", help="JSON config file")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
@@ -213,7 +219,9 @@ def delete_group(
 def add_device_group(
     access_group_id: Annotated[int, typer.Argument(help="Access group ID")],
     device_group_id: Annotated[int, typer.Argument(help="Device group ID to add")],
-    permission: Annotated[str, typer.Option("--permission", "-p", help="Permission level")] = "read",
+    permission: Annotated[
+        str, typer.Option("--permission", "-p", help="Permission level")
+    ] = "read",
 ) -> None:
     """Add a device group to an access group."""
     svc = _get_service()

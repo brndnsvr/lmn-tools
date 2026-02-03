@@ -47,7 +47,9 @@ def list_reports(
     filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
     type: Annotated[str | None, typer.Option("--type", "-t", help="Filter by report type")] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List reports."""
     svc = _get_service()

@@ -50,7 +50,9 @@ def list_services(
     group: Annotated[int | None, typer.Option("--group", "-g", help="Filter by group ID")] = None,
     filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List services."""
     svc = _get_service()
@@ -138,7 +140,9 @@ def get_service_cmd(
 def create_service(
     name: Annotated[str, typer.Option("--name", "-n", help="Service name")],
     group: Annotated[int, typer.Option("--group", "-g", help="Service group ID")] = 1,
-    devices: Annotated[str | None, typer.Option("--devices", "-d", help="Comma-separated device IDs")] = None,
+    devices: Annotated[
+        str | None, typer.Option("--devices", "-d", help="Comma-separated device IDs")
+    ] = None,
     description: Annotated[str | None, typer.Option("--description", help="Description")] = None,
     config_file: Annotated[str | None, typer.Option("--config", help="JSON config file")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
@@ -177,7 +181,9 @@ def create_service(
 def update_service(
     service_id: Annotated[int, typer.Argument(help="Service ID")],
     name: Annotated[str | None, typer.Option("--name", "-n", help="New name")] = None,
-    description: Annotated[str | None, typer.Option("--description", "-d", help="New description")] = None,
+    description: Annotated[
+        str | None, typer.Option("--description", "-d", help="New description")
+    ] = None,
     group: Annotated[int | None, typer.Option("--group", "-g", help="New group ID")] = None,
     config_file: Annotated[str | None, typer.Option("--config", help="JSON config file")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
@@ -310,7 +316,9 @@ def add_device(
 @app.command("groups")
 def list_groups(
     parent: Annotated[int | None, typer.Option("--parent", "-p", help="Parent group ID")] = None,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List service groups."""
     svc = _get_group_service()

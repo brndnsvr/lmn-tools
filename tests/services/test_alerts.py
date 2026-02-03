@@ -8,7 +8,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from lmn_tools.services.alerts import AlertService, AlertSeverity, SDTService, SDTType
+from lmn_tools.services.alerts import AlertService, AlertSeverity
+from lmn_tools.services.sdt import SDTService, SDTType
 
 
 @pytest.fixture
@@ -41,7 +42,9 @@ class TestAlertService:
         assert 'cleared:"false"' in call_args[0][1]["filter"]
         assert len(result) == 1
 
-    def test_list_active_with_severity(self, alert_service: AlertService, mock_client: MagicMock) -> None:
+    def test_list_active_with_severity(
+        self, alert_service: AlertService, mock_client: MagicMock
+    ) -> None:
         """Test listing active alerts filtered by severity."""
         mock_client.get_all.return_value = [{"id": "A2", "severity": 4}]
 
@@ -52,7 +55,9 @@ class TestAlertService:
         assert 'cleared:"false"' in filter_str
         assert 'severity:"critical"' in filter_str
 
-    def test_list_active_with_device_id(self, alert_service: AlertService, mock_client: MagicMock) -> None:
+    def test_list_active_with_device_id(
+        self, alert_service: AlertService, mock_client: MagicMock
+    ) -> None:
         """Test listing active alerts for a specific device."""
         mock_client.get_all.return_value = []
 
@@ -94,7 +99,9 @@ class TestAlertService:
         )
         assert result["acked"] is True
 
-    def test_acknowledge_without_comment(self, alert_service: AlertService, mock_client: MagicMock) -> None:
+    def test_acknowledge_without_comment(
+        self, alert_service: AlertService, mock_client: MagicMock
+    ) -> None:
         """Test acknowledging an alert without comment."""
         mock_client.patch.return_value = {"id": "A1", "acked": True}
 
@@ -134,7 +141,9 @@ class TestAlertService:
         assert "startEpoch>1700000000000" in filter_str
         assert "startEpoch<1700100000000" in filter_str
 
-    def test_list_history_with_group_id(self, alert_service: AlertService, mock_client: MagicMock) -> None:
+    def test_list_history_with_group_id(
+        self, alert_service: AlertService, mock_client: MagicMock
+    ) -> None:
         """Test listing alert history filtered by group."""
         mock_client.get_all.return_value = []
 
@@ -145,13 +154,30 @@ class TestAlertService:
         assert "monitorObjectGroups~456" in filter_str
 
     @patch("lmn_tools.services.alerts.time.time")
-    def test_get_trends(self, mock_time: MagicMock, alert_service: AlertService, mock_client: MagicMock) -> None:
+    def test_get_trends(
+        self, mock_time: MagicMock, alert_service: AlertService, mock_client: MagicMock
+    ) -> None:
         """Test getting alert trends."""
         mock_time.return_value = 1700000000  # Fixed timestamp
         mock_client.get_all.return_value = [
-            {"severity": "warning", "monitorObjectName": "server1", "dataSourceName": "CPU", "startEpoch": 1699950000000},
-            {"severity": "critical", "monitorObjectName": "server1", "dataSourceName": "Memory", "startEpoch": 1699960000000},
-            {"severity": "warning", "monitorObjectName": "server2", "dataSourceName": "CPU", "startEpoch": 1699970000000},
+            {
+                "severity": "warning",
+                "monitorObjectName": "server1",
+                "dataSourceName": "CPU",
+                "startEpoch": 1699950000000,
+            },
+            {
+                "severity": "critical",
+                "monitorObjectName": "server1",
+                "dataSourceName": "Memory",
+                "startEpoch": 1699960000000,
+            },
+            {
+                "severity": "warning",
+                "monitorObjectName": "server2",
+                "dataSourceName": "CPU",
+                "startEpoch": 1699970000000,
+            },
         ]
 
         result = alert_service.get_trends(days=7)
@@ -172,7 +198,9 @@ class TestSDTService:
         assert sdt_service.base_path == "/sdt/sdts"
 
     @patch("lmn_tools.services.alerts.time.time")
-    def test_list_active(self, mock_time: MagicMock, sdt_service: SDTService, mock_client: MagicMock) -> None:
+    def test_list_active(
+        self, mock_time: MagicMock, sdt_service: SDTService, mock_client: MagicMock
+    ) -> None:
         """Test listing active SDTs."""
         mock_time.return_value = 1700000000
         mock_client.get_all.return_value = [{"id": 1, "isEffective": True}]
@@ -186,7 +214,9 @@ class TestSDTService:
         assert "endDateTime>1700000000000" in filter_str
 
     @patch("lmn_tools.services.alerts.time.time")
-    def test_list_upcoming(self, mock_time: MagicMock, sdt_service: SDTService, mock_client: MagicMock) -> None:
+    def test_list_upcoming(
+        self, mock_time: MagicMock, sdt_service: SDTService, mock_client: MagicMock
+    ) -> None:
         """Test listing upcoming SDTs."""
         mock_time.return_value = 1700000000
         mock_client.get_all.return_value = []
@@ -209,7 +239,9 @@ class TestSDTService:
         assert call_args[0][1]["filter"] == "deviceId:123"
 
     @patch("lmn_tools.services.alerts.time.time")
-    def test_create_device_sdt(self, mock_time: MagicMock, sdt_service: SDTService, mock_client: MagicMock) -> None:
+    def test_create_device_sdt(
+        self, mock_time: MagicMock, sdt_service: SDTService, mock_client: MagicMock
+    ) -> None:
         """Test creating a device SDT."""
         mock_time.return_value = 1700000000
         mock_client.post.return_value = {"id": 1, "type": "DeviceSDT"}
@@ -230,7 +262,9 @@ class TestSDTService:
         assert data["comment"] == "Maintenance window"
 
     @patch("lmn_tools.services.alerts.time.time")
-    def test_create_group_sdt(self, mock_time: MagicMock, sdt_service: SDTService, mock_client: MagicMock) -> None:
+    def test_create_group_sdt(
+        self, mock_time: MagicMock, sdt_service: SDTService, mock_client: MagicMock
+    ) -> None:
         """Test creating a device group SDT."""
         mock_time.return_value = 1700000000
         mock_client.post.return_value = {"id": 2, "type": "DeviceGroupSDT"}
@@ -248,7 +282,9 @@ class TestSDTService:
         assert data["endDateTime"] == 1700000000000 + (120 * 60 * 1000)
 
     @patch("lmn_tools.services.alerts.time.time")
-    def test_create_datasource_sdt(self, mock_time: MagicMock, sdt_service: SDTService, mock_client: MagicMock) -> None:
+    def test_create_datasource_sdt(
+        self, mock_time: MagicMock, sdt_service: SDTService, mock_client: MagicMock
+    ) -> None:
         """Test creating a datasource SDT."""
         mock_time.return_value = 1700000000
         mock_client.post.return_value = {"id": 3, "type": "DeviceDataSourceSDT"}

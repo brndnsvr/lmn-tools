@@ -47,7 +47,9 @@ def list_users(
     filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
     role: Annotated[str | None, typer.Option("--role", "-r", help="Filter by role name")] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List users/admins."""
     svc = _get_service()

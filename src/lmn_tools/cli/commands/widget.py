@@ -28,7 +28,9 @@ def _get_service() -> WidgetService:
 @app.command("list")
 def list_widgets(
     dashboard_id: Annotated[int, typer.Argument(help="Dashboard ID")],
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List widgets in a dashboard."""
     svc = _get_service()
@@ -87,7 +89,9 @@ def get_widget(
 
     detail_table.add_row("Type", widget.get("type", "N/A"))
     detail_table.add_row("Dashboard ID", str(widget.get("dashboardId", "N/A")))
-    detail_table.add_row("Position", f"row {widget.get('row', 'N/A')}, col {widget.get('col', 'N/A')}")
+    detail_table.add_row(
+        "Position", f"row {widget.get('row', 'N/A')}, col {widget.get('col', 'N/A')}"
+    )
     detail_table.add_row("Size", f"{widget.get('width', 'N/A')}x{widget.get('height', 'N/A')}")
     detail_table.add_row("Description", widget.get("description", "N/A") or "N/A")
 
@@ -98,7 +102,9 @@ def get_widget(
 def create_widget(
     dashboard_id: Annotated[int, typer.Argument(help="Dashboard ID")],
     name: Annotated[str, typer.Option("--name", "-n", help="Widget name")],
-    widget_type: Annotated[str, typer.Option("--type", "-t", help="Widget type (e.g., text, bigNumber, gauge)")],
+    widget_type: Annotated[
+        str, typer.Option("--type", "-t", help="Widget type (e.g., text, bigNumber, gauge)")
+    ],
     row: Annotated[int, typer.Option("--row", "-r", help="Row position")] = 1,
     col: Annotated[int, typer.Option("--col", "-c", help="Column position")] = 1,
     width: Annotated[int, typer.Option("--width", "-w", help="Widget width")] = 4,
@@ -129,7 +135,9 @@ def create_widget(
         if format == "json":
             console.print_json(data=result)
         else:
-            console.print(f"[green]Created widget '{name}' (ID: {new_id}) on dashboard {dashboard_id}[/green]")
+            console.print(
+                f"[green]Created widget '{name}' (ID: {new_id}) on dashboard {dashboard_id}[/green]"
+            )
     except Exception as e:
         console.print(f"[red]Failed to create widget: {e}[/red]")
         raise typer.Exit(1) from None
@@ -225,7 +233,9 @@ def clone_widget(
         if format == "json":
             console.print_json(data=result)
         else:
-            console.print(f"[green]Cloned widget {widget_id} -> {new_id} to dashboard {dashboard_id}[/green]")
+            console.print(
+                f"[green]Cloned widget {widget_id} -> {new_id} to dashboard {dashboard_id}[/green]"
+            )
     except Exception as e:
         console.print(f"[red]Failed to clone widget: {e}[/red]")
         raise typer.Exit(1) from None

@@ -37,7 +37,9 @@ class TestAuditLogService:
         assert 'username:"admin"' in call_args[0][1]["filter"]
         assert len(result) == 1
 
-    def test_list_by_user_with_max_items(self, service: AuditLogService, mock_client: MagicMock) -> None:
+    def test_list_by_user_with_max_items(
+        self, service: AuditLogService, mock_client: MagicMock
+    ) -> None:
         """Test list_by_user with max_items limit."""
         mock_client.get_all.return_value = []
 
@@ -67,7 +69,9 @@ class TestAuditLogService:
         assert 'description~"device"' in call_args[0][1]["filter"]
 
     @patch("lmn_tools.services.audit.time.time")
-    def test_list_by_time_range(self, mock_time: MagicMock, service: AuditLogService, mock_client: MagicMock) -> None:
+    def test_list_by_time_range(
+        self, mock_time: MagicMock, service: AuditLogService, mock_client: MagicMock
+    ) -> None:
         """Test listing audit logs by time range."""
         mock_time.return_value = 1700100000
         mock_client.get_all.return_value = [{"id": 3}]
@@ -98,7 +102,9 @@ class TestAuditLogService:
         assert "happenedOn<1700100000000" in filter_str  # time.time() * 1000
 
     @patch("lmn_tools.services.audit.time.time")
-    def test_list_recent(self, mock_time: MagicMock, service: AuditLogService, mock_client: MagicMock) -> None:
+    def test_list_recent(
+        self, mock_time: MagicMock, service: AuditLogService, mock_client: MagicMock
+    ) -> None:
         """Test listing recent audit logs."""
         mock_time.return_value = 1700000000
         mock_client.get_all.return_value = [{"id": 1}, {"id": 2}]

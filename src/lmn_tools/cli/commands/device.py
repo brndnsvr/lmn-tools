@@ -29,10 +29,16 @@ def _get_service() -> DeviceService:
 def list_devices(
     filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
     group: Annotated[int | None, typer.Option("--group", "-g", help="Filter by group ID")] = None,
-    collector: Annotated[int | None, typer.Option("--collector", "-c", help="Filter by collector ID")] = None,
-    status: Annotated[str | None, typer.Option("--status", "-s", help="Filter by status: alive, dead")] = None,
+    collector: Annotated[
+        int | None, typer.Option("--collector", "-c", help="Filter by collector ID")
+    ] = None,
+    status: Annotated[
+        str | None, typer.Option("--status", "-s", help="Filter by status: alive, dead")
+    ] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List devices with optional filtering."""
     svc = _get_service()
@@ -75,8 +81,12 @@ def list_devices(
 @app.command("get")
 def get_device(
     identifier: Annotated[str, typer.Argument(help="Device ID or hostname")],
-    show_properties: Annotated[bool, typer.Option("--properties", "-p", help="Show properties")] = False,
-    show_datasources: Annotated[bool, typer.Option("--datasources", "-d", help="Show datasources")] = False,
+    show_properties: Annotated[
+        bool, typer.Option("--properties", "-p", help="Show properties")
+    ] = False,
+    show_datasources: Annotated[
+        bool, typer.Option("--datasources", "-d", help="Show datasources")
+    ] = False,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Get device details."""
@@ -135,7 +145,9 @@ def get_device(
         datasources = svc.get_datasources(device_id)
         if datasources:
             for ds in datasources[:20]:
-                console.print(f"  - {ds.get('dataSourceDisplayName', ds.get('dataSourceName', 'N/A'))}")
+                console.print(
+                    f"  - {ds.get('dataSourceDisplayName', ds.get('dataSourceName', 'N/A'))}"
+                )
             if len(datasources) > 20:
                 console.print(f"  [dim]... and {len(datasources) - 20} more[/dim]")
         else:
@@ -146,7 +158,9 @@ def get_device(
 def search_devices(
     query: Annotated[str, typer.Argument(help="Search term")],
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 25,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """Search devices by hostname or display name."""
     svc = _get_service()
@@ -183,7 +197,9 @@ def search_devices(
 @app.command("datasources")
 def list_device_datasources(
     device_id: Annotated[int, typer.Argument(help="Device ID")],
-    filter: Annotated[str | None, typer.Option("--filter", "-f", help="Filter by datasource name")] = None,
+    filter: Annotated[
+        str | None, typer.Option("--filter", "-f", help="Filter by datasource name")
+    ] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """List DataSources applied to a device."""
@@ -217,7 +233,9 @@ def list_device_datasources(
 @app.command("properties")
 def list_device_properties(
     device_id: Annotated[int, typer.Argument(help="Device ID")],
-    type: Annotated[str | None, typer.Option("--type", "-t", help="Property type: custom, system, auto")] = None,
+    type: Annotated[
+        str | None, typer.Option("--type", "-t", help="Property type: custom, system, auto")
+    ] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """List device properties."""
@@ -250,7 +268,9 @@ def list_device_properties(
 
 @app.command("dead")
 def list_dead_devices(
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List devices with dead status."""
     svc = _get_service()
@@ -292,10 +312,18 @@ def create_device(
     name: Annotated[str, typer.Argument(help="Device IP or hostname")],
     display_name: Annotated[str, typer.Option("--display-name", "-d", help="Display name")],
     group: Annotated[int, typer.Option("--group", "-g", help="Host group ID")] = 1,
-    collector: Annotated[int | None, typer.Option("--collector", "-c", help="Preferred collector ID")] = None,
-    description: Annotated[str | None, typer.Option("--description", help="Device description")] = None,
-    properties: Annotated[str | None, typer.Option("--properties", "-p", help="Custom properties as JSON")] = None,
-    disable_alerting: Annotated[bool, typer.Option("--disable-alerting", help="Disable alerting on creation")] = False,
+    collector: Annotated[
+        int | None, typer.Option("--collector", "-c", help="Preferred collector ID")
+    ] = None,
+    description: Annotated[
+        str | None, typer.Option("--description", help="Device description")
+    ] = None,
+    properties: Annotated[
+        str | None, typer.Option("--properties", "-p", help="Custom properties as JSON")
+    ] = None,
+    disable_alerting: Annotated[
+        bool, typer.Option("--disable-alerting", help="Disable alerting on creation")
+    ] = False,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Create a new device."""
@@ -337,11 +365,19 @@ def create_device(
 @app.command("update")
 def update_device(
     device_id: Annotated[int, typer.Argument(help="Device ID")],
-    display_name: Annotated[str | None, typer.Option("--display-name", "-d", help="New display name")] = None,
-    description: Annotated[str | None, typer.Option("--description", help="New description")] = None,
+    display_name: Annotated[
+        str | None, typer.Option("--display-name", "-d", help="New display name")
+    ] = None,
+    description: Annotated[
+        str | None, typer.Option("--description", help="New description")
+    ] = None,
     group: Annotated[int | None, typer.Option("--group", "-g", help="New host group ID")] = None,
-    collector: Annotated[int | None, typer.Option("--collector", "-c", help="New preferred collector ID")] = None,
-    disable_alerting: Annotated[bool | None, typer.Option("--disable-alerting/--enable-alerting", help="Toggle alerting")] = None,
+    collector: Annotated[
+        int | None, typer.Option("--collector", "-c", help="New preferred collector ID")
+    ] = None,
+    disable_alerting: Annotated[
+        bool | None, typer.Option("--disable-alerting/--enable-alerting", help="Toggle alerting")
+    ] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Update a device's properties."""
@@ -378,7 +414,9 @@ def update_device(
 def delete_device(
     device_id: Annotated[int, typer.Argument(help="Device ID")],
     force: Annotated[bool, typer.Option("--force", "-f", help="Skip confirmation")] = False,
-    delete_hard: Annotated[bool, typer.Option("--hard", help="Hard delete (immediate, not 30-day retention)")] = False,
+    delete_hard: Annotated[
+        bool, typer.Option("--hard", help="Hard delete (immediate, not 30-day retention)")
+    ] = False,
 ) -> None:
     """Delete a device."""
     svc = _get_service()

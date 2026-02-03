@@ -14,7 +14,7 @@ from rich.table import Table
 
 from lmn_tools.api.client import LMClient
 from lmn_tools.core.config import get_settings
-from lmn_tools.services.alerts import WebsiteService
+from lmn_tools.services.websites import WebsiteService
 
 app = typer.Typer(help="Manage website monitors (synthetic)")
 console = Console()
@@ -38,9 +38,13 @@ def _get_service() -> WebsiteService:
 def list_websites(
     filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
     group: Annotated[int | None, typer.Option("--group", "-g", help="Filter by group ID")] = None,
-    type: Annotated[str | None, typer.Option("--type", "-t", help="Filter by type: webcheck, pingcheck")] = None,
+    type: Annotated[
+        str | None, typer.Option("--type", "-t", help="Filter by type: webcheck, pingcheck")
+    ] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List website monitors."""
     svc = _get_service()
@@ -77,10 +81,18 @@ def list_websites(
         for w in websites:
             # Determine status style
             status = w.get("status", "unknown")
-            status_style = "green" if status == "active" else "yellow" if status == "dead" else "dim"
+            status_style = (
+                "green" if status == "active" else "yellow" if status == "dead" else "dim"
+            )
 
             overall = w.get("overallAlertLevel", "")
-            overall_style = "green" if overall == "normal" else "red" if overall in ("error", "critical") else "yellow"
+            overall_style = (
+                "green"
+                if overall == "normal"
+                else "red"
+                if overall in ("error", "critical")
+                else "yellow"
+            )
 
             # Get URL or host based on type
             url_host = w.get("domain", "") or w.get("host", "") or "N/A"
@@ -101,7 +113,9 @@ def list_websites(
 @app.command("get")
 def get_website(
     identifier: Annotated[str, typer.Argument(help="Website ID or name")],
-    show_checks: Annotated[bool, typer.Option("--checks", "-c", help="Show checkpoint status")] = False,
+    show_checks: Annotated[
+        bool, typer.Option("--checks", "-c", help="Show checkpoint status")
+    ] = False,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Get website monitor details."""
@@ -264,7 +278,9 @@ def website_status(
     # Alert level breakdown
     console.print("\n[bold]By Alert Level:[/bold]")
     for alert, count in sorted(alert_counts.items()):
-        style = "green" if alert == "normal" else "red" if alert in ("error", "critical") else "yellow"
+        style = (
+            "green" if alert == "normal" else "red" if alert in ("error", "critical") else "yellow"
+        )
         console.print(f"  [{style}]{alert}[/{style}]: {count}")
 
     # Type breakdown
@@ -315,12 +331,18 @@ def list_website_groups(
 def create_website(
     name: Annotated[str, typer.Argument(help="Website name")],
     domain: Annotated[str, typer.Option("--domain", "-d", help="Domain or URL to monitor")],
-    type: Annotated[str, typer.Option("--type", "-t", help="Monitor type: webcheck, pingcheck")] = "webcheck",
+    type: Annotated[
+        str, typer.Option("--type", "-t", help="Monitor type: webcheck, pingcheck")
+    ] = "webcheck",
     group: Annotated[int, typer.Option("--group", "-g", help="Website group ID")] = 1,
     description: Annotated[str | None, typer.Option("--description", help="Description")] = None,
-    polling_interval: Annotated[int, typer.Option("--interval", help="Polling interval in minutes")] = 5,
+    polling_interval: Annotated[
+        int, typer.Option("--interval", help="Polling interval in minutes")
+    ] = 5,
     use_ssl: Annotated[bool, typer.Option("--ssl/--no-ssl", help="Use SSL")] = True,
-    disable_alerting: Annotated[bool, typer.Option("--disable-alerting", help="Disable alerting")] = False,
+    disable_alerting: Annotated[
+        bool, typer.Option("--disable-alerting", help="Disable alerting")
+    ] = False,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Create a new website monitor."""
@@ -360,10 +382,16 @@ def create_website(
 def update_website(
     website_id: Annotated[int, typer.Argument(help="Website ID")],
     name: Annotated[str | None, typer.Option("--name", "-n", help="New name")] = None,
-    description: Annotated[str | None, typer.Option("--description", "-d", help="New description")] = None,
+    description: Annotated[
+        str | None, typer.Option("--description", "-d", help="New description")
+    ] = None,
     domain: Annotated[str | None, typer.Option("--domain", help="New domain")] = None,
-    polling_interval: Annotated[int | None, typer.Option("--interval", help="Polling interval")] = None,
-    disable_alerting: Annotated[bool | None, typer.Option("--disable-alerting/--enable-alerting", help="Toggle alerting")] = None,
+    polling_interval: Annotated[
+        int | None, typer.Option("--interval", help="Polling interval")
+    ] = None,
+    disable_alerting: Annotated[
+        bool | None, typer.Option("--disable-alerting/--enable-alerting", help="Toggle alerting")
+    ] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Update a website monitor."""

@@ -57,12 +57,16 @@ def _format_tags(tags: list[dict[str, Any]]) -> str:
 
 @app.command("list")
 def list_opsnotes(
-    device: Annotated[int | None, typer.Option("--device", "-d", help="Filter by device ID")] = None,
+    device: Annotated[
+        int | None, typer.Option("--device", "-d", help="Filter by device ID")
+    ] = None,
     group: Annotated[int | None, typer.Option("--group", "-g", help="Filter by group ID")] = None,
     tag: Annotated[str | None, typer.Option("--tag", "-t", help="Filter by tag")] = None,
     filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List OpsNotes with optional filtering."""
     svc = _get_service()
@@ -174,7 +178,9 @@ def create_opsnote(
 def update_opsnote(
     note_id: Annotated[int, typer.Argument(help="OpsNote ID")],
     note: Annotated[str | None, typer.Option("--note", "-n", help="New note text")] = None,
-    tags: Annotated[str | None, typer.Option("--tags", "-t", help="New comma-separated tags")] = None,
+    tags: Annotated[
+        str | None, typer.Option("--tags", "-t", help="New comma-separated tags")
+    ] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Update an OpsNote."""

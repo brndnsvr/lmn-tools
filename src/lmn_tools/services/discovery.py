@@ -15,6 +15,7 @@ from lmn_tools.services.base import BaseService
 
 class NetscanMethod(str, Enum):
     """Netscan discovery methods."""
+
     ICMP = "nmap"
     SCRIPT = "script"
     AWS = "aws"

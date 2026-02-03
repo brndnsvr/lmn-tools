@@ -39,7 +39,9 @@ class TestAPITokenService:
         assert len(result) == 2
         assert result[0]["accessId"] == "abc123"
 
-    def test_list_for_user_with_max_items(self, service: APITokenService, mock_client: MagicMock) -> None:
+    def test_list_for_user_with_max_items(
+        self, service: APITokenService, mock_client: MagicMock
+    ) -> None:
         """Test list_for_user with max_items."""
         mock_client.get_all.return_value = []
 
@@ -80,7 +82,9 @@ class TestAPITokenService:
         assert result["accessId"] == "new123"
         assert result["accessKey"] == "secret-key-value"
 
-    def test_create_for_user_empty_note(self, service: APITokenService, mock_client: MagicMock) -> None:
+    def test_create_for_user_empty_note(
+        self, service: APITokenService, mock_client: MagicMock
+    ) -> None:
         """Test creating a token with empty note."""
         mock_client.post.return_value = {"id": 4, "accessId": "xyz789"}
 
@@ -89,7 +93,9 @@ class TestAPITokenService:
         call_args = mock_client.post.call_args
         assert call_args[1]["json_data"]["note"] == ""
 
-    def test_create_for_user_with_roles(self, service: APITokenService, mock_client: MagicMock) -> None:
+    def test_create_for_user_with_roles(
+        self, service: APITokenService, mock_client: MagicMock
+    ) -> None:
         """Test creating a token with roles."""
         mock_client.post.return_value = {"id": 5}
 
@@ -121,7 +127,9 @@ class TestAPITokenService:
         assert call_args[0][0] == "/setting/apitokens"
         assert len(result) == 2
 
-    def test_list_all_tokens_with_max_items(self, service: APITokenService, mock_client: MagicMock) -> None:
+    def test_list_all_tokens_with_max_items(
+        self, service: APITokenService, mock_client: MagicMock
+    ) -> None:
         """Test list_all_tokens with max_items limit."""
         mock_client.get_all.return_value = []
 

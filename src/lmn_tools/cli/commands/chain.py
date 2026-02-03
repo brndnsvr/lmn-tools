@@ -15,7 +15,7 @@ from rich.table import Table
 
 from lmn_tools.api.client import LMClient
 from lmn_tools.core.config import get_settings
-from lmn_tools.services.alerts import EscalationChainService
+from lmn_tools.services.escalation import EscalationChainService
 
 app = typer.Typer(help="Manage escalation chains")
 console = Console()
@@ -39,7 +39,9 @@ def _get_service() -> EscalationChainService:
 def list_chains(
     filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List escalation chains."""
     svc = _get_service()
@@ -120,7 +122,7 @@ def get_chain(
     detail_table.add_row("Description", chain.get("description", "N/A") or "N/A")
     detail_table.add_row("In Alerting", str(chain.get("inAlerting", False)))
     detail_table.add_row("Throttle Period", f"{chain.get('throttlingPeriod', 0)} minutes")
-    detail_table.add_row("Throttle Alerts", str(chain.get('throttlingAlerts', 0)))
+    detail_table.add_row("Throttle Alerts", str(chain.get("throttlingAlerts", 0)))
 
     console.print(detail_table)
 
@@ -135,11 +137,15 @@ def get_chain(
                 method = dest.get("method", "")
                 addr = dest.get("addr", dest.get("contact", ""))
                 period = dest.get("period", 0)
-                stage_info = f" (stage {dest.get('stages', 'N/A')}, period {period}min)" if period else ""
+                stage_info = (
+                    f" (stage {dest.get('stages', 'N/A')}, period {period}min)" if period else ""
+                )
                 console.print(f"  • {dest_type}: {method} → {addr}{stage_info}")
         elif isinstance(destinations, dict):
             # Handle legacy dict format keyed by stage
-            for stage, dests in sorted(destinations.items(), key=lambda x: int(x[0]) if x[0].isdigit() else 0):
+            for stage, dests in sorted(
+                destinations.items(), key=lambda x: int(x[0]) if x[0].isdigit() else 0
+            ):
                 if isinstance(dests, list) and dests:
                     console.print(f"\n  [cyan]Stage {stage}:[/cyan]")
                     for dest in dests:
@@ -189,10 +195,18 @@ def search_chains(
 @app.command("create")
 def create_chain(
     name: Annotated[str, typer.Argument(help="Chain name")],
-    description: Annotated[str | None, typer.Option("--description", "-d", help="Chain description")] = None,
-    destinations: Annotated[str | None, typer.Option("--destinations", help="Destinations as JSON")] = None,
-    throttling_period: Annotated[int, typer.Option("--throttle-period", help="Throttling period in minutes")] = 0,
-    throttling_alerts: Annotated[int, typer.Option("--throttle-alerts", help="Number of throttled alerts")] = 0,
+    description: Annotated[
+        str | None, typer.Option("--description", "-d", help="Chain description")
+    ] = None,
+    destinations: Annotated[
+        str | None, typer.Option("--destinations", help="Destinations as JSON")
+    ] = None,
+    throttling_period: Annotated[
+        int, typer.Option("--throttle-period", help="Throttling period in minutes")
+    ] = 0,
+    throttling_alerts: Annotated[
+        int, typer.Option("--throttle-alerts", help="Number of throttled alerts")
+    ] = 0,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Create a new escalation chain."""
@@ -234,10 +248,18 @@ def create_chain(
 def update_chain(
     chain_id: Annotated[int, typer.Argument(help="Chain ID")],
     name: Annotated[str | None, typer.Option("--name", "-n", help="New chain name")] = None,
-    description: Annotated[str | None, typer.Option("--description", "-d", help="New description")] = None,
-    destinations: Annotated[str | None, typer.Option("--destinations", help="Destinations as JSON")] = None,
-    throttling_period: Annotated[int | None, typer.Option("--throttle-period", help="Throttling period")] = None,
-    throttling_alerts: Annotated[int | None, typer.Option("--throttle-alerts", help="Throttled alerts")] = None,
+    description: Annotated[
+        str | None, typer.Option("--description", "-d", help="New description")
+    ] = None,
+    destinations: Annotated[
+        str | None, typer.Option("--destinations", help="Destinations as JSON")
+    ] = None,
+    throttling_period: Annotated[
+        int | None, typer.Option("--throttle-period", help="Throttling period")
+    ] = None,
+    throttling_alerts: Annotated[
+        int | None, typer.Option("--throttle-alerts", help="Throttled alerts")
+    ] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Update an escalation chain."""
@@ -296,7 +318,9 @@ def delete_chain(
         in_alerting = False
 
     if in_alerting and not force:
-        console.print(f"[yellow]Warning: Chain '{chain_name}' is currently in use for alerting![/yellow]")
+        console.print(
+            f"[yellow]Warning: Chain '{chain_name}' is currently in use for alerting![/yellow]"
+        )
 
     if not force:
         confirm = typer.confirm(f"Delete escalation chain '{chain_name}'?")

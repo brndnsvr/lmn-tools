@@ -37,7 +37,9 @@ def list_dashboards(
     filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
     group: Annotated[int | None, typer.Option("--group", "-g", help="Filter by group ID")] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List dashboards with optional filtering."""
     svc = _get_service()
@@ -151,7 +153,9 @@ def list_widgets(
 def search_dashboards(
     query: Annotated[str, typer.Argument(help="Search term")],
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 25,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """Search dashboards by name."""
     svc = _get_service()
@@ -198,7 +202,9 @@ def export_dashboard(
 def clone_dashboard(
     dashboard_id: Annotated[int, typer.Argument(help="Dashboard ID to clone")],
     name: Annotated[str, typer.Option("--name", "-n", help="Name for the cloned dashboard")],
-    group: Annotated[int | None, typer.Option("--group", "-g", help="Group ID for the clone")] = None,
+    group: Annotated[
+        int | None, typer.Option("--group", "-g", help="Group ID for the clone")
+    ] = None,
 ) -> None:
     """Clone a dashboard."""
     svc = _get_service()
@@ -216,7 +222,9 @@ def clone_dashboard(
 @app.command("groups")
 def list_groups(
     parent: Annotated[int | None, typer.Option("--parent", "-p", help="Parent group ID")] = None,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List dashboard groups."""
     svc = _get_group_service()
@@ -283,9 +291,15 @@ def show_group_tree(
 def create_dashboard(
     name: Annotated[str, typer.Argument(help="Dashboard name")],
     group: Annotated[int, typer.Option("--group", "-g", help="Dashboard group ID")] = 1,
-    description: Annotated[str | None, typer.Option("--description", "-d", help="Dashboard description")] = None,
-    sharable: Annotated[bool, typer.Option("--sharable/--private", help="Make dashboard sharable")] = True,
-    template: Annotated[str | None, typer.Option("--template", "-t", help="Template file (JSON)")] = None,
+    description: Annotated[
+        str | None, typer.Option("--description", "-d", help="Dashboard description")
+    ] = None,
+    sharable: Annotated[
+        bool, typer.Option("--sharable/--private", help="Make dashboard sharable")
+    ] = True,
+    template: Annotated[
+        str | None, typer.Option("--template", "-t", help="Template file (JSON)")
+    ] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Create a new dashboard."""
@@ -321,9 +335,13 @@ def create_dashboard(
 def update_dashboard(
     dashboard_id: Annotated[int, typer.Argument(help="Dashboard ID")],
     name: Annotated[str | None, typer.Option("--name", "-n", help="New name")] = None,
-    description: Annotated[str | None, typer.Option("--description", "-d", help="New description")] = None,
+    description: Annotated[
+        str | None, typer.Option("--description", "-d", help="New description")
+    ] = None,
     group: Annotated[int | None, typer.Option("--group", "-g", help="New group ID")] = None,
-    sharable: Annotated[bool | None, typer.Option("--sharable/--private", help="Toggle sharable")] = None,
+    sharable: Annotated[
+        bool | None, typer.Option("--sharable/--private", help="Toggle sharable")
+    ] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Update a dashboard."""
@@ -386,7 +404,9 @@ def delete_dashboard(
 def import_dashboard(
     file: Annotated[str, typer.Argument(help="JSON file to import")],
     group: Annotated[int | None, typer.Option("--group", "-g", help="Target group ID")] = None,
-    name: Annotated[str | None, typer.Option("--name", "-n", help="Override dashboard name")] = None,
+    name: Annotated[
+        str | None, typer.Option("--name", "-n", help="Override dashboard name")
+    ] = None,
     force: Annotated[bool, typer.Option("--force", "-f", help="Overwrite if name exists")] = False,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
@@ -407,7 +427,9 @@ def import_dashboard(
     if not force:
         existing = svc.list(filter=f'name:"{dashboard_name}"', max_items=1)
         if existing:
-            console.print(f"[yellow]Dashboard '{dashboard_name}' already exists (ID: {existing[0]['id']})[/yellow]")
+            console.print(
+                f"[yellow]Dashboard '{dashboard_name}' already exists (ID: {existing[0]['id']})[/yellow]"
+            )
             console.print("Use --force to overwrite or --name to rename")
             raise typer.Exit(1) from None
 
@@ -418,7 +440,9 @@ def import_dashboard(
         if format == "json":
             console.print_json(data=result)
         else:
-            console.print(f"[green]Imported dashboard '{dashboard_name}' (ID: {dashboard_id})[/green]")
+            console.print(
+                f"[green]Imported dashboard '{dashboard_name}' (ID: {dashboard_id})[/green]"
+            )
     except Exception as e:
         console.print(f"[red]Failed to import dashboard: {e}[/red]")
         raise typer.Exit(1) from None
@@ -426,11 +450,14 @@ def import_dashboard(
 
 # Dashboard Group write operations
 
+
 @app.command("create-group")
 def create_dashboard_group(
     name: Annotated[str, typer.Argument(help="Group name")],
     parent: Annotated[int, typer.Option("--parent", "-p", help="Parent group ID")] = 1,
-    description: Annotated[str | None, typer.Option("--description", "-d", help="Group description")] = None,
+    description: Annotated[
+        str | None, typer.Option("--description", "-d", help="Group description")
+    ] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Create a new dashboard group."""

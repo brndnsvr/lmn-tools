@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class ResolvedInterface:
     """Represents a resolved interface with all necessary LM identifiers."""
+
     device_id: int
     hostname: str
     instance_id: int
@@ -38,6 +39,7 @@ class ResolvedInterface:
 @dataclass
 class ResolvedBGPPeer:
     """Represents a resolved BGP peer with LM identifiers."""
+
     device_id: int
     hostname: str
     instance_id: int
@@ -50,6 +52,7 @@ class ResolvedBGPPeer:
 @dataclass
 class ResolutionSummary:
     """Summary of resolution results for reporting."""
+
     devices_defined: int = 0
     devices_resolved: int = 0
     interfaces_defined: int = 0
@@ -79,22 +82,21 @@ def find_device_by_hostname(client: LMClient, hostname: str) -> int | None:
     logger.debug(f"Searching for device with displayName: {hostname}")
 
     try:
-        response = client.get('/device/devices', params={
-            'filter': filter_str,
-            'fields': 'id,displayName,systemProperties',
-            'size': 10
-        })
+        response = client.get(
+            "/device/devices",
+            params={"filter": filter_str, "fields": "id,displayName,systemProperties", "size": 10},
+        )
     except LMAPIError as e:
         logger.error(f"Error searching for device {hostname}: {e}")
         return None
 
-    items = response.get('data', {}).get('items', [])
+    items = response.get("data", {}).get("items", [])
 
     if items:
         if len(items) > 1:
             logger.warning(f"Multiple devices found for hostname {hostname}, using first match")
         device = items[0]
-        device_id: int = device['id']
+        device_id: int = device["id"]
         logger.info(f"Found device {hostname} -> deviceId: {device_id}")
         return device_id
 
@@ -104,19 +106,17 @@ def find_device_by_hostname(client: LMClient, hostname: str) -> int | None:
     # Search by system.sysname property
     filter_str = f'systemProperties.name:system.sysname,systemProperties.value:"{hostname}"'
     try:
-        response = client.get('/device/devices', params={
-            'filter': filter_str,
-            'fields': 'id,displayName',
-            'size': 10
-        })
+        response = client.get(
+            "/device/devices", params={"filter": filter_str, "fields": "id,displayName", "size": 10}
+        )
     except LMAPIError as e:
         logger.debug(f"Sysname search failed for {hostname}: {e}")
         return None
 
-    items = response.get('data', {}).get('items', [])
+    items = response.get("data", {}).get("items", [])
     if items:
         device = items[0]
-        found_device_id: int = device['id']
+        found_device_id: int = device["id"]
         logger.info(f"Found device {hostname} via sysname -> deviceId: {found_device_id}")
         return found_device_id
 
@@ -143,37 +143,35 @@ def find_datasource_by_name(client: LMClient, datasource_name: str) -> int | Non
     filter_str = f'displayName:"{search_name}"'
 
     try:
-        response = client.get('/setting/datasources', params={
-            'filter': filter_str,
-            'fields': 'id,name,displayName',
-            'size': 10
-        })
+        response = client.get(
+            "/setting/datasources",
+            params={"filter": filter_str, "fields": "id,name,displayName", "size": 10},
+        )
     except LMAPIError as e:
         logger.error(f"Error searching for datasource {datasource_name}: {e}")
         return None
 
-    items = response.get('data', {}).get('items', [])
+    items = response.get("data", {}).get("items", [])
     if items:
         ds = items[0]
-        ds_id: int = ds['id']
+        ds_id: int = ds["id"]
         logger.debug(f"Found datasource {datasource_name} -> id: {ds_id}")
         return ds_id
 
     # Try by internal name
     filter_str = f'name:"{search_name}"'
     try:
-        response = client.get('/setting/datasources', params={
-            'filter': filter_str,
-            'fields': 'id,name,displayName',
-            'size': 10
-        })
+        response = client.get(
+            "/setting/datasources",
+            params={"filter": filter_str, "fields": "id,name,displayName", "size": 10},
+        )
     except LMAPIError:
         return None
 
-    items = response.get('data', {}).get('items', [])
+    items = response.get("data", {}).get("items", [])
     if items:
         ds = items[0]
-        found_ds_id: int = ds['id']
+        found_ds_id: int = ds["id"]
         logger.debug(f"Found datasource {datasource_name} by name -> id: {found_ds_id}")
         return found_ds_id
 
@@ -182,9 +180,7 @@ def find_datasource_by_name(client: LMClient, datasource_name: str) -> int | Non
 
 
 def find_device_datasource(
-    client: LMClient,
-    device_id: int,
-    datasource_name: str
+    client: LMClient, device_id: int, datasource_name: str
 ) -> tuple[int, int, str, str] | None:
     """
     Find the deviceDatasource for a specific device and datasource.
@@ -205,27 +201,27 @@ def find_device_datasource(
         if ds_id:
             # If we have the datasource ID, filter by it
             response = client.get(
-                f'/device/devices/{device_id}/devicedatasources',
+                f"/device/devices/{device_id}/devicedatasources",
                 params={
-                    'filter': f'dataSourceId:{ds_id}',
-                    'fields': 'id,dataSourceId,dataSourceName,dataSourceDisplayName',
-                    'size': 10
-                }
+                    "filter": f"dataSourceId:{ds_id}",
+                    "fields": "id,dataSourceId,dataSourceName,dataSourceDisplayName",
+                    "size": 10,
+                },
             )
         else:
             # Otherwise search by name pattern
             response = client.get(
-                f'/device/devices/{device_id}/devicedatasources',
+                f"/device/devices/{device_id}/devicedatasources",
                 params={
-                    'fields': 'id,dataSourceId,dataSourceName,dataSourceDisplayName',
-                    'size': 1000
-                }
+                    "fields": "id,dataSourceId,dataSourceName,dataSourceDisplayName",
+                    "size": 1000,
+                },
             )
     except LMAPIError as e:
         logger.error(f"Error getting device datasources for device {device_id}: {e}")
         return None
 
-    items = response.get('data', {}).get('items', [])
+    items = response.get("data", {}).get("items", [])
 
     # If we filtered by ID, we should have a direct match
     if ds_id and items:
@@ -234,29 +230,39 @@ def find_device_datasource(
             f"Found deviceDatasource for device {device_id}, "
             f"datasource {datasource_name} -> {item['id']}"
         )
-        return (item['id'], item['dataSourceId'], item.get('dataSourceName', ''), item.get('dataSourceDisplayName', ''))
+        return (
+            item["id"],
+            item["dataSourceId"],
+            item.get("dataSourceName", ""),
+            item.get("dataSourceDisplayName", ""),
+        )
 
     # Otherwise search through all datasources
     for item in items:
-        ds_name = item.get('dataSourceName', '')
-        ds_display = item.get('dataSourceDisplayName', '')
+        ds_name = item.get("dataSourceName", "")
+        ds_display = item.get("dataSourceDisplayName", "")
 
         if datasource_name in ds_name or datasource_name in ds_display:
             logger.debug(
                 f"Found deviceDatasource for device {device_id}, "
                 f"datasource {datasource_name} -> {item['id']}"
             )
-            return (item['id'], item['dataSourceId'], ds_name, ds_display)
+            return (item["id"], item["dataSourceId"], ds_name, ds_display)
 
         # Also check for partial match (e.g., "SNMP_Network_Interfaces" in full name)
-        if datasource_name.lower() in ds_name.lower() or datasource_name.lower() in ds_display.lower():
+        if (
+            datasource_name.lower() in ds_name.lower()
+            or datasource_name.lower() in ds_display.lower()
+        ):
             logger.debug(
                 f"Found deviceDatasource (partial match) for device {device_id}, "
                 f"datasource {datasource_name} -> {item['id']}"
             )
-            return (item['id'], item['dataSourceId'], ds_name, ds_display)
+            return (item["id"], item["dataSourceId"], ds_name, ds_display)
 
-    logger.warning(f"DeviceDatasource not found for device {device_id}, datasource {datasource_name}")
+    logger.warning(
+        f"DeviceDatasource not found for device {device_id}, datasource {datasource_name}"
+    )
     return None
 
 
@@ -265,7 +271,7 @@ def find_datasource_instance(
     device_id: int,
     device_datasource_id: int,
     interface_name: str,
-    alias: str | None = None
+    alias: str | None = None,
 ) -> tuple[int, str] | None:
     """
     Find a datasource instance by interface name or alias.
@@ -283,49 +289,46 @@ def find_datasource_instance(
     try:
         # Get all instances for this device datasource
         response = client.get(
-            f'/device/devices/{device_id}/devicedatasources/{device_datasource_id}/instances',
-            params={
-                'fields': 'id,name,displayName,description,wildValue,wildValue2',
-                'size': 1000
-            }
+            f"/device/devices/{device_id}/devicedatasources/{device_datasource_id}/instances",
+            params={"fields": "id,name,displayName,description,wildValue,wildValue2", "size": 1000},
         )
     except LMAPIError as e:
         logger.error(f"Error getting instances for device {device_id}: {e}")
         return None
 
-    items = response.get('data', {}).get('items', [])
+    items = response.get("data", {}).get("items", [])
 
     # First pass: exact match on displayName or name
     for item in items:
-        display_name = item.get('displayName', '')
-        name = item.get('name', '')
-        description = item.get('description', '')
-        wild_value = item.get('wildValue', '')
+        display_name = item.get("displayName", "")
+        name = item.get("name", "")
+        description = item.get("description", "")
+        wild_value = item.get("wildValue", "")
 
         if interface_name == display_name or interface_name == name or interface_name == wild_value:
             logger.debug(f"Found instance by exact name match: {interface_name} -> {item['id']}")
-            return (item['id'], display_name or name)
+            return (item["id"], display_name or name)
 
     # Second pass: match by alias in description or displayName
     if alias:
         for item in items:
-            display_name = item.get('displayName', '')
-            description = item.get('description', '')
+            display_name = item.get("displayName", "")
+            description = item.get("description", "")
 
             if alias in display_name or alias in description:
                 logger.debug(f"Found instance by alias match: {alias} -> {item['id']}")
-                return (item['id'], display_name or item.get('name', ''))
+                return (item["id"], display_name or item.get("name", ""))
 
     # Third pass: partial match on interface name (for subinterfaces)
     for item in items:
-        display_name = item.get('displayName', '')
-        name = item.get('name', '')
-        wild_value = item.get('wildValue', '')
+        display_name = item.get("displayName", "")
+        name = item.get("name", "")
+        wild_value = item.get("wildValue", "")
 
         # Check if the interface name is contained in the display name
         if interface_name in display_name or interface_name in name or interface_name in wild_value:
             logger.debug(f"Found instance by partial name match: {interface_name} -> {item['id']}")
-            return (item['id'], display_name or name)
+            return (item["id"], display_name or name)
 
     logger.warning(
         f"Instance not found for interface {interface_name} "
@@ -335,10 +338,7 @@ def find_datasource_instance(
 
 
 def find_dom_instance(
-    client: LMClient,
-    device_id: int,
-    device_datasource_id: int,
-    interface_name: str
+    client: LMClient, device_id: int, device_datasource_id: int, interface_name: str
 ) -> tuple[int, str] | None:
     """
     Find a DOM datasource instance for a given interface.
@@ -356,47 +356,41 @@ def find_dom_instance(
         Tuple of (instanceId, displayName) if found, None otherwise
     """
     # Strip the unit number to get base port
-    base_port = re.sub(r'\.\d+$', '', interface_name)
+    base_port = re.sub(r"\.\d+$", "", interface_name)
     logger.debug(f"Looking for DOM instance for base port: {base_port} (from {interface_name})")
 
     try:
         response = client.get(
-            f'/device/devices/{device_id}/devicedatasources/{device_datasource_id}/instances',
-            params={
-                'fields': 'id,name,displayName,description,wildValue',
-                'size': 500
-            }
+            f"/device/devices/{device_id}/devicedatasources/{device_datasource_id}/instances",
+            params={"fields": "id,name,displayName,description,wildValue", "size": 500},
         )
     except LMAPIError as e:
         logger.error(f"Error getting DOM instances for device {device_id}: {e}")
         return None
 
-    items = response.get('data', {}).get('items', [])
+    items = response.get("data", {}).get("items", [])
 
     # Look for exact match on base port
     for item in items:
-        display_name = item.get('displayName', '')
-        name = item.get('name', '')
-        wild_value = item.get('wildValue', '')
+        display_name = item.get("displayName", "")
+        name = item.get("name", "")
+        wild_value = item.get("wildValue", "")
 
         if base_port == display_name or base_port == name or base_port == wild_value:
             logger.debug(f"Found DOM instance for {base_port} -> {item['id']}")
-            return (item['id'], display_name or name)
+            return (item["id"], display_name or name)
 
         # Also check if base port is contained (in case of different naming)
         if base_port in display_name or base_port in name:
             logger.debug(f"Found DOM instance (partial match) for {base_port} -> {item['id']}")
-            return (item['id'], display_name or name)
+            return (item["id"], display_name or name)
 
     logger.warning(f"DOM instance not found for port {base_port} on device {device_id}")
     return None
 
 
 def find_bgp_instance(
-    client: LMClient,
-    device_id: int,
-    device_datasource_id: int,
-    neighbor_ip: str
+    client: LMClient, device_id: int, device_datasource_id: int, neighbor_ip: str
 ) -> tuple[int, str] | None:
     """
     Find a BGP datasource instance by neighbor IP.
@@ -412,29 +406,30 @@ def find_bgp_instance(
     """
     try:
         response = client.get(
-            f'/device/devices/{device_id}/devicedatasources/{device_datasource_id}/instances',
-            params={
-                'fields': 'id,name,displayName,description,wildValue',
-                'size': 500
-            }
+            f"/device/devices/{device_id}/devicedatasources/{device_datasource_id}/instances",
+            params={"fields": "id,name,displayName,description,wildValue", "size": 500},
         )
     except LMAPIError as e:
         logger.error(f"Error getting BGP instances for device {device_id}: {e}")
         return None
 
-    items = response.get('data', {}).get('items', [])
+    items = response.get("data", {}).get("items", [])
 
     for item in items:
-        display_name = item.get('displayName', '')
-        name = item.get('name', '')
-        description = item.get('description', '')
-        wild_value = item.get('wildValue', '')
+        display_name = item.get("displayName", "")
+        name = item.get("name", "")
+        description = item.get("description", "")
+        wild_value = item.get("wildValue", "")
 
         # Check if neighbor IP appears in any field
-        if neighbor_ip in display_name or neighbor_ip in name or \
-           neighbor_ip in description or neighbor_ip in wild_value:
+        if (
+            neighbor_ip in display_name
+            or neighbor_ip in name
+            or neighbor_ip in description
+            or neighbor_ip in wild_value
+        ):
             logger.debug(f"Found BGP instance for {neighbor_ip} -> {item['id']}")
-            return (item['id'], display_name or name)
+            return (item["id"], display_name or name)
 
     logger.warning(f"BGP instance not found for neighbor {neighbor_ip} on device {device_id}")
     return None
@@ -451,49 +446,55 @@ def ensure_dashboard_group(client: LMClient, group_path: str) -> int | None:
     Returns:
         Dashboard group ID if successful, None otherwise
     """
-    parts = [p.strip() for p in group_path.split('/') if p.strip()]
+    parts = [p.strip() for p in group_path.split("/") if p.strip()]
     parent_id = 1  # Root group ID
 
     for i, part in enumerate(parts):
-        current_path = '/'.join(parts[:i + 1])
+        current_path = "/".join(parts[: i + 1])
         logger.debug(f"Ensuring dashboard group exists: {current_path}")
 
         # Search for existing group
         try:
-            response = client.get('/dashboard/groups', params={
-                'filter': f'parentId:{parent_id},name:"{part}"',
-                'fields': 'id,name,parentId,fullPath',
-                'size': 50
-            })
+            response = client.get(
+                "/dashboard/groups",
+                params={
+                    "filter": f'parentId:{parent_id},name:"{part}"',
+                    "fields": "id,name,parentId,fullPath",
+                    "size": 50,
+                },
+            )
         except LMAPIError as e:
             logger.error(f"Error searching for dashboard group {part}: {e}")
             return None
 
-        items = response.get('data', {}).get('items', [])
+        items = response.get("data", {}).get("items", [])
 
         found = None
         for item in items:
-            if item['name'] == part and item['parentId'] == parent_id:
+            if item["name"] == part and item["parentId"] == parent_id:
                 found = item
                 break
 
         if found:
-            parent_id = found['id']
+            parent_id = found["id"]
             logger.debug(f"Found existing dashboard group: {part} -> {parent_id}")
         else:
             # Create the group
             logger.info(f"Creating dashboard group: {part} under parent {parent_id}")
             try:
-                response = client.post('/dashboard/groups', json_data={
-                    'name': part,
-                    'parentId': parent_id,
-                    'description': 'Auto-created by LM Dashboard Builder'
-                })
+                response = client.post(
+                    "/dashboard/groups",
+                    json_data={
+                        "name": part,
+                        "parentId": parent_id,
+                        "description": "Auto-created by LM Dashboard Builder",
+                    },
+                )
             except LMAPIError as e:
                 logger.error(f"Error creating dashboard group {part}: {e}")
                 return None
 
-            result_id = response.get('data', {}).get('id') or response.get('id')
+            result_id = response.get("data", {}).get("id") or response.get("id")
             if not result_id:
                 logger.error(f"Failed to get ID for created group {part}")
                 return None
@@ -517,19 +518,22 @@ def find_dashboard_by_name(client: LMClient, group_id: int, name: str) -> dict[s
         Dashboard dict if found, None otherwise
     """
     try:
-        response = client.get('/dashboard/dashboards', params={
-            'filter': f'groupId:{group_id},name:"{name}"',
-            'fields': 'id,name,groupId,widgetTokens',
-            'size': 50
-        })
+        response = client.get(
+            "/dashboard/dashboards",
+            params={
+                "filter": f'groupId:{group_id},name:"{name}"',
+                "fields": "id,name,groupId,widgetTokens",
+                "size": 50,
+            },
+        )
     except LMAPIError as e:
         logger.error(f"Error searching for dashboard {name}: {e}")
         return None
 
-    items = response.get('data', {}).get('items', [])
+    items = response.get("data", {}).get("items", [])
 
     for item in items:
-        if item['name'] == name:
+        if item["name"] == name:
             result: dict[str, Any] = item
             return result
 
@@ -548,16 +552,12 @@ def sanitize_dashboard_name(name: str) -> str:
     """
     # LM doesn't allow: comma, backslash, and possibly others
     # Replace them with safe alternatives
-    sanitized = name.replace(',', ' -').replace('\\', '-')
+    sanitized = name.replace(",", " -").replace("\\", "-")
     return sanitized
 
 
 def ensure_dashboard(
-    client: LMClient,
-    group_id: int,
-    name: str,
-    tokens: dict[str, Any],
-    description: str = ''
+    client: LMClient, group_id: int, name: str, tokens: dict[str, Any], description: str = ""
 ) -> int | None:
     """
     Ensure a dashboard exists with the specified tokens.
@@ -580,21 +580,18 @@ def ensure_dashboard(
 
     # Convert tokens dict to LM format
     # Token names should NOT include ## - LM adds those automatically
-    widget_tokens = [
-        {'name': k, 'value': str(v)}
-        for k, v in tokens.items()
-    ]
+    widget_tokens = [{"name": k, "value": str(v)} for k, v in tokens.items()]
 
     if existing:
-        dashboard_id: int = existing['id']
+        dashboard_id: int = existing["id"]
         logger.info(f"Found existing dashboard: {name} -> {dashboard_id}")
 
         # Update tokens if needed
         try:
-            client.patch(f'/dashboard/dashboards/{dashboard_id}', json_data={
-                'widgetTokens': widget_tokens,
-                'description': description
-            })
+            client.patch(
+                f"/dashboard/dashboards/{dashboard_id}",
+                json_data={"widgetTokens": widget_tokens, "description": description},
+            )
             logger.debug(f"Updated dashboard tokens for {name}")
         except LMAPIError as e:
             logger.warning(f"Failed to update dashboard tokens: {e}")
@@ -605,18 +602,21 @@ def ensure_dashboard(
     logger.info(f"Creating dashboard: {name}")
 
     try:
-        response = client.post('/dashboard/dashboards', json_data={
-            'name': name,
-            'groupId': group_id,
-            'description': description,
-            'widgetTokens': widget_tokens,
-            'sharable': True
-        })
+        response = client.post(
+            "/dashboard/dashboards",
+            json_data={
+                "name": name,
+                "groupId": group_id,
+                "description": description,
+                "widgetTokens": widget_tokens,
+                "sharable": True,
+            },
+        )
     except LMAPIError as e:
         logger.error(f"Error creating dashboard {name}: {e}")
         return None
 
-    result_id = response.get('data', {}).get('id') or response.get('id')
+    result_id = response.get("data", {}).get("id") or response.get("id")
     if not result_id:
         logger.error(f"Failed to get ID for created dashboard {name}")
         return None
@@ -638,21 +638,21 @@ def delete_dashboard_widgets(client: LMClient, dashboard_id: int) -> int:
         Number of widgets deleted
     """
     try:
-        response = client.get(f'/dashboard/dashboards/{dashboard_id}/widgets', params={
-            'fields': 'id,name,type',
-            'size': 500
-        })
+        response = client.get(
+            f"/dashboard/dashboards/{dashboard_id}/widgets",
+            params={"fields": "id,name,type", "size": 500},
+        )
     except LMAPIError as e:
         logger.error(f"Error getting widgets for dashboard {dashboard_id}: {e}")
         return 0
 
-    items = response.get('data', {}).get('items', [])
+    items = response.get("data", {}).get("items", [])
     deleted_count = 0
 
     for widget in items:
-        widget_id = widget['id']
+        widget_id = widget["id"]
         try:
-            client.delete(f'/dashboard/widgets/{widget_id}')
+            client.delete(f"/dashboard/widgets/{widget_id}")
             deleted_count += 1
             logger.debug(f"Deleted widget {widget_id}: {widget.get('name', 'unnamed')}")
         except LMAPIError as e:
@@ -674,13 +674,13 @@ def get_datapoint_info(client: LMClient, datasource_id: int) -> dict[str, Any]:
         Dictionary mapping datapoint names to their info
     """
     try:
-        response = client.get(f'/setting/datasources/{datasource_id}/datapoints', params={
-            'fields': 'id,name,description,type',
-            'size': 100
-        })
+        response = client.get(
+            f"/setting/datasources/{datasource_id}/datapoints",
+            params={"fields": "id,name,description,type", "size": 100},
+        )
     except LMAPIError as e:
         logger.error(f"Error getting datapoints for datasource {datasource_id}: {e}")
         return {}
 
-    items = response.get('data', {}).get('items', [])
-    return {item['name']: item for item in items}
+    items = response.get("data", {}).get("items", [])
+    return {item["name"]: item for item in items}

@@ -86,11 +86,13 @@ class RecipientGroupService(BaseService):
         group = self.get(group_id)
         data = group.get("data", group) if "data" in group else group
         recipients = data.get("recipients", [])
-        recipients.append({
-            "type": "ARBITRARY",
-            "method": method,
-            "addr": email,
-        })
+        recipients.append(
+            {
+                "type": "ARBITRARY",
+                "method": method,
+                "addr": email,
+            }
+        )
         return self.update(group_id, {"recipients": recipients})
 
     def add_admin_recipient(
@@ -113,11 +115,13 @@ class RecipientGroupService(BaseService):
         group = self.get(group_id)
         data = group.get("data", group) if "data" in group else group
         recipients = data.get("recipients", [])
-        recipients.append({
-            "type": "ADMIN",
-            "method": method,
-            "admin": admin_id,
-        })
+        recipients.append(
+            {
+                "type": "ADMIN",
+                "method": method,
+                "admin": admin_id,
+            }
+        )
         return self.update(group_id, {"recipients": recipients})
 
     def get_recipients(self, group_id: int) -> list[dict[str, Any]]:

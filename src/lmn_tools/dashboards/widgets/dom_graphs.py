@@ -32,7 +32,7 @@ def create_dom_graph_widget(
     datapoint_name: str,
     position: WidgetPosition,
     width: int = 6,
-    dom_datasource_full_name: str = 'Juniper DOM- (Juniper DOM-)'
+    dom_datasource_full_name: str = "Juniper DOM- (Juniper DOM-)",
 ) -> int | None:
     """
     Create a DOM optics graph widget for a single datapoint.
@@ -55,58 +55,58 @@ def create_dom_graph_widget(
     # Map datapoint names to display names and units
     # Using actual Juniper DOM datapoint names
     datapoint_display = {
-        'LaserBiasCurrent': ('Laser Bias', 'mA'),
-        'ModuleTemp': ('Module Temperature', '°C'),
-        'RxLaserPower': ('Rx Power', 'dBm'),
-        'TxLaserOutputPower': ('Tx Power', 'dBm'),
+        "LaserBiasCurrent": ("Laser Bias", "mA"),
+        "ModuleTemp": ("Module Temperature", "°C"),
+        "RxLaserPower": ("Rx Power", "dBm"),
+        "TxLaserOutputPower": ("Tx Power", "dBm"),
     }
 
-    display_name, unit = datapoint_display.get(datapoint_name, (datapoint_name, ''))
+    display_name, unit = datapoint_display.get(datapoint_name, (datapoint_name, ""))
 
     # Extract base port name (strip unit number)
-    base_port = re.sub(r'\.\d+$', '', interface.interface_name)
+    base_port = re.sub(r"\.\d+$", "", interface.interface_name)
 
-    title = f'{interface.hostname} – DOM – {base_port} – {display_name}'
+    title = f"{interface.hostname} – DOM – {base_port} – {display_name}"
 
     # dataPoints with GlobMatchToggle format and display settings
     data_points = [
         {
-            'name': 'domMetric',
-            'dataPointName': datapoint_name,
-            'dataSourceFullName': dom_datasource_full_name,
-            'instanceName': {'value': dom_instance_name, 'isGlob': False},
-            'deviceDisplayName': {'value': interface.hostname, 'isGlob': False},
-            'deviceGroupFullPath': {'value': '*', 'isGlob': True},
-            'consolidateFunction': 'average',
-            'display': {
-                'option': 'custom',
-                'legend': display_name,
-                'type': 'line',
-                'color': '#9b59b6'
-            }
+            "name": "domMetric",
+            "dataPointName": datapoint_name,
+            "dataSourceFullName": dom_datasource_full_name,
+            "instanceName": {"value": dom_instance_name, "isGlob": False},
+            "deviceDisplayName": {"value": interface.hostname, "isGlob": False},
+            "deviceGroupFullPath": {"value": "*", "isGlob": True},
+            "consolidateFunction": "average",
+            "display": {
+                "option": "custom",
+                "legend": display_name,
+                "type": "line",
+                "color": "#9b59b6",
+            },
         }
     ]
 
     widget_data = {
-        'dashboardId': dashboard_id,
-        'name': title,
-        'type': 'cgraph',
-        'col': position.col,
-        'row': position.row,
-        'colSpan': width,
-        'rowSpan': DEFAULT_GRAPH_HEIGHT,
-        'graphInfo': {
-            'verticalLabel': unit or 'Value',
-            'minValue': 0,
-            'aggregate': False,
-            'dataPoints': data_points
+        "dashboardId": dashboard_id,
+        "name": title,
+        "type": "cgraph",
+        "col": position.col,
+        "row": position.row,
+        "colSpan": width,
+        "rowSpan": DEFAULT_GRAPH_HEIGHT,
+        "graphInfo": {
+            "verticalLabel": unit or "Value",
+            "minValue": 0,
+            "aggregate": False,
+            "dataPoints": data_points,
         },
-        'timescale': '6hour'  # Longer timescale for sparse DOM data
+        "timescale": "6hour",  # Longer timescale for sparse DOM data
     }
 
     try:
-        response = client.post('/dashboard/widgets', json=widget_data)
-        widget_id: int | None = response.get('data', {}).get('id') or response.get('id')
+        response = client.post("/dashboard/widgets", json=widget_data)
+        widget_id: int | None = response.get("data", {}).get("id") or response.get("id")
         position.next_col(width)
         logger.debug(f"Created DOM graph widget: {title} -> {widget_id}")
         return widget_id
@@ -124,7 +124,7 @@ def create_dom_optical_power_graph(
     dom_datasource_id: int,
     position: WidgetPosition,
     width: int = 6,
-    dom_datasource_full_name: str = 'Juniper DOM- (Juniper DOM-)'
+    dom_datasource_full_name: str = "Juniper DOM- (Juniper DOM-)",
 ) -> int | None:
     """
     Create a combined DOM optical power graph with Rx and Tx power.
@@ -144,63 +144,59 @@ def create_dom_optical_power_graph(
         Widget ID if created, None otherwise
     """
     # Extract base port name (strip unit number)
-    base_port = re.sub(r'\.\d+$', '', interface.interface_name)
+    base_port = re.sub(r"\.\d+$", "", interface.interface_name)
 
-    title = f'{interface.hostname} – DOM – {base_port} – Optical Power'
+    title = f"{interface.hostname} – DOM – {base_port} – Optical Power"
 
     # Combined Rx and Tx power datapoints
     data_points = [
         {
-            'name': 'rxPower',
-            'dataPointName': 'RxLaserPower',
-            'dataSourceFullName': dom_datasource_full_name,
-            'instanceName': {'value': dom_instance_name, 'isGlob': False},
-            'deviceDisplayName': {'value': interface.hostname, 'isGlob': False},
-            'deviceGroupFullPath': {'value': '*', 'isGlob': True},
-            'consolidateFunction': 'average',
-            'display': {
-                'option': 'custom',
-                'legend': 'Rx Power',
-                'type': 'line',
-                'color': '#2ecc71'  # Green for Rx
-            }
+            "name": "rxPower",
+            "dataPointName": "RxLaserPower",
+            "dataSourceFullName": dom_datasource_full_name,
+            "instanceName": {"value": dom_instance_name, "isGlob": False},
+            "deviceDisplayName": {"value": interface.hostname, "isGlob": False},
+            "deviceGroupFullPath": {"value": "*", "isGlob": True},
+            "consolidateFunction": "average",
+            "display": {
+                "option": "custom",
+                "legend": "Rx Power",
+                "type": "line",
+                "color": "#2ecc71",  # Green for Rx
+            },
         },
         {
-            'name': 'txPower',
-            'dataPointName': 'TxLaserOutputPower',
-            'dataSourceFullName': dom_datasource_full_name,
-            'instanceName': {'value': dom_instance_name, 'isGlob': False},
-            'deviceDisplayName': {'value': interface.hostname, 'isGlob': False},
-            'deviceGroupFullPath': {'value': '*', 'isGlob': True},
-            'consolidateFunction': 'average',
-            'display': {
-                'option': 'custom',
-                'legend': 'Tx Power',
-                'type': 'line',
-                'color': '#3498db'  # Blue for Tx
-            }
-        }
+            "name": "txPower",
+            "dataPointName": "TxLaserOutputPower",
+            "dataSourceFullName": dom_datasource_full_name,
+            "instanceName": {"value": dom_instance_name, "isGlob": False},
+            "deviceDisplayName": {"value": interface.hostname, "isGlob": False},
+            "deviceGroupFullPath": {"value": "*", "isGlob": True},
+            "consolidateFunction": "average",
+            "display": {
+                "option": "custom",
+                "legend": "Tx Power",
+                "type": "line",
+                "color": "#3498db",  # Blue for Tx
+            },
+        },
     ]
 
     widget_data = {
-        'dashboardId': dashboard_id,
-        'name': title,
-        'type': 'cgraph',
-        'col': position.col,
-        'row': position.row,
-        'colSpan': width,
-        'rowSpan': DEFAULT_GRAPH_HEIGHT,
-        'graphInfo': {
-            'verticalLabel': 'dBm',
-            'aggregate': False,
-            'dataPoints': data_points
-        },
-        'timescale': '6hour'  # Longer timescale for sparse DOM data
+        "dashboardId": dashboard_id,
+        "name": title,
+        "type": "cgraph",
+        "col": position.col,
+        "row": position.row,
+        "colSpan": width,
+        "rowSpan": DEFAULT_GRAPH_HEIGHT,
+        "graphInfo": {"verticalLabel": "dBm", "aggregate": False, "dataPoints": data_points},
+        "timescale": "6hour",  # Longer timescale for sparse DOM data
     }
 
     try:
-        response = client.post('/dashboard/widgets', json=widget_data)
-        widget_id: int | None = response.get('data', {}).get('id') or response.get('id')
+        response = client.post("/dashboard/widgets", json=widget_data)
+        widget_id: int | None = response.get("data", {}).get("id") or response.get("id")
         position.next_col(width)
         logger.debug(f"Created DOM optical power graph: {title} -> {widget_id}")
         return widget_id
@@ -212,8 +208,10 @@ def create_dom_optical_power_graph(
 def build_dom_graphs(
     client: LMClient,
     dashboard_id: int,
-    dom_interfaces: list[tuple[Any, ...]],  # List of (interface, instance_id, instance_name, datasource_id, datasource_full_name)
-    position: WidgetPosition
+    dom_interfaces: list[
+        tuple[Any, ...]
+    ],  # List of (interface, instance_id, instance_name, datasource_id, datasource_full_name)
+    position: WidgetPosition,
 ) -> int:
     """
     Create DOM optics graphs for leaf interfaces.
@@ -236,33 +234,50 @@ def build_dom_graphs(
         return 0
 
     # Create section header
-    create_section_header(client, dashboard_id, 'DOM Optics – Leaf Interfaces', position)
+    create_section_header(client, dashboard_id, "DOM Optics – Leaf Interfaces", position)
     widgets_created = 1
 
     # Solo DOM datapoints (Laser Bias and Module Temp)
     solo_datapoints = [
-        'LaserBiasCurrent',
-        'ModuleTemp',
+        "LaserBiasCurrent",
+        "ModuleTemp",
     ]
 
-    for interface, dom_instance_id, dom_instance_name, dom_datasource_id, dom_ds_full_name in dom_interfaces:
+    for (
+        interface,
+        dom_instance_id,
+        dom_instance_name,
+        dom_datasource_id,
+        dom_ds_full_name,
+    ) in dom_interfaces:
         # Create solo graphs for Laser Bias and Module Temp
         for dp_name in solo_datapoints:
             widget_id = create_dom_graph_widget(
-                client, dashboard_id,
-                interface, dom_instance_id, dom_instance_name, dom_datasource_id,
-                dp_name, position, width=6,
-                dom_datasource_full_name=dom_ds_full_name
+                client,
+                dashboard_id,
+                interface,
+                dom_instance_id,
+                dom_instance_name,
+                dom_datasource_id,
+                dp_name,
+                position,
+                width=6,
+                dom_datasource_full_name=dom_ds_full_name,
             )
             if widget_id:
                 widgets_created += 1
 
         # Create combined Optical Power graph (Rx + Tx)
         widget_id = create_dom_optical_power_graph(
-            client, dashboard_id,
-            interface, dom_instance_id, dom_instance_name, dom_datasource_id,
-            position, width=6,
-            dom_datasource_full_name=dom_ds_full_name
+            client,
+            dashboard_id,
+            interface,
+            dom_instance_id,
+            dom_instance_name,
+            dom_datasource_id,
+            position,
+            width=6,
+            dom_datasource_full_name=dom_ds_full_name,
         )
         if widget_id:
             widgets_created += 1

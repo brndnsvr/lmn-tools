@@ -32,7 +32,7 @@ def create_traffic_graph_widget(
     interface: ResolvedInterface,
     position: WidgetPosition,
     width: int = DEFAULT_WIDGET_WIDTH,
-    datasource_full_name: str = 'Interfaces- (snmpIf-)'
+    datasource_full_name: str = "Interfaces- (snmpIf-)",
 ) -> int | None:
     """
     Create a traffic throughput graph widget for an interface.
@@ -49,64 +49,64 @@ def create_traffic_graph_widget(
         Widget ID if created, None otherwise
     """
     # Widget title
-    title = f'{interface.hostname} – {interface.interface_name}'
+    title = f"{interface.hostname} – {interface.interface_name}"
     if interface.alias:
-        title += f' – {interface.alias}'
+        title += f" – {interface.alias}"
 
     # dataPoints with GlobMatchToggle format and display settings
     data_points = [
         {
-            'name': 'inMbps',
-            'dataPointName': 'InMbps',
-            'dataSourceFullName': datasource_full_name,
-            'instanceName': {'value': interface.instance_name, 'isGlob': False},
-            'deviceDisplayName': {'value': interface.hostname, 'isGlob': False},
-            'deviceGroupFullPath': {'value': '*', 'isGlob': True},
-            'consolidateFunction': 'average',
-            'display': {
-                'option': 'custom',
-                'legend': f'{interface.interface_name} In',
-                'type': 'line',
-                'color': '#2ecc71'
-            }
+            "name": "inMbps",
+            "dataPointName": "InMbps",
+            "dataSourceFullName": datasource_full_name,
+            "instanceName": {"value": interface.instance_name, "isGlob": False},
+            "deviceDisplayName": {"value": interface.hostname, "isGlob": False},
+            "deviceGroupFullPath": {"value": "*", "isGlob": True},
+            "consolidateFunction": "average",
+            "display": {
+                "option": "custom",
+                "legend": f"{interface.interface_name} In",
+                "type": "line",
+                "color": "#2ecc71",
+            },
         },
         {
-            'name': 'outMbps',
-            'dataPointName': 'OutMbps',
-            'dataSourceFullName': datasource_full_name,
-            'instanceName': {'value': interface.instance_name, 'isGlob': False},
-            'deviceDisplayName': {'value': interface.hostname, 'isGlob': False},
-            'deviceGroupFullPath': {'value': '*', 'isGlob': True},
-            'consolidateFunction': 'average',
-            'display': {
-                'option': 'custom',
-                'legend': f'{interface.interface_name} Out',
-                'type': 'line',
-                'color': '#3498db'
-            }
-        }
+            "name": "outMbps",
+            "dataPointName": "OutMbps",
+            "dataSourceFullName": datasource_full_name,
+            "instanceName": {"value": interface.instance_name, "isGlob": False},
+            "deviceDisplayName": {"value": interface.hostname, "isGlob": False},
+            "deviceGroupFullPath": {"value": "*", "isGlob": True},
+            "consolidateFunction": "average",
+            "display": {
+                "option": "custom",
+                "legend": f"{interface.interface_name} Out",
+                "type": "line",
+                "color": "#3498db",
+            },
+        },
     ]
 
     widget_data = {
-        'dashboardId': dashboard_id,
-        'name': title,
-        'type': 'cgraph',
-        'col': position.col,
-        'row': position.row,
-        'colSpan': width,
-        'rowSpan': DEFAULT_GRAPH_HEIGHT,
-        'graphInfo': {
-            'verticalLabel': 'Mbps',
-            'minValue': 0,
-            'aggregate': False,
-            'dataPoints': data_points
+        "dashboardId": dashboard_id,
+        "name": title,
+        "type": "cgraph",
+        "col": position.col,
+        "row": position.row,
+        "colSpan": width,
+        "rowSpan": DEFAULT_GRAPH_HEIGHT,
+        "graphInfo": {
+            "verticalLabel": "Mbps",
+            "minValue": 0,
+            "aggregate": False,
+            "dataPoints": data_points,
         },
-        'timescale': '2hour'
+        "timescale": "2hour",
     }
 
     try:
-        response = client.post('/dashboard/widgets', json=widget_data)
-        widget_id: int | None = response.get('data', {}).get('id') or response.get('id')
+        response = client.post("/dashboard/widgets", json=widget_data)
+        widget_id: int | None = response.get("data", {}).get("id") or response.get("id")
         position.next_col(width)
         logger.debug(f"Created traffic graph widget: {title} -> {widget_id}")
         return widget_id
@@ -120,8 +120,8 @@ def create_consolidated_traffic_graph(
     dashboard_id: int,
     interfaces: list[ResolvedInterface],
     position: WidgetPosition,
-    title: str = 'Bandwidth Utilization - All Interfaces',
-    interface_type_filter: str | None = None
+    title: str = "Bandwidth Utilization - All Interfaces",
+    interface_type_filter: str | None = None,
 ) -> int | None:
     """
     Create a consolidated bandwidth utilization graph with filtered interfaces.
@@ -143,7 +143,8 @@ def create_consolidated_traffic_graph(
     # Apply interface type filter if specified
     if interface_type_filter:
         traffic_interfaces = [
-            i for i in traffic_interfaces
+            i
+            for i in traffic_interfaces
             if get_interface_type(i.role, i.interface_name, i.alias) == interface_type_filter
         ]
 
@@ -161,8 +162,8 @@ def create_consolidated_traffic_graph(
         ds_full_name = f"{iface.datasource_display_name} ({iface.datasource_name})"
 
         # Sanitize name to only a-zA-Z0-9_ (only for the 'name' field, not instanceName)
-        safe_hostname = re.sub(r'[^a-zA-Z0-9_]', '_', iface.hostname)
-        safe_iface = re.sub(r'[^a-zA-Z0-9_]', '_', iface.interface_name)
+        safe_hostname = re.sub(r"[^a-zA-Z0-9_]", "_", iface.hostname)
+        safe_iface = re.sub(r"[^a-zA-Z0-9_]", "_", iface.interface_name)
 
         # Log the instance name being used for debugging
         logger.debug(
@@ -172,59 +173,63 @@ def create_consolidated_traffic_graph(
         )
 
         # In datapoint
-        data_points.append({
-            'name': f'in_{safe_hostname}_{safe_iface}',
-            'dataPointName': 'InMbps',
-            'dataSourceFullName': ds_full_name,
-            'instanceName': {'value': iface.instance_name, 'isGlob': False},
-            'deviceDisplayName': {'value': iface.hostname, 'isGlob': False},
-            'deviceGroupFullPath': {'value': '*', 'isGlob': True},
-            'consolidateFunction': 'average',
-            'display': {
-                'option': 'custom',
-                'legend': f'{iface.hostname}-{iface.interface_name} In',
-                'type': 'line',
-                'color': in_color
+        data_points.append(
+            {
+                "name": f"in_{safe_hostname}_{safe_iface}",
+                "dataPointName": "InMbps",
+                "dataSourceFullName": ds_full_name,
+                "instanceName": {"value": iface.instance_name, "isGlob": False},
+                "deviceDisplayName": {"value": iface.hostname, "isGlob": False},
+                "deviceGroupFullPath": {"value": "*", "isGlob": True},
+                "consolidateFunction": "average",
+                "display": {
+                    "option": "custom",
+                    "legend": f"{iface.hostname}-{iface.interface_name} In",
+                    "type": "line",
+                    "color": in_color,
+                },
             }
-        })
+        )
 
         # Out datapoint
-        data_points.append({
-            'name': f'out_{safe_hostname}_{safe_iface}',
-            'dataPointName': 'OutMbps',
-            'dataSourceFullName': ds_full_name,
-            'instanceName': {'value': iface.instance_name, 'isGlob': False},
-            'deviceDisplayName': {'value': iface.hostname, 'isGlob': False},
-            'deviceGroupFullPath': {'value': '*', 'isGlob': True},
-            'consolidateFunction': 'average',
-            'display': {
-                'option': 'custom',
-                'legend': f'{iface.hostname}-{iface.interface_name} Out',
-                'type': 'line',
-                'color': out_color
+        data_points.append(
+            {
+                "name": f"out_{safe_hostname}_{safe_iface}",
+                "dataPointName": "OutMbps",
+                "dataSourceFullName": ds_full_name,
+                "instanceName": {"value": iface.instance_name, "isGlob": False},
+                "deviceDisplayName": {"value": iface.hostname, "isGlob": False},
+                "deviceGroupFullPath": {"value": "*", "isGlob": True},
+                "consolidateFunction": "average",
+                "display": {
+                    "option": "custom",
+                    "legend": f"{iface.hostname}-{iface.interface_name} Out",
+                    "type": "line",
+                    "color": out_color,
+                },
             }
-        })
+        )
 
     widget_data = {
-        'dashboardId': dashboard_id,
-        'name': title,
-        'type': 'cgraph',
-        'col': position.col,
-        'row': position.row,
-        'colSpan': GRID_COLUMNS,
-        'rowSpan': DEFAULT_GRAPH_HEIGHT + 2,  # Taller to accommodate legend
-        'graphInfo': {
-            'verticalLabel': 'Mbps',
-            'minValue': 0,
-            'aggregate': False,
-            'dataPoints': data_points
+        "dashboardId": dashboard_id,
+        "name": title,
+        "type": "cgraph",
+        "col": position.col,
+        "row": position.row,
+        "colSpan": GRID_COLUMNS,
+        "rowSpan": DEFAULT_GRAPH_HEIGHT + 2,  # Taller to accommodate legend
+        "graphInfo": {
+            "verticalLabel": "Mbps",
+            "minValue": 0,
+            "aggregate": False,
+            "dataPoints": data_points,
         },
-        'timescale': '2hour'
+        "timescale": "2hour",
     }
 
     try:
-        response = client.post('/dashboard/widgets', json=widget_data)
-        widget_id: int | None = response.get('data', {}).get('id') or response.get('id')
+        response = client.post("/dashboard/widgets", json=widget_data)
+        widget_id: int | None = response.get("data", {}).get("id") or response.get("id")
         position.next_row(DEFAULT_GRAPH_HEIGHT + 2)
         logger.info(f"Created bandwidth graph '{title}' -> {widget_id}")
         return widget_id
@@ -238,8 +243,8 @@ def create_consolidated_packet_graph(
     dashboard_id: int,
     interfaces: list[ResolvedInterface],
     position: WidgetPosition,
-    title: str = 'Packet Transmission - All Interfaces',
-    interface_type_filter: str | None = None
+    title: str = "Packet Transmission - All Interfaces",
+    interface_type_filter: str | None = None,
 ) -> int | None:
     """
     Create a consolidated packet transmission graph with filtered interfaces.
@@ -261,7 +266,8 @@ def create_consolidated_packet_graph(
     # Apply interface type filter if specified
     if interface_type_filter:
         traffic_interfaces = [
-            i for i in traffic_interfaces
+            i
+            for i in traffic_interfaces
             if get_interface_type(i.role, i.interface_name, i.alias) == interface_type_filter
         ]
 
@@ -279,63 +285,67 @@ def create_consolidated_packet_graph(
         ds_full_name = f"{iface.datasource_display_name} ({iface.datasource_name})"
 
         # Sanitize name to only a-zA-Z0-9_
-        safe_hostname = re.sub(r'[^a-zA-Z0-9_]', '_', iface.hostname)
-        safe_iface = re.sub(r'[^a-zA-Z0-9_]', '_', iface.interface_name)
+        safe_hostname = re.sub(r"[^a-zA-Z0-9_]", "_", iface.hostname)
+        safe_iface = re.sub(r"[^a-zA-Z0-9_]", "_", iface.interface_name)
 
         # In packets datapoint
-        data_points.append({
-            'name': f'inpkts_{safe_hostname}_{safe_iface}',
-            'dataPointName': 'InUcastPkts',
-            'dataSourceFullName': ds_full_name,
-            'instanceName': {'value': iface.instance_name, 'isGlob': False},
-            'deviceDisplayName': {'value': iface.hostname, 'isGlob': False},
-            'deviceGroupFullPath': {'value': '*', 'isGlob': True},
-            'consolidateFunction': 'average',
-            'display': {
-                'option': 'custom',
-                'legend': f'{iface.hostname}-{iface.interface_name} In',
-                'type': 'line',
-                'color': in_color
+        data_points.append(
+            {
+                "name": f"inpkts_{safe_hostname}_{safe_iface}",
+                "dataPointName": "InUcastPkts",
+                "dataSourceFullName": ds_full_name,
+                "instanceName": {"value": iface.instance_name, "isGlob": False},
+                "deviceDisplayName": {"value": iface.hostname, "isGlob": False},
+                "deviceGroupFullPath": {"value": "*", "isGlob": True},
+                "consolidateFunction": "average",
+                "display": {
+                    "option": "custom",
+                    "legend": f"{iface.hostname}-{iface.interface_name} In",
+                    "type": "line",
+                    "color": in_color,
+                },
             }
-        })
+        )
 
         # Out packets datapoint
-        data_points.append({
-            'name': f'outpkts_{safe_hostname}_{safe_iface}',
-            'dataPointName': 'OutUcastPkts',
-            'dataSourceFullName': ds_full_name,
-            'instanceName': {'value': iface.instance_name, 'isGlob': False},
-            'deviceDisplayName': {'value': iface.hostname, 'isGlob': False},
-            'deviceGroupFullPath': {'value': '*', 'isGlob': True},
-            'consolidateFunction': 'average',
-            'display': {
-                'option': 'custom',
-                'legend': f'{iface.hostname}-{iface.interface_name} Out',
-                'type': 'line',
-                'color': out_color
+        data_points.append(
+            {
+                "name": f"outpkts_{safe_hostname}_{safe_iface}",
+                "dataPointName": "OutUcastPkts",
+                "dataSourceFullName": ds_full_name,
+                "instanceName": {"value": iface.instance_name, "isGlob": False},
+                "deviceDisplayName": {"value": iface.hostname, "isGlob": False},
+                "deviceGroupFullPath": {"value": "*", "isGlob": True},
+                "consolidateFunction": "average",
+                "display": {
+                    "option": "custom",
+                    "legend": f"{iface.hostname}-{iface.interface_name} Out",
+                    "type": "line",
+                    "color": out_color,
+                },
             }
-        })
+        )
 
     widget_data = {
-        'dashboardId': dashboard_id,
-        'name': title,
-        'type': 'cgraph',
-        'col': position.col,
-        'row': position.row,
-        'colSpan': GRID_COLUMNS,
-        'rowSpan': DEFAULT_GRAPH_HEIGHT + 2,  # Taller to accommodate legend
-        'graphInfo': {
-            'verticalLabel': 'Packets/sec',
-            'minValue': 0,
-            'aggregate': False,
-            'dataPoints': data_points
+        "dashboardId": dashboard_id,
+        "name": title,
+        "type": "cgraph",
+        "col": position.col,
+        "row": position.row,
+        "colSpan": GRID_COLUMNS,
+        "rowSpan": DEFAULT_GRAPH_HEIGHT + 2,  # Taller to accommodate legend
+        "graphInfo": {
+            "verticalLabel": "Packets/sec",
+            "minValue": 0,
+            "aggregate": False,
+            "dataPoints": data_points,
         },
-        'timescale': '2hour'
+        "timescale": "2hour",
     }
 
     try:
-        response = client.post('/dashboard/widgets', json=widget_data)
-        widget_id: int | None = response.get('data', {}).get('id') or response.get('id')
+        response = client.post("/dashboard/widgets", json=widget_data)
+        widget_id: int | None = response.get("data", {}).get("id") or response.get("id")
         position.next_row(DEFAULT_GRAPH_HEIGHT + 2)
         logger.info(f"Created packet graph '{title}' -> {widget_id}")
         return widget_id
@@ -348,7 +358,7 @@ def build_traffic_graphs_by_type(
     client: LMClient,
     dashboard_id: int,
     interfaces: list[ResolvedInterface],
-    position: WidgetPosition
+    position: WidgetPosition,
 ) -> int:
     """
     Create traffic graphs split by interface type.
@@ -375,15 +385,16 @@ def build_traffic_graphs_by_type(
 
     # Define the graph types to create
     graph_configs = [
-        ('internet', 'Internet Traffic - All Sites', 'Internet Packets - All Sites'),
-        ('cloudconnect', 'CloudConnect Traffic', 'CloudConnect Packets'),
-        ('access', 'Access Port Traffic', 'Access Port Packets'),
+        ("internet", "Internet Traffic - All Sites", "Internet Packets - All Sites"),
+        ("cloudconnect", "CloudConnect Traffic", "CloudConnect Packets"),
+        ("access", "Access Port Traffic", "Access Port Packets"),
     ]
 
     for interface_type, bandwidth_title, packet_title in graph_configs:
         # Check if there are any interfaces of this type
         type_interfaces = [
-            i for i in traffic_interfaces
+            i
+            for i in traffic_interfaces
             if get_interface_type(i.role, i.interface_name, i.alias) == interface_type
         ]
 
@@ -392,26 +403,32 @@ def build_traffic_graphs_by_type(
             continue
 
         # Create section header for this interface type
-        section_title = bandwidth_title.replace(' Traffic', ' Traffic Overview')
-        if interface_type == 'access':
-            section_title = 'Access Port Traffic Overview'
+        section_title = bandwidth_title.replace(" Traffic", " Traffic Overview")
+        if interface_type == "access":
+            section_title = "Access Port Traffic Overview"
         create_section_header(client, dashboard_id, section_title, position)
         widgets_created += 1
 
         # Create bandwidth graph for this type
         widget_id = create_consolidated_traffic_graph(
-            client, dashboard_id, interfaces, position,
+            client,
+            dashboard_id,
+            interfaces,
+            position,
             title=bandwidth_title,
-            interface_type_filter=interface_type
+            interface_type_filter=interface_type,
         )
         if widget_id:
             widgets_created += 1
 
         # Create packet graph for this type
         widget_id = create_consolidated_packet_graph(
-            client, dashboard_id, interfaces, position,
+            client,
+            dashboard_id,
+            interfaces,
+            position,
             title=packet_title,
-            interface_type_filter=interface_type
+            interface_type_filter=interface_type,
         )
         if widget_id:
             widgets_created += 1
@@ -423,7 +440,7 @@ def build_traffic_graphs_by_device(
     client: LMClient,
     dashboard_id: int,
     interfaces: list[ResolvedInterface],
-    position: WidgetPosition
+    position: WidgetPosition,
 ) -> int:
     """
     Create consolidated traffic graphs for all interfaces (legacy function).
@@ -448,7 +465,7 @@ def build_traffic_graphs_by_device(
     widgets_created = 0
 
     # Create section header for traffic graphs
-    create_section_header(client, dashboard_id, 'Traffic Overview - All Interfaces', position)
+    create_section_header(client, dashboard_id, "Traffic Overview - All Interfaces", position)
     widgets_created += 1
 
     # Create consolidated bandwidth graph

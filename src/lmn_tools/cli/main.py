@@ -209,7 +209,11 @@ def info() -> None:
     console.print("\n[bold]LogicMonitor API:[/bold]")
     if settings.has_credentials:
         console.print(f"  Company: {settings.company}")
-        console.print(f"  Access ID: {settings.access_id[:8]}..." if settings.access_id else "  Access ID: Not set")
+        console.print(
+            f"  Access ID: {settings.access_id[:8]}..."
+            if settings.access_id
+            else "  Access ID: Not set"
+        )
         console.print(f"  API Timeout: {settings.api_timeout}s")
     else:
         console.print("  [yellow]Credentials not configured[/yellow]")

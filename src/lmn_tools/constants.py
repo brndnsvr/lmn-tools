@@ -208,7 +208,9 @@ class LMEndpoints:
     # =========================================================================
     # Metrics/Data
     # =========================================================================
-    DEVICE_DATA: Final[str] = "/device/devices/{device_id}/devicedatasources/{device_datasource_id}/instances/{instance_id}/data"
+    DEVICE_DATA: Final[str] = (
+        "/device/devices/{device_id}/devicedatasources/{device_datasource_id}/instances/{instance_id}/data"
+    )
     DEVICE_INSTANCE_DATA: Final[str] = "/device/devices/{device_id}/instances/{instance_id}/data"
 
 

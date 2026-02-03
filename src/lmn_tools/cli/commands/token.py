@@ -38,9 +38,13 @@ def _format_timestamp(ts: int | None) -> str:
 
 @app.command("list")
 def list_tokens(
-    user: Annotated[int | None, typer.Option("--user", "-u", help="Filter by admin user ID")] = None,
+    user: Annotated[
+        int | None, typer.Option("--user", "-u", help="Filter by admin user ID")
+    ] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List API tokens."""
     svc = _get_service()
@@ -143,7 +147,9 @@ def create_token(
         else:
             console.print("[green]Created API token[/green]")
             console.print()
-            console.print("[bold yellow]IMPORTANT: Save these credentials - the access key is only shown once![/bold yellow]")
+            console.print(
+                "[bold yellow]IMPORTANT: Save these credentials - the access key is only shown once![/bold yellow]"
+            )
             console.print()
             console.print(f"Access ID:  [cyan]{result.get('accessId', 'N/A')}[/cyan]")
             console.print(f"Access Key: [cyan]{result.get('accessKey', 'N/A')}[/cyan]")

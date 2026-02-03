@@ -68,7 +68,9 @@ class TestTopologyService:
         assert len(result["data"]["vertices"]) == 1
         assert len(result["data"]["edges"]) == 1
 
-    def test_export_map_with_data_wrapper(self, service: TopologyService, mock_client: MagicMock) -> None:
+    def test_export_map_with_data_wrapper(
+        self, service: TopologyService, mock_client: MagicMock
+    ) -> None:
         """Test export_map when responses have data wrappers."""
         mock_client.get.side_effect = [
             {"data": {"id": 123, "name": "WrappedMap"}},
@@ -98,7 +100,9 @@ class TestTopologyService:
         assert len(data["vertices"]) == 3
         assert data["vertices"][0] == {"type": "device", "id": 10}
 
-    def test_create_from_devices_no_description(self, service: TopologyService, mock_client: MagicMock) -> None:
+    def test_create_from_devices_no_description(
+        self, service: TopologyService, mock_client: MagicMock
+    ) -> None:
         """Test creating a map without description."""
         mock_client.post.return_value = {"id": 457}
 
@@ -124,7 +128,9 @@ class TestTopologyService:
         assert len(data["vertices"]) == 2
         assert {"type": "device", "id": 20} in data["vertices"]
 
-    def test_add_device_to_empty_map(self, service: TopologyService, mock_client: MagicMock) -> None:
+    def test_add_device_to_empty_map(
+        self, service: TopologyService, mock_client: MagicMock
+    ) -> None:
         """Test adding a device to an empty topology map."""
         mock_client.get.return_value = {"vertices": []}
         mock_client.patch.return_value = {"vertices": [{"id": 20}]}
@@ -135,13 +141,11 @@ class TestTopologyService:
         data = call_args[1]["json_data"]
         assert len(data["vertices"]) == 1
 
-    def test_add_device_with_data_wrapper(self, service: TopologyService, mock_client: MagicMock) -> None:
+    def test_add_device_with_data_wrapper(
+        self, service: TopologyService, mock_client: MagicMock
+    ) -> None:
         """Test add_device when response has data wrapper."""
-        mock_client.get.return_value = {
-            "data": {
-                "vertices": [{"type": "device", "id": 10}]
-            }
-        }
+        mock_client.get.return_value = {"data": {"vertices": [{"type": "device", "id": 10}]}}
         mock_client.patch.return_value = {}
 
         service.add_device(123, 20)

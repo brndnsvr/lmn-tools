@@ -53,7 +53,9 @@ def list_jobs(
     status: Annotated[str | None, typer.Option("--status", "-s", help="Filter by status")] = None,
     filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List batch jobs with optional filtering."""
     svc = _get_service()
@@ -82,7 +84,9 @@ def list_jobs(
 
         for j in jobs:
             job_status = j.get("status", "")
-            status_styled = f"[{_status_style(job_status)}]{job_status}[/{_status_style(job_status)}]"
+            status_styled = (
+                f"[{_status_style(job_status)}]{job_status}[/{_status_style(job_status)}]"
+            )
 
             progress = j.get("progress", 0)
             total = j.get("totalCount", 0)
@@ -147,7 +151,9 @@ def job_status(
         return
 
     job_status_val = status.get("status", "")
-    status_styled = f"[{_status_style(job_status_val)}]{job_status_val}[/{_status_style(job_status_val)}]"
+    status_styled = (
+        f"[{_status_style(job_status_val)}]{job_status_val}[/{_status_style(job_status_val)}]"
+    )
 
     console.print(f"\n[bold]Batch Job {job_id}:[/bold] {status_styled}")
 

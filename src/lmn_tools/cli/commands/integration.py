@@ -15,7 +15,7 @@ from rich.table import Table
 
 from lmn_tools.api.client import LMClient
 from lmn_tools.core.config import get_settings
-from lmn_tools.services.alerts import IntegrationService
+from lmn_tools.services.integrations import IntegrationService
 
 app = typer.Typer(help="Manage integrations")
 console = Console()
@@ -38,9 +38,13 @@ def _get_service() -> IntegrationService:
 @app.command("list")
 def list_integrations(
     filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
-    type: Annotated[str | None, typer.Option("--type", "-t", help="Filter by integration type")] = None,
+    type: Annotated[
+        str | None, typer.Option("--type", "-t", help="Filter by integration type")
+    ] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List integrations."""
     svc = _get_service()
@@ -105,7 +109,9 @@ def get_integration(
         console.print_json(data=integration)
         return
 
-    console.print(f"\n[bold cyan]{integration.get('name', 'N/A')}[/bold cyan] (ID: {integration_id})")
+    console.print(
+        f"\n[bold cyan]{integration.get('name', 'N/A')}[/bold cyan] (ID: {integration_id})"
+    )
     console.print()
 
     detail_table = Table(show_header=False, box=None)
@@ -204,7 +210,9 @@ def list_integration_types() -> None:
 def create_integration(
     name: Annotated[str, typer.Argument(help="Integration name")],
     type: Annotated[str, typer.Option("--type", "-t", help="Integration type")],
-    description: Annotated[str | None, typer.Option("--description", "-d", help="Description")] = None,
+    description: Annotated[
+        str | None, typer.Option("--description", "-d", help="Description")
+    ] = None,
     extra: Annotated[str | None, typer.Option("--extra", "-e", help="Extra config as JSON")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
@@ -244,7 +252,9 @@ def create_integration(
 def update_integration(
     integration_id: Annotated[int, typer.Argument(help="Integration ID")],
     name: Annotated[str | None, typer.Option("--name", "-n", help="New name")] = None,
-    description: Annotated[str | None, typer.Option("--description", "-d", help="New description")] = None,
+    description: Annotated[
+        str | None, typer.Option("--description", "-d", help="New description")
+    ] = None,
     extra: Annotated[str | None, typer.Option("--extra", "-e", help="Extra config as JSON")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:

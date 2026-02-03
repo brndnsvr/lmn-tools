@@ -50,12 +50,12 @@ class TestAccessGroupService:
         assert len(result) == 2
         assert result[0]["permission"] == "read"
 
-    def test_get_device_groups_with_data_wrapper(self, service: AccessGroupService, mock_client: MagicMock) -> None:
+    def test_get_device_groups_with_data_wrapper(
+        self, service: AccessGroupService, mock_client: MagicMock
+    ) -> None:
         """Test getting device groups when response has data wrapper."""
         mock_client.get.return_value = {
-            "data": {
-                "deviceGroups": [{"id": 1, "permission": "manage"}]
-            }
+            "data": {"deviceGroups": [{"id": 1, "permission": "manage"}]}
         }
 
         result = service.get_device_groups(123)
@@ -63,7 +63,9 @@ class TestAccessGroupService:
         assert len(result) == 1
         assert result[0]["permission"] == "manage"
 
-    def test_get_device_groups_empty(self, service: AccessGroupService, mock_client: MagicMock) -> None:
+    def test_get_device_groups_empty(
+        self, service: AccessGroupService, mock_client: MagicMock
+    ) -> None:
         """Test getting device groups when none exist."""
         mock_client.get.return_value = {"deviceGroups": []}
 
@@ -88,7 +90,9 @@ class TestAccessGroupService:
         assert len(data["deviceGroups"]) == 2
         assert {"id": 2, "permission": "write"} in data["deviceGroups"]
 
-    def test_add_device_group_default_permission(self, service: AccessGroupService, mock_client: MagicMock) -> None:
+    def test_add_device_group_default_permission(
+        self, service: AccessGroupService, mock_client: MagicMock
+    ) -> None:
         """Test adding a device group with default read permission."""
         mock_client.get.return_value = {"id": 123, "deviceGroups": []}
         mock_client.patch.return_value = {"id": 123}
@@ -113,7 +117,9 @@ class TestAccessGroupService:
         assert len(data["deviceGroups"]) == 3
         assert all(dg["permission"] == "read" for dg in data["deviceGroups"])
 
-    def test_create_simple_no_device_groups(self, service: AccessGroupService, mock_client: MagicMock) -> None:
+    def test_create_simple_no_device_groups(
+        self, service: AccessGroupService, mock_client: MagicMock
+    ) -> None:
         """Test creating an access group without device groups."""
         mock_client.post.return_value = {"id": 457}
 

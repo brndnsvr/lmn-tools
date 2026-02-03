@@ -80,7 +80,9 @@ class LMToolsSettings(BaseSettings):
 
     # Logging
     debug: bool = False
-    log_level: Annotated[str, Field(default="INFO", pattern=r"^(DEBUG|INFO|WARNING|ERROR|CRITICAL)$")]
+    log_level: Annotated[
+        str, Field(default="INFO", pattern=r"^(DEBUG|INFO|WARNING|ERROR|CRITICAL)$")
+    ]
 
     @property
     def credentials(self) -> LMCredentials | None:
@@ -159,5 +161,3 @@ class LMClientConfig(BaseModel):
     timeout: Annotated[int, Field(default=30, ge=1, le=300)]
     max_retries: Annotated[int, Field(default=3, ge=0, le=10)]
     page_size: Annotated[int, Field(default=250, ge=1, le=1000)]
-
-

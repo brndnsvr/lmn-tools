@@ -37,10 +37,17 @@ def _get_service() -> AlertRuleService:
 @app.command("list")
 def list_alertrules(
     filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
-    datasource: Annotated[int | None, typer.Option("--datasource", "-d", help="Filter by DataSource ID")] = None,
-    severity: Annotated[str | None, typer.Option("--severity", "-s", help="Filter by severity (warning, error, critical)")] = None,
+    datasource: Annotated[
+        int | None, typer.Option("--datasource", "-d", help="Filter by DataSource ID")
+    ] = None,
+    severity: Annotated[
+        str | None,
+        typer.Option("--severity", "-s", help="Filter by severity (warning, error, critical)"),
+    ] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List alert rules with optional filtering."""
     svc = _get_service()
@@ -80,7 +87,9 @@ def list_alertrules(
         table.add_column("Enabled", justify="center")
 
         for rule in rules:
-            enabled = "[green]Yes[/green]" if not rule.get("disableAlerting", False) else "[dim]No[/dim]"
+            enabled = (
+                "[green]Yes[/green]" if not rule.get("disableAlerting", False) else "[dim]No[/dim]"
+            )
             table.add_row(
                 str(rule["id"]),
                 rule.get("name", ""),
@@ -118,7 +127,9 @@ def get_alertrule(
     detail_table.add_column("Field", style="dim")
     detail_table.add_column("Value")
 
-    detail_table.add_row("DataSource", rule.get("dataSourceName", str(rule.get("dataSourceId", "N/A"))))
+    detail_table.add_row(
+        "DataSource", rule.get("dataSourceName", str(rule.get("dataSourceId", "N/A")))
+    )
     detail_table.add_row("Datapoint", rule.get("dataPointName", "N/A"))
     detail_table.add_row("Severity", rule.get("levelStr", "N/A"))
     detail_table.add_row("Threshold", rule.get("alertExpr", "N/A"))
@@ -133,7 +144,9 @@ def get_alertrule(
 def search_alertrules(
     query: Annotated[str, typer.Argument(help="Search term")],
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 25,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """Search alert rules by name."""
     svc = _get_service()
@@ -170,9 +183,15 @@ def create_alertrule(
     name: Annotated[str, typer.Option("--name", "-n", help="Alert rule name")],
     datasource_id: Annotated[int, typer.Option("--datasource", "-d", help="DataSource ID")],
     datapoint: Annotated[str, typer.Option("--datapoint", "-p", help="Datapoint name")],
-    threshold: Annotated[str, typer.Option("--threshold", "-t", help="Alert threshold expression (e.g., '> 90')")],
-    severity: Annotated[str, typer.Option("--severity", "-s", help="Severity level: warning, error, critical")] = "error",
-    escalation_chain: Annotated[int | None, typer.Option("--chain", "-c", help="Escalation chain ID")] = None,
+    threshold: Annotated[
+        str, typer.Option("--threshold", "-t", help="Alert threshold expression (e.g., '> 90')")
+    ],
+    severity: Annotated[
+        str, typer.Option("--severity", "-s", help="Severity level: warning, error, critical")
+    ] = "error",
+    escalation_chain: Annotated[
+        int | None, typer.Option("--chain", "-c", help="Escalation chain ID")
+    ] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Create a new alert rule."""
@@ -212,9 +231,15 @@ def create_alertrule(
 def update_alertrule(
     rule_id: Annotated[int, typer.Argument(help="Alert rule ID")],
     name: Annotated[str | None, typer.Option("--name", "-n", help="New name")] = None,
-    threshold: Annotated[str | None, typer.Option("--threshold", "-t", help="New threshold expression")] = None,
-    severity: Annotated[str | None, typer.Option("--severity", "-s", help="New severity level")] = None,
-    escalation_chain: Annotated[int | None, typer.Option("--chain", "-c", help="Escalation chain ID")] = None,
+    threshold: Annotated[
+        str | None, typer.Option("--threshold", "-t", help="New threshold expression")
+    ] = None,
+    severity: Annotated[
+        str | None, typer.Option("--severity", "-s", help="New severity level")
+    ] = None,
+    escalation_chain: Annotated[
+        int | None, typer.Option("--chain", "-c", help="Escalation chain ID")
+    ] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Update an alert rule."""

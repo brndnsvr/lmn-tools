@@ -18,7 +18,9 @@ def mock_client() -> MagicMock:
     return client
 
 
-def make_list_response(items: list[dict[str, Any]], total: int | None = None) -> list[dict[str, Any]]:
+def make_list_response(
+    items: list[dict[str, Any]], total: int | None = None
+) -> list[dict[str, Any]]:
     """Helper to format list responses as the client returns them."""
     return items
 

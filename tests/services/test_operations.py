@@ -37,7 +37,9 @@ class TestOpsNoteService:
         assert "scopes.id:123" in filter_str
         assert len(result) == 1
 
-    def test_list_by_resource_with_max_items(self, service: OpsNoteService, mock_client: MagicMock) -> None:
+    def test_list_by_resource_with_max_items(
+        self, service: OpsNoteService, mock_client: MagicMock
+    ) -> None:
         """Test list_by_resource with max_items limit."""
         mock_client.get_all.return_value = [{"id": 1}]
 
@@ -92,7 +94,9 @@ class TestOpsNoteService:
         assert data["scopes"] == [{"type": "device", "id": 123}]
         assert result["id"] == 1
 
-    def test_create_device_note_no_tags(self, service: OpsNoteService, mock_client: MagicMock) -> None:
+    def test_create_device_note_no_tags(
+        self, service: OpsNoteService, mock_client: MagicMock
+    ) -> None:
         """Test creating a device note without tags."""
         mock_client.post.return_value = {"id": 1, "note": "test"}
 
@@ -131,13 +135,11 @@ class TestOpsNoteService:
         assert len(data["tags"]) == 2
         assert {"name": "new_tag"} in data["tags"]
 
-    def test_add_tag_with_data_wrapper(self, service: OpsNoteService, mock_client: MagicMock) -> None:
+    def test_add_tag_with_data_wrapper(
+        self, service: OpsNoteService, mock_client: MagicMock
+    ) -> None:
         """Test add_tag when response has data wrapper."""
-        mock_client.get.return_value = {
-            "data": {
-                "tags": []
-            }
-        }
+        mock_client.get.return_value = {"data": {"tags": []}}
         mock_client.patch.return_value = {"id": 1}
 
         service.add_tag(1, "first_tag")

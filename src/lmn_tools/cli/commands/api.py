@@ -35,7 +35,9 @@ def api_get(
     fields: Annotated[str | None, typer.Option("--fields", help="Comma-separated fields")] = None,
     size: Annotated[int, typer.Option("--size", "-s", help="Page size")] = 50,
     offset: Annotated[int, typer.Option("--offset", "-o", help="Offset")] = 0,
-    raw: Annotated[bool, typer.Option("--raw", "-r", help="Show raw response without formatting")] = False,
+    raw: Annotated[
+        bool, typer.Option("--raw", "-r", help="Show raw response without formatting")
+    ] = False,
 ) -> None:
     """Make a GET request to the API."""
     client = _get_client()

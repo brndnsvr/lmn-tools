@@ -15,7 +15,7 @@ from rich.table import Table
 
 from lmn_tools.api.client import LMClient
 from lmn_tools.core.config import get_settings
-from lmn_tools.services.alerts import SDTService
+from lmn_tools.services.sdt import SDTService
 
 app = typer.Typer(help="Manage SDT (maintenance windows)")
 console = Console()
@@ -66,10 +66,14 @@ def _format_duration(start: int, end: int) -> str:
 @app.command("list")
 def list_sdts(
     filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
-    device: Annotated[int | None, typer.Option("--device", "-d", help="Filter by device ID")] = None,
+    device: Annotated[
+        int | None, typer.Option("--device", "-d", help="Filter by device ID")
+    ] = None,
     active: Annotated[bool, typer.Option("--active", "-a", help="Show only active SDTs")] = False,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List SDT (maintenance windows)."""
     svc = _get_service()
@@ -152,11 +156,7 @@ def list_active_sdts(
     now = datetime.now().timestamp() * 1000
 
     for s in sdts:
-        target = (
-            s.get("deviceDisplayName")
-            or s.get("deviceGroupFullPath")
-            or "N/A"
-        )
+        target = s.get("deviceDisplayName") or s.get("deviceGroupFullPath") or "N/A"
         end_ts = s.get("endDateTime", 0)
         remaining_mins = int((end_ts - now) / 60000) if end_ts else 0
 
@@ -203,11 +203,7 @@ def list_upcoming_sdts(
     table.add_column("Comment")
 
     for s in sdts:
-        target = (
-            s.get("deviceDisplayName")
-            or s.get("deviceGroupFullPath")
-            or "N/A"
-        )
+        target = s.get("deviceDisplayName") or s.get("deviceGroupFullPath") or "N/A"
         comment = s.get("comment", "")[:30]
 
         table.add_row(
@@ -222,7 +218,9 @@ def list_upcoming_sdts(
 
 @app.command("create")
 def create_sdt(
-    type: Annotated[str, typer.Option("--type", "-t", help="SDT type: device, group, datasource")] = "device",
+    type: Annotated[
+        str, typer.Option("--type", "-t", help="SDT type: device, group, datasource")
+    ] = "device",
     device: Annotated[int | None, typer.Option("--device", "-d", help="Device ID")] = None,
     group: Annotated[int | None, typer.Option("--group", "-g", help="Device group ID")] = None,
     duration: Annotated[int, typer.Option("--duration", help="Duration in minutes")] = 60,

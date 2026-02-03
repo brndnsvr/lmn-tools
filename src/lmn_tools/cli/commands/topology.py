@@ -30,7 +30,9 @@ def _get_service() -> TopologyService:
 def list_maps(
     filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List topology maps."""
     svc = _get_service()
@@ -105,7 +107,9 @@ def get_map(
 @app.command("create")
 def create_map(
     name: Annotated[str, typer.Option("--name", "-n", help="Map name")],
-    devices: Annotated[str | None, typer.Option("--devices", "-d", help="Comma-separated device IDs")] = None,
+    devices: Annotated[
+        str | None, typer.Option("--devices", "-d", help="Comma-separated device IDs")
+    ] = None,
     description: Annotated[str | None, typer.Option("--description", help="Description")] = None,
     config_file: Annotated[str | None, typer.Option("--config", help="JSON config file")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
@@ -141,7 +145,9 @@ def create_map(
 def update_map(
     map_id: Annotated[int, typer.Argument(help="Topology map ID")],
     name: Annotated[str | None, typer.Option("--name", "-n", help="New name")] = None,
-    description: Annotated[str | None, typer.Option("--description", "-d", help="New description")] = None,
+    description: Annotated[
+        str | None, typer.Option("--description", "-d", help="New description")
+    ] = None,
     config_file: Annotated[str | None, typer.Option("--config", help="JSON config file")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:

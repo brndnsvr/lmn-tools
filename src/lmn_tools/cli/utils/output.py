@@ -48,12 +48,14 @@ def show_diff(
     if old == new:
         return False
 
-    diff = list(difflib.unified_diff(
-        old.splitlines(keepends=True),
-        new.splitlines(keepends=True),
-        fromfile=old_label,
-        tofile=new_label,
-    ))
+    diff = list(
+        difflib.unified_diff(
+            old.splitlines(keepends=True),
+            new.splitlines(keepends=True),
+            fromfile=old_label,
+            tofile=new_label,
+        )
+    )
 
     if not diff:
         return False
@@ -243,4 +245,4 @@ def truncate(value: str | None, max_len: int = 60) -> str:
         return ""
     if len(value) <= max_len:
         return value
-    return value[:max_len - 3] + "..."
+    return value[: max_len - 3] + "..."

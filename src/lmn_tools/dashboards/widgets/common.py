@@ -25,6 +25,7 @@ DEFAULT_TEXT_HEIGHT = 3
 @dataclass
 class WidgetPosition:
     """Track widget positioning on dashboard."""
+
     col: int = 0
     row: int = 0
 
@@ -43,18 +44,18 @@ class WidgetPosition:
 
 # Color palette for multi-interface graphs
 INTERFACE_COLORS = [
-    ('#2ecc71', '#27ae60'),  # Green pair (In/Out)
-    ('#3498db', '#2980b9'),  # Blue pair
-    ('#e74c3c', '#c0392b'),  # Red pair
-    ('#9b59b6', '#8e44ad'),  # Purple pair
-    ('#f39c12', '#d68910'),  # Orange pair
-    ('#1abc9c', '#16a085'),  # Teal pair
-    ('#e91e63', '#c2185b'),  # Pink pair
-    ('#00bcd4', '#0097a7'),  # Cyan pair
+    ("#2ecc71", "#27ae60"),  # Green pair (In/Out)
+    ("#3498db", "#2980b9"),  # Blue pair
+    ("#e74c3c", "#c0392b"),  # Red pair
+    ("#9b59b6", "#8e44ad"),  # Purple pair
+    ("#f39c12", "#d68910"),  # Orange pair
+    ("#1abc9c", "#16a085"),  # Teal pair
+    ("#e91e63", "#c2185b"),  # Pink pair
+    ("#00bcd4", "#0097a7"),  # Cyan pair
 ]
 
 
-def get_interface_type(device_role: str, interface_name: str, alias: str = '') -> str:
+def get_interface_type(device_role: str, interface_name: str, alias: str = "") -> str:
     """
     Determine interface type based on device role and interface name.
 
@@ -66,11 +67,11 @@ def get_interface_type(device_role: str, interface_name: str, alias: str = '') -
     Returns:
         Interface type: 'internet', 'cloudconnect', 'access', or 'other'
     """
-    if device_role == 'router':
-        if interface_name.startswith('irb'):
-            return 'internet'
-        elif interface_name.startswith(('ae100', 'ae110', 'ae120')) or alias.startswith('CC_'):
-            return 'cloudconnect'
-    elif device_role == 'leaf':
-        return 'access'
-    return 'other'
+    if device_role == "router":
+        if interface_name.startswith("irb"):
+            return "internet"
+        elif interface_name.startswith(("ae100", "ae110", "ae120")) or alias.startswith("CC_"):
+            return "cloudconnect"
+    elif device_role == "leaf":
+        return "access"
+    return "other"

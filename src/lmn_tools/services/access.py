@@ -77,10 +77,12 @@ class AccessGroupService(BaseService):
         group = self.get(access_group_id)
         data = group.get("data", group) if "data" in group else group
         device_groups = data.get("deviceGroups", [])
-        device_groups.append({
-            "id": device_group_id,
-            "permission": permission,
-        })
+        device_groups.append(
+            {
+                "id": device_group_id,
+                "permission": permission,
+            }
+        )
         return self.update(access_group_id, {"deviceGroups": device_groups})
 
     def create_simple(

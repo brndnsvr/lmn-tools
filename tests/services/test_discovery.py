@@ -52,7 +52,9 @@ class TestNetscanService:
         assert result["name"] == "TestScan"
         assert result["nextStart"] == "2024-01-15"
 
-    def test_get_execution_status_with_data_wrapper(self, service: NetscanService, mock_client: MagicMock) -> None:
+    def test_get_execution_status_with_data_wrapper(
+        self, service: NetscanService, mock_client: MagicMock
+    ) -> None:
         """Test get_execution_status when response has data wrapper."""
         mock_client.get.return_value = {
             "data": {
@@ -76,7 +78,9 @@ class TestNetscanService:
         assert "collector.id:10" in call_args[0][1]["filter"]
         assert len(result) == 1
 
-    def test_list_by_collector_with_max_items(self, service: NetscanService, mock_client: MagicMock) -> None:
+    def test_list_by_collector_with_max_items(
+        self, service: NetscanService, mock_client: MagicMock
+    ) -> None:
         """Test list_by_collector with max_items."""
         mock_client.get_all.return_value = []
 
@@ -117,7 +121,9 @@ class TestNetscanService:
         assert data["description"] == "Test description"
         assert result["id"] == 123
 
-    def test_create_icmp_scan_no_description(self, service: NetscanService, mock_client: MagicMock) -> None:
+    def test_create_icmp_scan_no_description(
+        self, service: NetscanService, mock_client: MagicMock
+    ) -> None:
         """Test creating an ICMP scan without description."""
         mock_client.post.return_value = {"id": 124}
 

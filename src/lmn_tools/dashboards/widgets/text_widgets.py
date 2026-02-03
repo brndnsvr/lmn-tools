@@ -26,7 +26,7 @@ def create_text_widget(
     content: str,
     position: WidgetPosition,
     width: int = GRID_COLUMNS,
-    height: int = DEFAULT_TEXT_HEIGHT
+    height: int = DEFAULT_TEXT_HEIGHT,
 ) -> int | None:
     """
     Create a text/HTML widget on a dashboard.
@@ -44,19 +44,19 @@ def create_text_widget(
         Widget ID if created, None otherwise
     """
     widget_data = {
-        'dashboardId': dashboard_id,
-        'name': name,
-        'type': 'text',
-        'content': content,
-        'col': position.col,
-        'row': position.row,
-        'colSpan': width,
-        'rowSpan': height
+        "dashboardId": dashboard_id,
+        "name": name,
+        "type": "text",
+        "content": content,
+        "col": position.col,
+        "row": position.row,
+        "colSpan": width,
+        "rowSpan": height,
     }
 
     try:
-        response = client.post('/dashboard/widgets', json=widget_data)
-        widget_id: int | None = response.get('data', {}).get('id') or response.get('id')
+        response = client.post("/dashboard/widgets", json=widget_data)
+        widget_id: int | None = response.get("data", {}).get("id") or response.get("id")
         position.next_row(height)
         logger.info(f"Created text widget: {name} -> {widget_id}")
         return widget_id
@@ -66,11 +66,7 @@ def create_text_widget(
 
 
 def create_header_widget(
-    client: LMClient,
-    dashboard_id: int,
-    customer_name: str,
-    ban: str,
-    position: WidgetPosition
+    client: LMClient, dashboard_id: int, customer_name: str, ban: str, position: WidgetPosition
 ) -> int | None:
     """
     Create the header text widget for a customer dashboard.
@@ -98,20 +94,18 @@ For assistance, contact: <a href="mailto:noc@example.com">noc@example.com</a>
 </div>"""
 
     return create_text_widget(
-        client, dashboard_id,
-        name='Customer Overview - ##BAN##',
+        client,
+        dashboard_id,
+        name="Customer Overview - ##BAN##",
         content=content,
         position=position,
         width=GRID_COLUMNS,
-        height=DEFAULT_TEXT_HEIGHT
+        height=DEFAULT_TEXT_HEIGHT,
     )
 
 
 def create_section_header(
-    client: LMClient,
-    dashboard_id: int,
-    title: str,
-    position: WidgetPosition
+    client: LMClient, dashboard_id: int, title: str, position: WidgetPosition
 ) -> int | None:
     """
     Create a section header widget.
@@ -130,21 +124,18 @@ def create_section_header(
 </div>"""
 
     return create_text_widget(
-        client, dashboard_id,
+        client,
+        dashboard_id,
         name=title,
         content=content,
         position=position,
         width=GRID_COLUMNS,
-        height=1
+        height=1,
     )
 
 
 def create_noc_header_widget(
-    client: LMClient,
-    dashboard_id: int,
-    customer_name: str,
-    ban: str,
-    position: WidgetPosition
+    client: LMClient, dashboard_id: int, customer_name: str, ban: str, position: WidgetPosition
 ) -> int | None:
     """
     Create the header text widget for a NOC dashboard.
@@ -175,10 +166,11 @@ It shows alerts, errors, discards, and traffic metrics for customer circuits.
 </div>"""
 
     return create_text_widget(
-        client, dashboard_id,
-        name='NOC Overview - ##BAN##',
+        client,
+        dashboard_id,
+        name="NOC Overview - ##BAN##",
         content=content,
         position=position,
         width=GRID_COLUMNS,
-        height=DEFAULT_TEXT_HEIGHT
+        height=DEFAULT_TEXT_HEIGHT,
     )

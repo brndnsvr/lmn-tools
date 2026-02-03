@@ -66,12 +66,18 @@ def _severity_style(severity: str | int) -> str:
 @app.command("list")
 def list_alerts(
     filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
-    severity: Annotated[str | None, typer.Option("--severity", "-s", help="Filter by severity")] = None,
+    severity: Annotated[
+        str | None, typer.Option("--severity", "-s", help="Filter by severity")
+    ] = None,
     acked: Annotated[bool | None, typer.Option("--acked", help="Filter by acked status")] = None,
     cleared: Annotated[bool, typer.Option("--cleared", help="Include cleared alerts")] = False,
-    device: Annotated[int | None, typer.Option("--device", "-d", help="Filter by device ID")] = None,
+    device: Annotated[
+        int | None, typer.Option("--device", "-d", help="Filter by device ID")
+    ] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List alerts with optional filtering."""
     svc = _get_service()
@@ -133,7 +139,9 @@ def list_alerts(
 
 @app.command("active")
 def list_active_alerts(
-    severity: Annotated[str | None, typer.Option("--severity", "-s", help="Filter by severity")] = None,
+    severity: Annotated[
+        str | None, typer.Option("--severity", "-s", help="Filter by severity")
+    ] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
@@ -304,9 +312,13 @@ def alert_summary() -> None:
 
 @app.command("history")
 def alert_history(
-    device: Annotated[int | None, typer.Option("--device", "-d", help="Filter by device ID")] = None,
+    device: Annotated[
+        int | None, typer.Option("--device", "-d", help="Filter by device ID")
+    ] = None,
     group: Annotated[int | None, typer.Option("--group", "-g", help="Filter by group ID")] = None,
-    severity: Annotated[str | None, typer.Option("--severity", "-s", help="Filter by severity")] = None,
+    severity: Annotated[
+        str | None, typer.Option("--severity", "-s", help="Filter by severity")
+    ] = None,
     days: Annotated[int, typer.Option("--days", help="Number of days to look back")] = 7,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 100,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",

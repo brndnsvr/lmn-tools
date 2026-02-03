@@ -64,11 +64,15 @@ def _parse_time_arg(time_str: str) -> int:
 def list_logs(
     user: Annotated[str | None, typer.Option("--user", "-u", help="Filter by username")] = None,
     action: Annotated[str | None, typer.Option("--action", "-a", help="Filter by action")] = None,
-    resource: Annotated[str | None, typer.Option("--resource", "-r", help="Filter by resource type")] = None,
+    resource: Annotated[
+        str | None, typer.Option("--resource", "-r", help="Filter by resource type")
+    ] = None,
     filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
     hours: Annotated[int | None, typer.Option("--hours", help="Filter to last N hours")] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List audit logs with optional filtering."""
     svc = _get_service()
@@ -173,14 +177,16 @@ def export_logs(
         )
         writer.writeheader()
         for log in logs:
-            writer.writerow({
-                "id": log.get("id", ""),
-                "happenedOn": _format_timestamp(log.get("happenedOn")),
-                "username": log.get("username", ""),
-                "ip": log.get("ip", ""),
-                "sessionId": log.get("sessionId", ""),
-                "description": log.get("description", ""),
-            })
+            writer.writerow(
+                {
+                    "id": log.get("id", ""),
+                    "happenedOn": _format_timestamp(log.get("happenedOn")),
+                    "username": log.get("username", ""),
+                    "ip": log.get("ip", ""),
+                    "sessionId": log.get("sessionId", ""),
+                    "description": log.get("description", ""),
+                }
+            )
         output_data = output_buffer.getvalue()
     else:
         output_data = json.dumps(logs, indent=2)

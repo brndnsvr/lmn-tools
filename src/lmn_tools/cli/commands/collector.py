@@ -61,7 +61,9 @@ def _status_name(status: str | int) -> str:
 def list_collectors(
     filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
     status: Annotated[str | None, typer.Option("--status", "-s", help="Filter by status")] = None,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List collectors."""
     svc = _get_service()
@@ -117,7 +119,9 @@ def get_collector(
         console.print_json(data=collector)
         return
 
-    console.print(f"\n[bold cyan]{collector.get('hostname', 'N/A')}[/bold cyan] (ID: {collector_id})")
+    console.print(
+        f"\n[bold cyan]{collector.get('hostname', 'N/A')}[/bold cyan] (ID: {collector_id})"
+    )
     console.print()
 
     status = _status_name(collector.get("status", ""))
@@ -133,14 +137,19 @@ def get_collector(
     detail_table.add_row("Platform", collector.get("platform", "N/A"))
     detail_table.add_row("Up Time", str(collector.get("upTime", "N/A")))
     detail_table.add_row("Number of Hosts", str(collector.get("numberOfHosts", 0)))
-    detail_table.add_row("Automatic Upgrade", str((collector.get("automaticUpgradeInfo") or {}).get("enabled", False)))
+    detail_table.add_row(
+        "Automatic Upgrade",
+        str((collector.get("automaticUpgradeInfo") or {}).get("enabled", False)),
+    )
 
     console.print(detail_table)
 
 
 @app.command("status")
 def collector_status(
-    down_only: Annotated[bool, typer.Option("--down-only", "-d", help="Show only down collectors")] = False,
+    down_only: Annotated[
+        bool, typer.Option("--down-only", "-d", help="Show only down collectors")
+    ] = False,
 ) -> None:
     """Show collector status summary."""
     svc = _get_service()

@@ -46,7 +46,10 @@ def show_config() -> None:
         lm_table.add_row("Access ID", f"{settings.access_id[:8]}...")
     else:
         lm_table.add_row("Access ID", "[dim]Not set[/dim]")
-    lm_table.add_row("Access Key", "[dim]****[/dim]" if settings.access_key.get_secret_value() else "[dim]Not set[/dim]")
+    lm_table.add_row(
+        "Access Key",
+        "[dim]****[/dim]" if settings.access_key.get_secret_value() else "[dim]Not set[/dim]",
+    )
     lm_table.add_row("API Timeout", f"{settings.api_timeout}s")
     console.print(lm_table)
 

@@ -39,9 +39,13 @@ def _get_service() -> DeviceGroupService:
 @app.command("list")
 def list_groups(
     filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
-    parent: Annotated[int | None, typer.Option("--parent", "-p", help="Filter by parent group ID")] = None,
+    parent: Annotated[
+        int | None, typer.Option("--parent", "-p", help="Filter by parent group ID")
+    ] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 100,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List device groups."""
     svc = _get_service()
@@ -80,7 +84,9 @@ def list_groups(
 @app.command("get")
 def get_group(
     identifier: Annotated[str, typer.Argument(help="Group ID or path")],
-    show_properties: Annotated[bool, typer.Option("--properties", "-p", help="Show properties")] = False,
+    show_properties: Annotated[
+        bool, typer.Option("--properties", "-p", help="Show properties")
+    ] = False,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Get device group details."""
@@ -137,7 +143,9 @@ def get_group(
 @app.command("devices")
 def list_group_devices(
     group_id: Annotated[int, typer.Argument(help="Group ID")],
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List devices in a group."""
     svc = _get_service()
@@ -204,7 +212,9 @@ def show_tree(
 @app.command("children")
 def list_children(
     parent_id: Annotated[int, typer.Argument(help="Parent group ID")] = 1,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List child groups of a parent."""
     svc = _get_service()
@@ -245,10 +255,19 @@ def list_children(
 def create_group(
     name: Annotated[str, typer.Argument(help="Group name")],
     parent: Annotated[int, typer.Option("--parent", "-p", help="Parent group ID")] = 1,
-    description: Annotated[str | None, typer.Option("--description", "-d", help="Group description")] = None,
-    applies_to: Annotated[str | None, typer.Option("--applies-to", "-a", help="AppliesTo expression for dynamic group")] = None,
-    properties: Annotated[str | None, typer.Option("--properties", help="Custom properties as JSON")] = None,
-    disable_alerting: Annotated[bool, typer.Option("--disable-alerting", help="Disable alerting for group")] = False,
+    description: Annotated[
+        str | None, typer.Option("--description", "-d", help="Group description")
+    ] = None,
+    applies_to: Annotated[
+        str | None,
+        typer.Option("--applies-to", "-a", help="AppliesTo expression for dynamic group"),
+    ] = None,
+    properties: Annotated[
+        str | None, typer.Option("--properties", help="Custom properties as JSON")
+    ] = None,
+    disable_alerting: Annotated[
+        bool, typer.Option("--disable-alerting", help="Disable alerting for group")
+    ] = False,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Create a new device group."""
@@ -269,9 +288,7 @@ def create_group(
     if properties:
         try:
             props = json.loads(properties)
-            group_data["customProperties"] = [
-                {"name": k, "value": v} for k, v in props.items()
-            ]
+            group_data["customProperties"] = [{"name": k, "value": v} for k, v in props.items()]
         except json.JSONDecodeError as e:
             console.print(f"[red]Invalid JSON for properties: {e}[/red]")
             raise typer.Exit(1) from None
@@ -296,10 +313,18 @@ def create_group(
 def update_group(
     group_id: Annotated[int, typer.Argument(help="Group ID")],
     name: Annotated[str | None, typer.Option("--name", "-n", help="New group name")] = None,
-    description: Annotated[str | None, typer.Option("--description", "-d", help="New description")] = None,
-    parent: Annotated[int | None, typer.Option("--parent", "-p", help="New parent group ID (moves group)")] = None,
-    applies_to: Annotated[str | None, typer.Option("--applies-to", "-a", help="New AppliesTo expression")] = None,
-    disable_alerting: Annotated[bool | None, typer.Option("--disable-alerting/--enable-alerting", help="Toggle alerting")] = None,
+    description: Annotated[
+        str | None, typer.Option("--description", "-d", help="New description")
+    ] = None,
+    parent: Annotated[
+        int | None, typer.Option("--parent", "-p", help="New parent group ID (moves group)")
+    ] = None,
+    applies_to: Annotated[
+        str | None, typer.Option("--applies-to", "-a", help="New AppliesTo expression")
+    ] = None,
+    disable_alerting: Annotated[
+        bool | None, typer.Option("--disable-alerting/--enable-alerting", help="Toggle alerting")
+    ] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Update a device group."""
@@ -339,7 +364,9 @@ def update_group(
 def delete_group(
     group_id: Annotated[int, typer.Argument(help="Group ID")],
     force: Annotated[bool, typer.Option("--force", "-f", help="Skip confirmation")] = False,
-    delete_devices: Annotated[bool, typer.Option("--delete-devices", help="Also delete devices in group")] = False,
+    delete_devices: Annotated[
+        bool, typer.Option("--delete-devices", help="Also delete devices in group")
+    ] = False,
     delete_hard: Annotated[bool, typer.Option("--hard", help="Hard delete (immediate)")] = False,
 ) -> None:
     """Delete a device group."""

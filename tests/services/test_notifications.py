@@ -52,19 +52,21 @@ class TestRecipientGroupService:
         assert len(result) == 2
         assert result[0]["addr"] == "admin@example.com"
 
-    def test_get_recipients_with_data_wrapper(self, service: RecipientGroupService, mock_client: MagicMock) -> None:
+    def test_get_recipients_with_data_wrapper(
+        self, service: RecipientGroupService, mock_client: MagicMock
+    ) -> None:
         """Test getting recipients when response has data wrapper."""
         mock_client.get.return_value = {
-            "data": {
-                "recipients": [{"type": "ADMIN", "addr": "test@example.com"}]
-            }
+            "data": {"recipients": [{"type": "ADMIN", "addr": "test@example.com"}]}
         }
 
         result = service.get_recipients(123)
 
         assert len(result) == 1
 
-    def test_get_recipients_empty(self, service: RecipientGroupService, mock_client: MagicMock) -> None:
+    def test_get_recipients_empty(
+        self, service: RecipientGroupService, mock_client: MagicMock
+    ) -> None:
         """Test getting recipients when group has none."""
         mock_client.get.return_value = {"id": 123, "groupName": "Empty", "recipients": []}
 
@@ -89,7 +91,9 @@ class TestRecipientGroupService:
         assert data["description"] == "Test group"
         assert len(data["recipients"]) == 1
 
-    def test_create_simple_no_recipients(self, service: RecipientGroupService, mock_client: MagicMock) -> None:
+    def test_create_simple_no_recipients(
+        self, service: RecipientGroupService, mock_client: MagicMock
+    ) -> None:
         """Test creating a group without recipients."""
         mock_client.post.return_value = {"id": 457}
 
@@ -99,7 +103,9 @@ class TestRecipientGroupService:
         data = call_args[1]["json_data"]
         assert data["recipients"] == []
 
-    def test_add_email_recipient(self, service: RecipientGroupService, mock_client: MagicMock) -> None:
+    def test_add_email_recipient(
+        self, service: RecipientGroupService, mock_client: MagicMock
+    ) -> None:
         """Test adding an email recipient to a group."""
         mock_client.get.return_value = {
             "id": 123,
@@ -119,7 +125,9 @@ class TestRecipientGroupService:
         assert new_recipient["method"] == "email"
         assert new_recipient["addr"] == "new@example.com"
 
-    def test_add_email_recipient_custom_method(self, service: RecipientGroupService, mock_client: MagicMock) -> None:
+    def test_add_email_recipient_custom_method(
+        self, service: RecipientGroupService, mock_client: MagicMock
+    ) -> None:
         """Test adding a recipient with custom method."""
         mock_client.get.return_value = {"id": 123, "recipients": []}
         mock_client.patch.return_value = {"id": 123}
@@ -130,7 +138,9 @@ class TestRecipientGroupService:
         data = call_args[1]["json_data"]
         assert data["recipients"][0]["method"] == "sms"
 
-    def test_add_admin_recipient(self, service: RecipientGroupService, mock_client: MagicMock) -> None:
+    def test_add_admin_recipient(
+        self, service: RecipientGroupService, mock_client: MagicMock
+    ) -> None:
         """Test adding an admin user as a recipient."""
         mock_client.get.return_value = {"id": 123, "recipients": []}
         mock_client.patch.return_value = {"id": 123}

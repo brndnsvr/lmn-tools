@@ -38,11 +38,17 @@ def _format_timestamp(ts: int | None) -> str:
 
 @app.command("list")
 def list_netscans(
-    collector: Annotated[int | None, typer.Option("--collector", "-c", help="Filter by collector ID")] = None,
-    group: Annotated[int | None, typer.Option("--group", "-g", help="Filter by target group ID")] = None,
+    collector: Annotated[
+        int | None, typer.Option("--collector", "-c", help="Filter by collector ID")
+    ] = None,
+    group: Annotated[
+        int | None, typer.Option("--group", "-g", help="Filter by target group ID")
+    ] = None,
     filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List Netscans with optional filtering."""
     svc = _get_service()
@@ -115,7 +121,9 @@ def get_netscan(
     detail_table.add_row("Description", scan.get("description", "N/A") or "N/A")
 
     collector_info = scan.get("collector", {})
-    detail_table.add_row("Collector", collector_info.get("description", str(collector_info.get("id", "N/A"))))
+    detail_table.add_row(
+        "Collector", collector_info.get("description", str(collector_info.get("id", "N/A")))
+    )
 
     group_info = scan.get("group", {})
     detail_table.add_row("Target Group", group_info.get("name", str(group_info.get("id", "N/A"))))
@@ -135,7 +143,9 @@ def create_netscan(
     group: Annotated[int, typer.Option("--group", "-g", help="Target device group ID")],
     subnet: Annotated[str, typer.Option("--subnet", "-s", help="IP range to scan (CIDR)")],
     method: Annotated[str, typer.Option("--method", "-m", help="Scan method")] = "nmap",
-    description: Annotated[str | None, typer.Option("--description", "-d", help="Description")] = None,
+    description: Annotated[
+        str | None, typer.Option("--description", "-d", help="Description")
+    ] = None,
     config_file: Annotated[str | None, typer.Option("--config", help="JSON config file")] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:

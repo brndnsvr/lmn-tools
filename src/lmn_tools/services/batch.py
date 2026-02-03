@@ -15,6 +15,7 @@ from lmn_tools.services.base import BaseService
 
 class BatchJobStatus(str, Enum):
     """Batch job status values."""
+
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"

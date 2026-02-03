@@ -62,7 +62,9 @@ class DeviceService(BaseService):
             List of property dictionaries
         """
         response = self.client.get(f"{self.base_path}/{device_id}/properties")
-        items: list[dict[str, Any]] = response.get("items", response.get("data", {}).get("items", []))
+        items: list[dict[str, Any]] = response.get(
+            "items", response.get("data", {}).get("items", [])
+        )
         return items
 
     def set_property(self, device_id: int, name: str, value: str) -> dict[str, Any]:
@@ -219,7 +221,9 @@ class DeviceGroupService(BaseService):
             List of property dictionaries
         """
         response = self.client.get(f"{self.base_path}/{group_id}/properties")
-        items: list[dict[str, Any]] = response.get("items", response.get("data", {}).get("items", []))
+        items: list[dict[str, Any]] = response.get(
+            "items", response.get("data", {}).get("items", [])
+        )
         return items
 
     def get_children(self, parent_id: int = 1) -> list[dict[str, Any]]:
@@ -245,6 +249,7 @@ class DeviceGroupService(BaseService):
         Returns:
             List of groups with 'children' key
         """
+
         def _build_tree(pid: int, depth: int) -> list[dict[str, Any]]:
             if depth <= 0:
                 return []

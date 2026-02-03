@@ -40,7 +40,9 @@ def list_propertysources(
     filter: Annotated[str | None, typer.Option("--filter", "-f", help="LM filter string")] = None,
     group: Annotated[str | None, typer.Option("--group", "-g", help="Filter by group name")] = None,
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 50,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """List PropertySources with optional filtering."""
     svc = _get_service()
@@ -123,7 +125,9 @@ def get_propertysource(
 def search_propertysources(
     query: Annotated[str, typer.Argument(help="Search term")],
     limit: Annotated[int, typer.Option("--limit", "-n", help="Maximum results")] = 25,
-    format: Annotated[str, typer.Option("--format", help="Output format: table, json, ids")] = "table",
+    format: Annotated[
+        str, typer.Option("--format", help="Output format: table, json, ids")
+    ] = "table",
 ) -> None:
     """Search PropertySources by name."""
     svc = _get_service()
@@ -167,6 +171,7 @@ def export_propertysource(
 
     if output:
         from pathlib import Path
+
         Path(output).write_text(json_output)
         console.print(f"[green]Exported to {output}[/green]")
     else:
@@ -210,7 +215,9 @@ def import_propertysource(
     if not force:
         existing = svc.list(filter=f'name:"{ps_name}"', max_items=1)
         if existing:
-            console.print(f"[yellow]PropertySource '{ps_name}' already exists (ID: {existing[0]['id']})[/yellow]")
+            console.print(
+                f"[yellow]PropertySource '{ps_name}' already exists (ID: {existing[0]['id']})[/yellow]"
+            )
             console.print("Use --force to overwrite")
             raise typer.Exit(1) from None
 
@@ -236,8 +243,12 @@ def import_propertysource(
 def update_propertysource(
     ps_id: Annotated[int, typer.Argument(help="PropertySource ID")],
     group: Annotated[str | None, typer.Option("--group", "-g", help="New group name")] = None,
-    technology: Annotated[str | None, typer.Option("--technology", "-t", help="New technology")] = None,
-    applies_to: Annotated[str | None, typer.Option("--applies-to", "-a", help="New AppliesTo expression")] = None,
+    technology: Annotated[
+        str | None, typer.Option("--technology", "-t", help="New technology")
+    ] = None,
+    applies_to: Annotated[
+        str | None, typer.Option("--applies-to", "-a", help="New AppliesTo expression")
+    ] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Update a PropertySource."""
@@ -303,7 +314,9 @@ def delete_propertysource(
 def clone_propertysource(
     ps_id: Annotated[int, typer.Argument(help="PropertySource ID to clone")],
     name: Annotated[str, typer.Option("--name", "-n", help="New PropertySource name")],
-    display_name: Annotated[str | None, typer.Option("--display-name", "-d", help="New display name")] = None,
+    display_name: Annotated[
+        str | None, typer.Option("--display-name", "-d", help="New display name")
+    ] = None,
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """Clone a PropertySource with a new name."""

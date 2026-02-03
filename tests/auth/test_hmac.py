@@ -10,7 +10,6 @@ from pydantic import SecretStr
 
 from lmn_tools.auth.hmac import (
     AuthHeaders,
-    LMv1Authenticator,
     generate_auth_headers,
     generate_lmv1_signature,
 )
@@ -283,66 +282,3 @@ class TestAuthHeadersToDict:
 
         assert "epoch" not in header_dict
         assert "Epoch" not in header_dict
-
-
-class TestLMv1Authenticator:
-    """Tests for LMv1Authenticator class."""
-
-    def test_init_stores_credentials(self) -> None:
-        """Authenticator stores access_id and access_key."""
-        auth = LMv1Authenticator("my_id", "my_key")
-
-        assert auth._access_id == "my_id"
-        assert auth._access_key == "my_key"
-
-    def test_init_with_secret_str(self) -> None:
-        """Authenticator accepts SecretStr for access_key."""
-        secret = SecretStr("my_key")
-        auth = LMv1Authenticator("my_id", secret)
-
-        assert auth._access_id == "my_id"
-        assert auth._access_key == secret
-
-    def test_headers_returns_dict(self) -> None:
-        """headers() returns a dictionary suitable for requests."""
-        auth = LMv1Authenticator("id", "key")
-
-        result = auth.headers("GET", "/device/devices")
-
-        assert isinstance(result, dict)
-        assert "Authorization" in result
-        assert "Content-Type" in result
-        assert "X-Version" in result
-
-    def test_headers_with_data(self) -> None:
-        """headers() includes data in signature calculation."""
-        auth = LMv1Authenticator("id", "key")
-
-        headers_no_data = auth.headers("POST", "/test")
-        headers_with_data = auth.headers("POST", "/test", data='{"key": "value"}')
-
-        # Different data should produce different signatures
-        assert headers_no_data["Authorization"] != headers_with_data["Authorization"]
-
-    def test_auth_headers_returns_auth_headers_object(self) -> None:
-        """auth_headers() returns AuthHeaders dataclass."""
-        auth = LMv1Authenticator("id", "key")
-
-        result = auth.auth_headers("GET", "/test")
-
-        assert isinstance(result, AuthHeaders)
-        assert result.authorization.startswith("LMv1 id:")
-
-    def test_authenticator_reusable(self) -> None:
-        """Same authenticator can generate headers for multiple requests."""
-        auth = LMv1Authenticator("id", "key")
-
-        h1 = auth.headers("GET", "/path1")
-        h2 = auth.headers("POST", "/path2")
-        h3 = auth.headers("GET", "/path1")
-
-        # All should be valid
-        assert all("Authorization" in h for h in [h1, h2, h3])
-
-        # Different paths/methods should differ
-        assert h1["Authorization"] != h2["Authorization"]

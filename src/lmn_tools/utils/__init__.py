@@ -25,7 +25,6 @@ from lmn_tools.utils.sanitize import (
     make_safe_filename,
     normalize_hostname,
     normalize_interface_name,
-    sanitize_dashboard_name,
     sanitize_instance_id,
     sanitize_metric_name,
     strip_xml_namespaces,
@@ -50,7 +49,6 @@ __all__ = [
     # Conversion
     "safe_float",
     "safe_int",
-    "sanitize_dashboard_name",
     # Sanitization
     "sanitize_instance_id",
     "sanitize_metric_name",

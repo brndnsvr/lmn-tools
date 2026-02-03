@@ -88,39 +88,6 @@ def sanitize_metric_name(name: str) -> str:
     return name.strip("_")
 
 
-def sanitize_dashboard_name(name: str) -> str:
-    """
-    Sanitize string for use as LogicMonitor dashboard name.
-
-    Removes characters that cause issues in dashboard names:
-    - Commas (cause CSV parsing issues)
-    - Backslashes (cause escaping issues)
-
-    Args:
-        name: Raw dashboard name
-
-    Returns:
-        Sanitized dashboard name
-
-    Example:
-        >>> sanitize_dashboard_name("Site A, Site B Dashboard")
-        'Site A - Site B Dashboard'
-    """
-    if not name:
-        return ""
-
-    # Replace commas with " -"
-    name = name.replace(",", " -")
-
-    # Replace backslashes with hyphen
-    name = name.replace("\\", "-")
-
-    # Collapse multiple spaces
-    name = re.sub(r"\s+", " ", name)
-
-    return name.strip()
-
-
 def extract_base_interface(interface_name: str) -> str:
     """
     Remove unit number from interface name.

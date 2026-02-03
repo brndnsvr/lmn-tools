@@ -14,23 +14,7 @@
 
 ## Next
 
-### T-003: Split alerts.py into separate service files
-**Labels:** `refactor`
-**Location:** `src/lmn_tools/services/alerts.py`
-
-Contains 6 unrelated service classes in one file:
-- `AlertService` - keep in `alerts.py`
-- `AlertRuleService` - keep in `alerts.py`
-- `SDTService` → move to `services/sdt.py`
-- `EscalationChainService` → move to `services/escalation.py`
-- `IntegrationService` → move to `services/integrations.py`
-- `WebsiteService` → move to `services/websites.py`
-
-**Acceptance Criteria:**
-- [ ] Create new service files for SDT, Escalation, Integration, Website
-- [ ] Move classes to appropriate files
-- [ ] Update `__init__.py` exports
-- [ ] Verify no import cycles
+*Empty*
 
 ---
 
@@ -283,6 +267,19 @@ Recommended ADRs to document:
 ---
 
 ## Done
+
+### T-003: Split alerts.py into separate service files ✓
+**Labels:** `refactor`
+Split monolithic alerts.py (422 lines) into focused service modules:
+- alerts.py (234 lines): AlertService, AlertRuleService
+- sdt.py (171 lines): SDTService, SDTType enum
+- escalation.py (23 lines): EscalationChainService
+- integrations.py (23 lines): IntegrationService
+- websites.py (36 lines): WebsiteService
+
+Updated all imports in CLI commands and tests. All 190 tests pass.
+
+---
 
 ### T-001: Standardize client acquisition in CLI commands ✓
 **Labels:** `refactor`

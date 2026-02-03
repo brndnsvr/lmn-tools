@@ -17,21 +17,6 @@ from typing import Final
 # =============================================================================
 
 
-class LMAPIConfig:
-    """LogicMonitor REST API configuration constants."""
-
-    BASE_PATH: Final[str] = "/santaba/rest"
-    API_VERSION: Final[str] = "3"
-
-    DEFAULT_TIMEOUT: Final[int] = 30
-    DEFAULT_PAGE_SIZE: Final[int] = 250
-    MAX_PAGE_SIZE: Final[int] = 1000
-
-    # Rate limiting
-    RATE_LIMIT_HEADER: Final[str] = "X-Rate-Limit-Remaining"
-    RATE_LIMIT_WINDOW_HEADER: Final[str] = "X-Rate-Limit-Window"
-
-
 class LMEndpoints:
     """LogicMonitor API endpoint paths."""
 
@@ -378,29 +363,3 @@ class Patterns:
 # =============================================================================
 # Datasource Name Constants
 # =============================================================================
-
-
-class DatasourceNames:
-    """Common LogicMonitor datasource names."""
-
-    # Network interfaces
-    SNMP_NETWORK_INTERFACES: Final[str] = "SNMP_Network_Interfaces"
-    INTERFACES_DISPLAY: Final[str] = "Interfaces-"
-
-    # Juniper-specific
-    JUNIPER_DOM: Final[str] = "Juniper DOM-"
-    JUNIPER_BGP: Final[str] = "BGP-"
-
-    @classmethod
-    def format_full_name(cls, display_name: str, internal_name: str) -> str:
-        """
-        Format a datasource full name as used by LM API.
-
-        Args:
-            display_name: The display name (e.g., "Network Interfaces")
-            internal_name: The internal name (e.g., "SNMP_Network_Interfaces")
-
-        Returns:
-            Formatted string like "Network Interfaces (SNMP_Network_Interfaces)"
-        """
-        return f"{display_name} ({internal_name})"

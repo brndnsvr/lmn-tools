@@ -660,27 +660,3 @@ def delete_dashboard_widgets(client: LMClient, dashboard_id: int) -> int:
 
     logger.info(f"Deleted {deleted_count} widgets from dashboard {dashboard_id}")
     return deleted_count
-
-
-def get_datapoint_info(client: LMClient, datasource_id: int) -> dict[str, Any]:
-    """
-    Get datapoint information for a datasource.
-
-    Args:
-        client: LMClient instance
-        datasource_id: Datasource ID
-
-    Returns:
-        Dictionary mapping datapoint names to their info
-    """
-    try:
-        response = client.get(
-            f"/setting/datasources/{datasource_id}/datapoints",
-            params={"fields": "id,name,description,type", "size": 100},
-        )
-    except LMAPIError as e:
-        logger.error(f"Error getting datapoints for datasource {datasource_id}: {e}")
-        return {}
-
-    items = response.get("data", {}).get("items", [])
-    return {item["name"]: item for item in items}

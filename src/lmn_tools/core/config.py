@@ -142,22 +142,3 @@ def reset_settings() -> None:
 # =============================================================================
 # LM Client Configuration
 # =============================================================================
-
-
-class LMClientConfig(BaseModel):
-    """
-    Full LogicMonitor client configuration.
-
-    Attributes:
-        credentials: API credentials
-        timeout: Request timeout in seconds
-        max_retries: Maximum retry attempts for failed requests
-        page_size: Default page size for paginated requests
-    """
-
-    model_config = ConfigDict(str_strip_whitespace=True)
-
-    credentials: LMCredentials
-    timeout: Annotated[int, Field(default=30, ge=1, le=300)]
-    max_retries: Annotated[int, Field(default=3, ge=0, le=10)]
-    page_size: Annotated[int, Field(default=250, ge=1, le=1000)]

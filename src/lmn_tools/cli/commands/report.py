@@ -12,8 +12,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from lmn_tools.api.client import LMClient
-from lmn_tools.core.config import get_settings
+from lmn_tools.cli.utils import get_client
 from lmn_tools.services.base import BaseService
 
 app = typer.Typer(help="View reports")
@@ -28,18 +27,9 @@ class ReportService(BaseService):
         return "/report/reports"
 
 
-def _get_client() -> LMClient:
-    """Get authenticated API client."""
-    settings = get_settings()
-    if not settings.has_credentials:
-        console.print("[red]Error: LM credentials not configured[/red]")
-        raise typer.Exit(1) from None
-    return LMClient.from_credentials(settings.credentials)  # type: ignore
-
-
 def _get_service() -> ReportService:
     """Get report service."""
-    return ReportService(_get_client())
+    return ReportService(get_client(console))
 
 
 @app.command("list")
@@ -123,7 +113,7 @@ def list_report_groups(
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """List report groups."""
-    client = _get_client()
+    client = get_client(console)
     response = client.get("/report/groups")
     groups = response.get("items", response.get("data", {}).get("items", []))
 

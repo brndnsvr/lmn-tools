@@ -12,26 +12,16 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from lmn_tools.api.client import LMClient
-from lmn_tools.core.config import get_settings
+from lmn_tools.cli.utils import get_client
 from lmn_tools.services.websites import WebsiteService
 
 app = typer.Typer(help="Manage website monitors (synthetic)")
 console = Console()
 
 
-def _get_client() -> LMClient:
-    """Get authenticated API client."""
-    settings = get_settings()
-    if not settings.has_credentials:
-        console.print("[red]Error: LM credentials not configured[/red]")
-        raise typer.Exit(1) from None
-    return LMClient.from_credentials(settings.credentials)  # type: ignore
-
-
 def _get_service() -> WebsiteService:
     """Get website service."""
-    return WebsiteService(_get_client())
+    return WebsiteService(get_client(console))
 
 
 @app.command("list")
@@ -294,7 +284,7 @@ def list_website_groups(
     format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
 ) -> None:
     """List website groups."""
-    client = _get_client()
+    client = get_client(console)
     response = client.get("/website/groups")
     groups = response.get("items", response.get("data", {}).get("items", []))
 

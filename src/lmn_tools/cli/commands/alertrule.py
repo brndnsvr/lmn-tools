@@ -12,26 +12,16 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from lmn_tools.api.client import LMClient
-from lmn_tools.core.config import get_settings
+from lmn_tools.cli.utils import get_client
 from lmn_tools.services.alerts import AlertRuleService
 
 app = typer.Typer(help="Manage alert rules")
 console = Console()
 
 
-def _get_client() -> LMClient:
-    """Get authenticated API client."""
-    settings = get_settings()
-    if not settings.has_credentials:
-        console.print("[red]Error: LM credentials not configured[/red]")
-        raise typer.Exit(1) from None
-    return LMClient.from_credentials(settings.credentials)  # type: ignore
-
-
 def _get_service() -> AlertRuleService:
     """Get alert rule service."""
-    return AlertRuleService(_get_client())
+    return AlertRuleService(get_client(console))
 
 
 @app.command("list")

@@ -13,26 +13,16 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from lmn_tools.api.client import LMClient
-from lmn_tools.core.config import get_settings
+from lmn_tools.cli.utils import get_client
 from lmn_tools.services.escalation import EscalationChainService
 
 app = typer.Typer(help="Manage escalation chains")
 console = Console()
 
 
-def _get_client() -> LMClient:
-    """Get authenticated API client."""
-    settings = get_settings()
-    if not settings.has_credentials:
-        console.print("[red]Error: LM credentials not configured[/red]")
-        raise typer.Exit(1) from None
-    return LMClient.from_credentials(settings.credentials)  # type: ignore
-
-
 def _get_service() -> EscalationChainService:
     """Get escalation chain service."""
-    return EscalationChainService(_get_client())
+    return EscalationChainService(get_client(console))
 
 
 @app.command("list")

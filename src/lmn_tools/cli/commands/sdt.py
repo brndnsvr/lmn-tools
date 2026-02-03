@@ -13,7 +13,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from lmn_tools.cli.utils import get_client
+from lmn_tools.cli.utils import format_duration, format_timestamp, get_client
 from lmn_tools.services.sdt import SDTService
 
 app = typer.Typer(help="Manage SDT (maintenance windows)")
@@ -23,34 +23,6 @@ console = Console()
 def _get_service() -> SDTService:
     """Get SDT service."""
     return SDTService(get_client(console))
-
-
-def _format_timestamp(ts: int | None) -> str:
-    """Format epoch timestamp to readable string (handles both seconds and milliseconds)."""
-    if not ts:
-        return "N/A"
-    try:
-        # Timestamps >= 10^12 are in milliseconds, < 10^12 are in seconds
-        ts_secs: float = ts / 1000 if ts >= 1e12 else float(ts)
-        return datetime.fromtimestamp(ts_secs).strftime("%Y-%m-%d %H:%M")
-    except Exception:
-        return str(ts)
-
-
-def _format_duration(start: int, end: int) -> str:
-    """Format duration between timestamps (handles both seconds and milliseconds)."""
-    if not start or not end:
-        return "N/A"
-    # Convert to seconds if in milliseconds
-    start_secs = start / 1000 if start >= 1e12 else start
-    end_secs = end / 1000 if end >= 1e12 else end
-    duration_mins = int((end_secs - start_secs) / 60)
-    if duration_mins < 60:
-        return f"{duration_mins}m"
-    elif duration_mins < 1440:
-        return f"{duration_mins // 60}h {duration_mins % 60}m"
-    else:
-        return f"{duration_mins // 1440}d {(duration_mins % 1440) // 60}h"
 
 
 @app.command("list")
@@ -111,9 +83,9 @@ def list_sdts(
                 str(s.get("id", "")),
                 s.get("type", "").replace("SDT", ""),
                 target,
-                _format_timestamp(s.get("startDateTime")),
-                _format_timestamp(s.get("endDateTime")),
-                _format_duration(s.get("startDateTime", 0), s.get("endDateTime", 0)),
+                format_timestamp(s.get("startDateTime")),
+                format_timestamp(s.get("endDateTime")),
+                format_duration(s.get("startDateTime", 0), s.get("endDateTime", 0)),
                 comment,
             )
         console.print(table)
@@ -161,7 +133,7 @@ def list_active_sdts(
             str(s.get("id", "")),
             s.get("type", "").replace("SDT", ""),
             target,
-            _format_timestamp(end_ts),
+            format_timestamp(end_ts),
             remaining,
             comment,
         )
@@ -199,8 +171,8 @@ def list_upcoming_sdts(
         table.add_row(
             s.get("type", "").replace("SDT", ""),
             target,
-            _format_timestamp(s.get("startDateTime")),
-            _format_duration(s.get("startDateTime", 0), s.get("endDateTime", 0)),
+            format_timestamp(s.get("startDateTime")),
+            format_duration(s.get("startDateTime", 0), s.get("endDateTime", 0)),
             comment,
         )
     console.print(table)

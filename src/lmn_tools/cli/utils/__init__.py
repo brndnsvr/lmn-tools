@@ -25,6 +25,11 @@ from lmn_tools.cli.utils.output import (
     show_syntax,
     truncate,
 )
+from lmn_tools.cli.utils.time import (
+    format_duration,
+    format_duration_from_now,
+    format_timestamp,
+)
 
 __all__ = [
     "add_table_rows",
@@ -32,8 +37,11 @@ __all__ = [
     "create_table",
     "edit_in_editor",
     "edit_json_in_editor",
+    "format_duration",
+    "format_duration_from_now",
     "format_enabled",
     "format_status",
+    "format_timestamp",
     # Client
     "get_client",
     "get_syntax_lexer",

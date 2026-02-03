@@ -17,7 +17,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from lmn_tools.cli.utils import get_client, unwrap_response
+from lmn_tools.cli.utils import format_timestamp, get_client, unwrap_response
 from lmn_tools.services.audit import AuditLogService
 
 app = typer.Typer(help="View audit logs")
@@ -27,17 +27,6 @@ console = Console()
 def _get_service() -> AuditLogService:
     """Get audit log service."""
     return AuditLogService(get_client(console))
-
-
-def _format_timestamp(ts: int | None) -> str:
-    """Format epoch timestamp to readable string."""
-    if not ts:
-        return "N/A"
-    try:
-        ts_secs: float = ts / 1000 if ts >= 1e12 else float(ts)
-        return datetime.fromtimestamp(ts_secs).strftime("%Y-%m-%d %H:%M:%S")
-    except Exception:
-        return str(ts)
 
 
 def _parse_time_arg(time_str: str) -> int:
@@ -111,7 +100,7 @@ def list_logs(
                 desc = desc[:50] + "..."
             table.add_row(
                 str(log.get("id", "")),
-                _format_timestamp(log.get("happenedOn")),
+                format_timestamp(log.get("happenedOn"), format="seconds"),
                 log.get("username", ""),
                 log.get("ip", ""),
                 desc,
@@ -140,7 +129,7 @@ def get_log(
     detail_table.add_column("Field", style="dim")
     detail_table.add_column("Value")
 
-    detail_table.add_row("Time", _format_timestamp(log.get("happenedOn")))
+    detail_table.add_row("Time", format_timestamp(log.get("happenedOn"), format="seconds"))
     detail_table.add_row("Username", log.get("username", "N/A"))
     detail_table.add_row("IP Address", log.get("ip", "N/A"))
     detail_table.add_row("Session ID", log.get("sessionId", "N/A") or "N/A")
@@ -180,7 +169,7 @@ def export_logs(
             writer.writerow(
                 {
                     "id": log.get("id", ""),
-                    "happenedOn": _format_timestamp(log.get("happenedOn")),
+                    "happenedOn": format_timestamp(log.get("happenedOn"), format="seconds"),
                     "username": log.get("username", ""),
                     "ip": log.get("ip", ""),
                     "sessionId": log.get("sessionId", ""),
@@ -234,7 +223,7 @@ def list_logins(
             result = log.get("description", "")[:20]
 
         table.add_row(
-            _format_timestamp(log.get("happenedOn")),
+            format_timestamp(log.get("happenedOn"), format="seconds"),
             log.get("username", ""),
             log.get("ip", ""),
             result,
@@ -270,7 +259,7 @@ def recent_logs(
         if len(desc) > 60:
             desc = desc[:60] + "..."
         table.add_row(
-            _format_timestamp(log.get("happenedOn")),
+            format_timestamp(log.get("happenedOn"), format="seconds"),
             log.get("username", ""),
             desc,
         )

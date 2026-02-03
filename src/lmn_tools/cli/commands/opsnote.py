@@ -6,14 +6,13 @@ Provides commands for managing LogicMonitor operational notes.
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Annotated, Any
 
 import typer
 from rich.console import Console
 from rich.table import Table
 
-from lmn_tools.cli.utils import get_client, unwrap_response
+from lmn_tools.cli.utils import format_timestamp, get_client, unwrap_response
 from lmn_tools.services.operations import OpsNoteService
 
 app = typer.Typer(help="Manage operational notes")
@@ -23,17 +22,6 @@ console = Console()
 def _get_service() -> OpsNoteService:
     """Get OpsNote service."""
     return OpsNoteService(get_client(console))
-
-
-def _format_timestamp(ts: int | None) -> str:
-    """Format epoch timestamp to readable string."""
-    if not ts:
-        return "N/A"
-    try:
-        ts_secs: float = ts / 1000 if ts >= 1e12 else float(ts)
-        return datetime.fromtimestamp(ts_secs).strftime("%Y-%m-%d %H:%M")
-    except Exception:
-        return str(ts)
 
 
 def _format_scopes(scopes: list[dict[str, Any]]) -> str:
@@ -106,7 +94,7 @@ def list_opsnotes(
                 note_text,
                 _format_scopes(n.get("scopes", [])),
                 _format_tags(n.get("tags", [])),
-                _format_timestamp(n.get("createdOn")),
+                format_timestamp(n.get("createdOn")),
             )
         console.print(table)
 
@@ -135,7 +123,7 @@ def get_opsnote(
     detail_table.add_row("Note", note.get("note", "N/A"))
     detail_table.add_row("Scopes", _format_scopes(note.get("scopes", [])))
     detail_table.add_row("Tags", _format_tags(note.get("tags", [])) or "N/A")
-    detail_table.add_row("Created", _format_timestamp(note.get("createdOn")))
+    detail_table.add_row("Created", format_timestamp(note.get("createdOn")))
     detail_table.add_row("Created By", note.get("createdBy", "N/A"))
 
     console.print(detail_table)

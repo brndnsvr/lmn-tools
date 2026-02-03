@@ -6,14 +6,13 @@ Provides commands for managing LogicMonitor API tokens.
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Annotated
 
 import typer
 from rich.console import Console
 from rich.table import Table
 
-from lmn_tools.cli.utils import get_client, unwrap_response
+from lmn_tools.cli.utils import format_timestamp, get_client, unwrap_response
 from lmn_tools.services.tokens import APITokenService
 
 app = typer.Typer(help="Manage API tokens")
@@ -23,17 +22,6 @@ console = Console()
 def _get_service() -> APITokenService:
     """Get API token service."""
     return APITokenService(get_client(console))
-
-
-def _format_timestamp(ts: int | None) -> str:
-    """Format epoch timestamp to readable string."""
-    if not ts:
-        return "N/A"
-    try:
-        ts_secs: float = ts / 1000 if ts >= 1e12 else float(ts)
-        return datetime.fromtimestamp(ts_secs).strftime("%Y-%m-%d %H:%M")
-    except Exception:
-        return str(ts)
 
 
 @app.command("list")
@@ -85,7 +73,7 @@ def list_tokens(
                 (t.get("note", "") or "")[:25],
                 admin_info,
                 status,
-                _format_timestamp(t.get("createdOn")),
+                format_timestamp(t.get("createdOn")),
             )
         console.print(table)
 
@@ -118,8 +106,8 @@ def get_token(
     detail_table.add_row("Admin Name", token.get("adminName", "N/A"))
     status = "Active" if token.get("status") == 2 else "Inactive"
     detail_table.add_row("Status", status)
-    detail_table.add_row("Created", _format_timestamp(token.get("createdOn")))
-    detail_table.add_row("Last Used", _format_timestamp(token.get("lastUsedOn")))
+    detail_table.add_row("Created", format_timestamp(token.get("createdOn")))
+    detail_table.add_row("Last Used", format_timestamp(token.get("lastUsedOn")))
 
     console.print(detail_table)
 
@@ -216,6 +204,6 @@ def list_user_tokens(
             access_id_display,
             (t.get("note", "") or "")[:30],
             status,
-            _format_timestamp(t.get("lastUsedOn")),
+            format_timestamp(t.get("lastUsedOn")),
         )
     console.print(table)

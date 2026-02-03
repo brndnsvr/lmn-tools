@@ -6,14 +6,13 @@ Provides commands for managing LogicMonitor network discovery scans.
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Annotated, Any
 
 import typer
 from rich.console import Console
 from rich.table import Table
 
-from lmn_tools.cli.utils import get_client, load_json_file, unwrap_response
+from lmn_tools.cli.utils import format_timestamp, get_client, load_json_file, unwrap_response
 from lmn_tools.services.discovery import NetscanService
 
 app = typer.Typer(help="Manage network discovery scans")
@@ -23,17 +22,6 @@ console = Console()
 def _get_service() -> NetscanService:
     """Get Netscan service."""
     return NetscanService(get_client(console))
-
-
-def _format_timestamp(ts: int | None) -> str:
-    """Format epoch timestamp to readable string."""
-    if not ts:
-        return "N/A"
-    try:
-        ts_secs: float = ts / 1000 if ts >= 1e12 else float(ts)
-        return datetime.fromtimestamp(ts_secs).strftime("%Y-%m-%d %H:%M")
-    except Exception:
-        return str(ts)
 
 
 @app.command("list")
@@ -130,8 +118,8 @@ def get_netscan(
 
     detail_table.add_row("Subnet", scan.get("subnet", "N/A") or "N/A")
     detail_table.add_row("Disabled", "Yes" if scan.get("disabled") else "No")
-    detail_table.add_row("Last Executed", _format_timestamp(scan.get("lastExecutedOn")))
-    detail_table.add_row("Next Start", _format_timestamp(scan.get("nextStart")))
+    detail_table.add_row("Last Executed", format_timestamp(scan.get("lastExecutedOn")))
+    detail_table.add_row("Next Start", format_timestamp(scan.get("nextStart")))
 
     console.print(detail_table)
 
@@ -214,8 +202,8 @@ def netscan_status(
     table.add_column("Field", style="dim")
     table.add_column("Value")
 
-    table.add_row("Last Executed", _format_timestamp(status.get("lastExecutedOn")))
-    table.add_row("Next Start", _format_timestamp(status.get("nextStart")))
+    table.add_row("Last Executed", format_timestamp(status.get("lastExecutedOn")))
+    table.add_row("Next Start", format_timestamp(status.get("nextStart")))
 
     console.print(table)
 

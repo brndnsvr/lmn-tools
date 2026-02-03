@@ -6,14 +6,13 @@ Provides commands for viewing and managing LogicMonitor alerts.
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Annotated
 
 import typer
 from rich.console import Console
 from rich.table import Table
 
-from lmn_tools.cli.utils import get_client
+from lmn_tools.cli.utils import format_duration_from_now, format_timestamp, get_client
 from lmn_tools.services.alerts import AlertService, AlertSeverity
 
 app = typer.Typer(help="Manage alerts")
@@ -23,18 +22,6 @@ console = Console()
 def _get_service() -> AlertService:
     """Get alert service."""
     return AlertService(get_client(console))
-
-
-def _format_timestamp(ts: int | None) -> str:
-    """Format epoch timestamp to readable string (handles both seconds and milliseconds)."""
-    if not ts:
-        return "N/A"
-    try:
-        # Timestamps >= 10^12 are in milliseconds, < 10^12 are in seconds
-        ts_secs: float = ts / 1000 if ts >= 1e12 else float(ts)
-        return datetime.fromtimestamp(ts_secs).strftime("%Y-%m-%d %H:%M")
-    except Exception:
-        return str(ts)
 
 
 # Map integer severity to string (LM API returns integers)
@@ -131,7 +118,7 @@ def list_alerts(
                 a.get("monitorObjectName", ""),
                 a.get("dataSourceName", ""),
                 msg,
-                _format_timestamp(a.get("startEpoch")),
+                format_timestamp(a.get("startEpoch")),
                 acked_status,
             )
         console.print(table)
@@ -169,20 +156,7 @@ def list_active_alerts(
         sev_name = _severity_name(sev)
         severity_styled = f"[{_severity_style(sev)}]{sev_name}[/{_severity_style(sev)}]"
 
-        # Calculate duration
-        start = a.get("startEpoch", 0)
-        if start:
-            # Convert to seconds if in milliseconds
-            start_secs = start / 1000 if start >= 1e12 else start
-            duration_mins = int((datetime.now().timestamp() - start_secs) / 60)
-            if duration_mins < 60:
-                duration = f"{duration_mins}m"
-            elif duration_mins < 1440:
-                duration = f"{duration_mins // 60}h {duration_mins % 60}m"
-            else:
-                duration = f"{duration_mins // 1440}d {(duration_mins % 1440) // 60}h"
-        else:
-            duration = "N/A"
+        duration = format_duration_from_now(a.get("startEpoch", 0))
 
         table.add_row(
             severity_styled,
@@ -224,7 +198,7 @@ def list_critical_alerts(
             a.get("monitorObjectName", ""),
             a.get("dataSourceName", ""),
             a.get("instanceName", ""),
-            _format_timestamp(a.get("startEpoch")),
+            format_timestamp(a.get("startEpoch")),
         )
     console.print(table)
 
@@ -260,8 +234,8 @@ def get_alert(
     detail_table.add_row("Datapoint", alert.get("dataPointName", "N/A"))
     detail_table.add_row("Alert Value", str(alert.get("alertValue", "N/A")))
     detail_table.add_row("Threshold", alert.get("threshold", "N/A"))
-    detail_table.add_row("Start", _format_timestamp(alert.get("startEpoch")))
-    detail_table.add_row("End", _format_timestamp(alert.get("endEpoch")))
+    detail_table.add_row("Start", format_timestamp(alert.get("startEpoch")))
+    detail_table.add_row("End", format_timestamp(alert.get("endEpoch")))
     detail_table.add_row("Acknowledged", "Yes" if alert.get("acked") else "No")
     detail_table.add_row("Cleared", "Yes" if alert.get("cleared") else "No")
 
@@ -366,7 +340,7 @@ def alert_history(
             severity_styled,
             a.get("monitorObjectName", ""),
             a.get("dataSourceName", ""),
-            _format_timestamp(a.get("startEpoch")),
+            format_timestamp(a.get("startEpoch")),
             cleared,
         )
     console.print(table)

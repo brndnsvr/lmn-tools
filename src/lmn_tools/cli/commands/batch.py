@@ -6,14 +6,13 @@ Provides commands for viewing and managing LogicMonitor batch jobs.
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Annotated
 
 import typer
 from rich.console import Console
 from rich.table import Table
 
-from lmn_tools.cli.utils import get_client, unwrap_response
+from lmn_tools.cli.utils import format_timestamp, get_client, unwrap_response
 from lmn_tools.services.batch import BatchJobService
 
 app = typer.Typer(help="Manage batch jobs")
@@ -23,17 +22,6 @@ console = Console()
 def _get_service() -> BatchJobService:
     """Get batch job service."""
     return BatchJobService(get_client(console))
-
-
-def _format_timestamp(ts: int | None) -> str:
-    """Format epoch timestamp to readable string."""
-    if not ts:
-        return "N/A"
-    try:
-        ts_secs: float = ts / 1000 if ts >= 1e12 else float(ts)
-        return datetime.fromtimestamp(ts_secs).strftime("%Y-%m-%d %H:%M")
-    except Exception:
-        return str(ts)
 
 
 def _status_style(status: str) -> str:
@@ -97,7 +85,7 @@ def list_jobs(
                 j.get("description", "")[:40] or "N/A",
                 status_styled,
                 progress_str,
-                _format_timestamp(j.get("createdOn")),
+                format_timestamp(j.get("createdOn")),
             )
         console.print(table)
 
@@ -127,8 +115,8 @@ def get_job(
     status_styled = f"[{_status_style(job_status)}]{job_status}[/{_status_style(job_status)}]"
     detail_table.add_row("Status", status_styled)
     detail_table.add_row("Description", job.get("description", "N/A") or "N/A")
-    detail_table.add_row("Created", _format_timestamp(job.get("createdOn")))
-    detail_table.add_row("Completed", _format_timestamp(job.get("completedOn")))
+    detail_table.add_row("Created", format_timestamp(job.get("createdOn")))
+    detail_table.add_row("Completed", format_timestamp(job.get("completedOn")))
     detail_table.add_row("Progress", f"{job.get('progress', 0)}%")
     detail_table.add_row("Success Count", str(job.get("successCount", 0)))
     detail_table.add_row("Fail Count", str(job.get("failCount", 0)))
@@ -252,6 +240,6 @@ def list_running(
             str(j.get("id", "")),
             j.get("description", "")[:40] or "N/A",
             progress,
-            _format_timestamp(j.get("createdOn")),
+            format_timestamp(j.get("createdOn")),
         )
     console.print(table)

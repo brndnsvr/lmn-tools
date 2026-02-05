@@ -18,13 +18,13 @@ src/lmn_tools/
 
 ## Task Tracking
 
-Tasks are tracked in `.tasks/TASKS.md` using a kanban board.
+Tasks are tracked in `.task-tracking/TASKS.md` using a kanban board.
 
 ### Quick Reference
 
 | Action | Location |
 |--------|----------|
-| View all tasks | `.tasks/TASKS.md` |
+| View all tasks | `.task-tracking/TASKS.md` |
 | Add new task | Add to **Inbox** section |
 | Start work | Move to **Inflight** (max 3) |
 | Complete | Move to **Done** |

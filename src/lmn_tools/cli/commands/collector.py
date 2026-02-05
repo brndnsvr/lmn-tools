@@ -13,37 +13,28 @@ from rich.console import Console
 from rich.table import Table
 
 from lmn_tools.cli.utils import get_client
-from lmn_tools.services.base import BaseService
+from lmn_tools.services.collectors import (
+    CollectorService,
+    CollectorStatus,
+    collector_service,
+)
 
-app = typer.Typer(help="View collectors")
+app = typer.Typer(help="Manage collectors")
 console = Console()
-
-
-class CollectorService(BaseService):
-    """Service for collectors."""
-
-    @property
-    def base_path(self) -> str:
-        return "/setting/collector/collectors"
 
 
 def _get_service() -> CollectorService:
     """Get collector service."""
-    return CollectorService(get_client(console))
-
-
-# Map integer status codes to labels (LM API returns integers)
-COLLECTOR_STATUS_MAP = {
-    0: "down",
-    1: "ok",
-    2: "warning",
-}
+    return collector_service(get_client(console))
 
 
 def _status_name(status: str | int) -> str:
     """Convert collector status to display name."""
     if isinstance(status, int):
-        return COLLECTOR_STATUS_MAP.get(status, str(status))
+        try:
+            return CollectorStatus(status).name.lower()
+        except ValueError:
+            return str(status)
     return str(status) if status else "unknown"
 
 
@@ -188,3 +179,118 @@ def collector_status(
 
         summary_table.add_row("[bold]Total[/bold]", f"[bold]{len(collectors)}[/bold]")
         console.print(summary_table)
+
+
+@app.command("update")
+def update_collector(
+    collector_id: Annotated[int, typer.Argument(help="Collector ID")],
+    description: Annotated[
+        str | None, typer.Option("--description", "-d", help="New description")
+    ] = None,
+    auto_upgrade: Annotated[
+        bool | None, typer.Option("--auto-upgrade", help="Enable/disable auto-upgrade")
+    ] = None,
+) -> None:
+    """Update collector configuration."""
+    svc = _get_service()
+
+    data: dict[str, Any] = {}
+    if description is not None:
+        data["description"] = description
+    if auto_upgrade is not None:
+        data["automaticUpgradeInfo"] = {"enabled": auto_upgrade}
+
+    if not data:
+        console.print("[yellow]No changes specified[/yellow]")
+        raise typer.Exit(1)
+
+    try:
+        result = svc.update(collector_id, data)
+        console.print(f"[green]Updated collector {collector_id}[/green]")
+        console.print_json(data=result)
+    except Exception as e:
+        console.print(f"[red]Failed: {e}[/red]")
+        raise typer.Exit(1) from None
+
+
+@app.command("download")
+def download_installer(
+    platform: Annotated[str, typer.Argument(help="Platform: linux64, win64, etc.")],
+    version: Annotated[
+        str | None, typer.Option("--version", "-v", help="Specific version (default: latest)")
+    ] = None,
+    format: Annotated[str, typer.Option("--format", help="Output format: table, json")] = "table",
+) -> None:
+    """Get collector installer download URL."""
+    svc = _get_service()
+
+    try:
+        result = svc.get_installer_url(platform, version)
+
+        if format == "json":
+            console.print_json(data=result)
+        else:
+            console.print(f"\n[bold]Installer: {platform}[/bold]")
+            console.print(f"Version: {result.get('version', 'N/A')}")
+            console.print(f"URL: {result.get('link', 'N/A')}")
+            console.print("\n[dim]URL expires in 2 hours[/dim]")
+    except Exception as e:
+        console.print(f"[red]Failed: {e}[/red]")
+        raise typer.Exit(1) from None
+
+
+@app.command("upgrade")
+def upgrade_collector(
+    collector_id: Annotated[int, typer.Argument(help="Collector ID")],
+    version: Annotated[str, typer.Argument(help="Target version (e.g., 31.004)")],
+    force: Annotated[bool, typer.Option("--force", "-f", help="Skip confirmation")] = False,
+) -> None:
+    """Upgrade collector to specific version."""
+    svc = _get_service()
+
+    try:
+        collector = svc.get(collector_id)
+        current_version = collector.get("build", "unknown")
+
+        if not force:
+            console.print(f"Current: {current_version}")
+            console.print(f"Target: {version}")
+            confirm = typer.confirm("Proceed?")
+            if not confirm:
+                raise typer.Abort()
+
+        result = svc.escalate_to_version(collector_id, version)
+        console.print(f"[green]Initiated upgrade to {version}[/green]")
+        console.print_json(data=result)
+    except typer.Abort:
+        console.print("[yellow]Upgrade cancelled[/yellow]")
+        raise typer.Exit(0) from None
+    except Exception as e:
+        console.print(f"[red]Failed: {e}[/red]")
+        raise typer.Exit(1) from None
+
+
+@app.command("delete")
+def delete_collector(
+    collector_id: Annotated[int, typer.Argument(help="Collector ID")],
+    force: Annotated[bool, typer.Option("--force", "-f", help="Skip confirmation")] = False,
+) -> None:
+    """Delete a collector."""
+    svc = _get_service()
+
+    try:
+        collector = svc.get(collector_id)
+        hostname = collector.get("hostname", f"ID {collector_id}")
+
+        if not force:
+            console.print(f"[yellow]Warning: Delete '{hostname}'?[/yellow]")
+            typer.confirm("Confirm", abort=True)
+
+        svc.delete(collector_id)
+        console.print(f"[green]Deleted {hostname}[/green]")
+    except typer.Abort:
+        console.print("[yellow]Deletion cancelled[/yellow]")
+        raise typer.Exit(0) from None
+    except Exception as e:
+        console.print(f"[red]Failed: {e}[/red]")
+        raise typer.Exit(1) from None

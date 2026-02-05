@@ -18,6 +18,13 @@ from lmn_tools.services.alerts import (
 from lmn_tools.services.audit import AuditLogService, audit_log_service
 from lmn_tools.services.base import BaseService
 from lmn_tools.services.batch import BatchJobService, batchjob_service
+from lmn_tools.services.collectors import (
+    CollectorGroupService,
+    CollectorService,
+    CollectorStatus,
+    collector_group_service,
+    collector_service,
+)
 from lmn_tools.services.dashboards import (
     DashboardGroupService,
     DashboardService,
@@ -103,6 +110,12 @@ __all__ = [  # noqa: RUF022
     # Batch
     "BatchJobService",
     "batchjob_service",
+    # Collectors
+    "CollectorService",
+    "CollectorGroupService",
+    "CollectorStatus",
+    "collector_service",
+    "collector_group_service",
     # Notifications
     "RecipientGroupService",
     "recipient_group_service",
